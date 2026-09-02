@@ -20,6 +20,7 @@ import {
   Footer,
   IconArrowRight,
   IconCheck,
+  IconClock,
   IconDownload,
   IconHeart,
   IconPlay,
@@ -511,12 +512,36 @@ function DomainCard({
   const color = domainColor(score.domain);
   const value = score.dq === null ? score.percent * 100 : score.dq;
 
+  const levels = [
+    {
+      key: "achieved",
+      label: "Doing",
+      n: score.achieved.length,
+      tone: "var(--st-on-track)",
+      icon: <IconCheck size={12} />,
+    },
+    {
+      key: "emerging",
+      label: "Arriving",
+      n: score.emerging.length,
+      tone: "var(--st-emerging)",
+      icon: <IconSparkle size={12} />,
+    },
+    {
+      key: "notYet",
+      label: "Not yet",
+      n: score.notYet.length,
+      tone: "var(--ink-3)",
+      icon: <IconClock size={12} />,
+    },
+  ] as const;
+
   return (
     <Card variant="clay" className="overflow-hidden">
       <div aria-hidden="true" className="h-1.5 w-full" style={{ background: color }} />
 
       <div className="p-6 sm:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line-soft pb-5">
           <div className="flex items-center gap-4">
             <SectionTile code={score.domain} size={52} />
             <div>
@@ -527,30 +552,26 @@ function DomainCard({
           <StatusChip status={score.status} label={STATUSES[score.status].label} />
         </div>
 
-        <div className="mt-5 flex items-center gap-4">
+        <div className="mt-5 flex items-center gap-4 border-b border-line-soft pb-5">
           <Meter value={Math.min(100, value)} color={color} className="flex-1" />
           <span className="tnum text-[0.95rem] font-extrabold text-ink">{Math.round(value)}</span>
         </div>
 
-        <div className={`mt-6 grid gap-6 ${suggestVideo ? "lg:grid-cols-[1fr_16rem]" : ""}`}>
+        <div className={`mt-6 grid gap-6 ${suggestVideo ? "lg:grid-cols-[1fr_17rem]" : ""}`}>
           <div>
             <p className="prose-read !text-[0.97rem]">{note}</p>
 
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              {[
-                { label: "Doing", n: score.achieved.length, c: "var(--st-on-track)" },
-                { label: "Arriving", n: score.emerging.length, c: "var(--st-emerging)" },
-                { label: "Not yet", n: score.notYet.length, c: "var(--ink-3)" },
-              ].map((s) => (
+            <p className="eyebrow mb-2.5 mt-6">Where they stand, item by item</p>
+            <div className="grid grid-cols-3 gap-2.5">
+              {levels.map((l) => (
                 <div
-                  key={s.label}
-                  className="rounded-[var(--radius-sm)] px-3 py-2.5"
-                  style={{ background: `color-mix(in srgb, ${s.c} 9%, var(--surface-2))` }}
+                  key={l.key}
+                  className="level-cell"
+                  style={{ "--tone": l.tone } as React.CSSProperties}
                 >
-                  <p className="tnum text-[1.3rem] font-extrabold leading-none" style={{ color: s.c }}>
-                    {s.n}
-                  </p>
-                  <p className="mt-1 text-[0.72rem] font-bold text-ink-3">{s.label}</p>
+                  <span className="level-cell-icon">{l.icon}</span>
+                  <p className="tnum level-cell-count">{l.n}</p>
+                  <p className="level-cell-label">{l.label}</p>
                 </div>
               ))}
             </div>
@@ -580,9 +601,14 @@ function DomainCard({
           </div>
 
           {suggestVideo && (
-            <div className="no-print">
-              <p className="eyebrow mb-3">Watch together</p>
-              <div className="video-thumb">
+            <div
+              className="video-highlight no-print"
+              style={{ "--tone": color } as React.CSSProperties}
+            >
+              <span className="video-highlight-badge">
+                <IconPlay size={10} /> Suggested watch
+              </span>
+              <div className="video-thumb mt-3">
                 <Image
                   src={VIDEO_STILL[score.domain]}
                   alt=""

@@ -843,6 +843,63 @@ h4,
   flex-shrink: 0;
 }
 
+/* ── report: level cells (Doing / Arriving / Not yet) ─────────────────────── */
+
+.level-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.8rem;
+  border: 1.5px solid color-mix(in srgb, var(--tone) 32%, var(--line));
+  background: color-mix(in srgb, var(--tone) 6%, var(--surface));
+}
+.level-cell-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 20%, var(--surface));
+  color: var(--tone);
+}
+.level-cell-count {
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--tone);
+}
+.level-cell-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+/* ── report: the highlighted video-suggestion panel ───────────────────────── */
+
+.video-highlight {
+  position: relative;
+  border-radius: var(--radius);
+  padding: 1rem;
+  border: 1.5px solid color-mix(in srgb, var(--tone) 38%, var(--line));
+  background: linear-gradient(165deg, color-mix(in srgb, var(--tone) 13%, var(--surface)), var(--surface) 72%);
+  box-shadow: var(--clay-sm);
+}
+.video-highlight-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--tone);
+  padding: 0.32rem 0.65rem;
+  border-radius: var(--radius-pill);
+}
+
 .video-thumb {
   position: relative;
   aspect-ratio: 16 / 10;
@@ -1150,6 +1207,20 @@ h4,
     color: var(--ink) !important;
     border: 1.1px solid var(--ink-3);
     font-weight: 700;
+  }
+
+  /* ── level cells: ink-outlined, not tinted per severity colour ────────── */
+  .level-cell {
+    background: #fff !important;
+    border: 1.2px solid var(--ink-3) !important;
+  }
+  .level-cell-icon {
+    background: #fff !important;
+    border: 1px solid var(--ink-3);
+    color: var(--ink) !important;
+  }
+  .level-cell-count {
+    color: var(--ink) !important;
   }
 
   /* ── section icon tiles: ink outline instead of six candy colours ────── */
