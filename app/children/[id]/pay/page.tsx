@@ -106,7 +106,7 @@ export default function PayPage({
               <p className="eyebrow eyebrow-accent">Step 2 of 2</p>
               <h1 className="mt-3">Unlock the check</h1>
             </div>
-            <ChildCard name={child.name} ageLabel={`${formatAge(age.chronologicalMonths)} old`} />
+            <ChildCard name={child.name} ageLabel={`${formatAge(age.chronologicalMonths)} old`} photoUrl={child.photoUrl} />
           </div>
 
           <div className="card card-pastel-amber animate-rise mt-8 !p-6">

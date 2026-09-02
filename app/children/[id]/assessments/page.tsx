@@ -62,7 +62,7 @@ export default function AssessmentListPage({
               <p className="eyebrow eyebrow-accent">Step 1 of 2</p>
               <h1 className="mt-3">Choose an assessment</h1>
             </div>
-            <ChildCard name={child.name} ageLabel={`${formatAge(age.chronologicalMonths)} old`} />
+            <ChildCard name={child.name} ageLabel={`${formatAge(age.chronologicalMonths)} old`} photoUrl={child.photoUrl} />
           </div>
 
           <div className="mt-9 space-y-4">

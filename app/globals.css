@@ -601,8 +601,8 @@ h4,
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(10px);
   border-top: 1px solid var(--line);
-  padding: 0.85rem max(1.25rem, env(safe-area-inset-left));
-  padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
+  padding: 0.65rem max(1.25rem, env(safe-area-inset-left));
+  padding-bottom: max(0.65rem, env(safe-area-inset-bottom));
 }
 
 /* ── video suggestion card ───────────────────────────────────────────────── */

@@ -4,7 +4,7 @@ import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE, moduleForAge } from "@/content/domains";
 import { itemsForModule } from "@/content/items";
-import { formatAge, summariseAge } from "@/lib/age";
+import { summariseAge } from "@/lib/age";
 import {
   completeAssessment,
   getAssessment,
@@ -13,7 +13,6 @@ import {
 } from "@/lib/store";
 import type { DomainCode, Item, ResponseValue } from "@/lib/types";
 import {
-  ChildCard,
   DoneBanner,
   ModuleChip,
   Shell,
@@ -129,8 +128,12 @@ export default function AssessmentPage({
     <>
       <TopBar
         right={
-          <span className="text-[0.82rem] font-semibold tabular-nums text-ink-3">
-            {answeredCount} / {allItems.length}
+          <span className="text-[0.82rem] text-ink-3">
+            <span className="font-semibold text-ink">{record.child.name}</span>
+            {" · "}
+            <span className="tabular-nums">
+              {answeredCount} / {allItems.length}
+            </span>
           </span>
         }
       />
@@ -145,16 +148,10 @@ export default function AssessmentPage({
           />
         </div>
         {!onReview && section && (
-          <div className="mx-auto flex w-full max-w-[78rem] flex-wrap items-center justify-between gap-3 px-5 py-2.5 sm:px-10">
+          <div className="mx-auto flex w-full max-w-[78rem] items-center px-5 py-1.5 sm:px-10">
             <ModuleChip
               moduleLabel={`Module ${currentModule.id} of 7 · ${currentModule.name}`}
               sectionLabel={DOMAIN_BY_CODE[section.domain].name}
-            />
-            <ChildCard
-              name={record.child.name}
-              ageLabel={`${formatAge(childAge.chronologicalMonths)} old`}
-              photoUrl={record.child.photoUrl}
-              size="sm"
             />
           </div>
         )}
@@ -262,7 +259,7 @@ export default function AssessmentPage({
 
 function StepDots({ sections, step }: { sections: Section[]; step: number }) {
   return (
-    <div className="flex gap-1.5 pt-8" aria-hidden="true">
+    <div className="flex gap-1.5 pt-5" aria-hidden="true">
       {sections.map((s, i) => (
         <span
           key={s.key}
@@ -287,7 +284,7 @@ function SectionIntro({
 }) {
   const domain = DOMAIN_BY_CODE[section.domain];
   return (
-    <div className="animate-rise pt-7">
+    <div className="animate-rise pt-5">
       <div className="flex items-center gap-2.5">
         <span
           aria-hidden="true"
