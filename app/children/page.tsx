@@ -174,6 +174,7 @@ function NewChildForm({
   const today = todayISO();
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
+  const [city, setCity] = useState("");
   const [gender, setGender] = useState<Gender | "">("");
   const [photoUrl, setPhotoUrl] = useState<string | undefined>();
   const [dobTouched, setDobTouched] = useState(false);
@@ -205,7 +206,13 @@ function NewChildForm({
     if (!canSubmit) return;
     setSubmitting(true);
     onCreated(
-      createChild({ name: name.trim(), dob, gender: gender as Gender, photoUrl }),
+      createChild({
+        name: name.trim(),
+        dob,
+        gender: gender as Gender,
+        photoUrl,
+        city: city.trim() || undefined,
+      }),
     );
   }
 
@@ -279,6 +286,20 @@ function NewChildForm({
           ) : (
             <p className="hint">We work out their age and stage from this — nothing else needed.</p>
           )}
+        </div>
+
+        <div>
+          <label className="label" htmlFor="city">
+            City <span className="font-normal text-ink-3">(optional)</span>
+          </label>
+          <input
+            id="city"
+            className="field"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Mumbai"
+            autoComplete="address-level2"
+          />
         </div>
 
         <fieldset className="border-0 p-0">

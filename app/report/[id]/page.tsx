@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { Fragment, use, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { DOMAIN_BY_CODE, moduleForAge } from "@/content/domains";
@@ -135,69 +135,102 @@ export default function ReportPage({
 
       <main className="pb-16">
         <Shell width="wide">
-          {/* print-only masthead */}
+          {/* print-only masthead — the logo already carries the programme
+              name, so the on-screen eyebrow line under it is redundant on
+              paper and is hidden there. */}
           <div className="hidden pt-6 print:block">
             <Wordmark height={48} />
           </div>
 
-          {/* ══ page 1 · the cover ═══════════════════════════════════════ */}
+          {/* ══ page 1 · the cover ═══════════════════════════════════════
+              On paper this becomes a plain letterhead: white, left-aligned,
+              a single rule underneath — see .report-cover in globals.css. */}
           <section
-            className="relative mt-7 overflow-hidden px-6 py-14 text-center sm:px-12 sm:py-20"
+            className="report-cover relative mt-7 overflow-hidden px-6 py-10 text-left sm:px-12 sm:py-14"
             style={{
               borderRadius: "var(--radius-xl)",
-              background: "linear-gradient(155deg, var(--brand-600), var(--brand-800))",
+              background: "linear-gradient(160deg, var(--brand-500) 0%, var(--brand-700) 58%, var(--brand-900) 100%)",
               boxShadow: "var(--clay-lg)",
             }}
           >
             <span
               aria-hidden="true"
               className="bloom"
-              style={{ width: 340, height: 340, top: -150, left: "8%", "--bloom-color": "#8285f5", opacity: 0.6 } as React.CSSProperties}
+              style={{ width: 420, height: 420, top: -200, left: "-4%", "--bloom-color": "#a5a9fb", opacity: 0.5 } as React.CSSProperties}
             />
             <span
               aria-hidden="true"
               className="bloom"
-              style={{ width: 280, height: 280, bottom: -140, right: "8%", "--bloom-color": "#fbbf24", opacity: 0.3 } as React.CSSProperties}
+              style={{ width: 300, height: 300, bottom: -160, right: "4%", "--bloom-color": "#fbbf24", opacity: 0.22 } as React.CSSProperties}
+            />
+            <span
+              aria-hidden="true"
+              className="bloom print:hidden"
+              style={{ width: 220, height: 220, top: -70, right: "2%", "--bloom-color": "#c7ccff", opacity: 0.4 } as React.CSSProperties}
             />
 
-            <div className="relative">
-              <p className="text-[0.78rem] font-extrabold uppercase tracking-[0.16em] text-white/70">
-                Kaushalya Genius Kid Program
-              </p>
+            <div className="relative flex flex-col gap-8 sm:gap-10">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+                <div className="min-w-0">
+                  <p className="text-[0.76rem] font-extrabold uppercase tracking-[0.18em] text-white/65 print:hidden">
+                    Kaushalya Genius Kid Program
+                  </p>
+                  <h1 className="display mt-3 !text-[2.1rem] leading-[1.08] text-white sm:!text-[2.75rem]">
+                    {child.name}&rsquo;s
+                    <br className="hidden sm:block" /> Milestone Report
+                  </h1>
+                </div>
 
-              <div className="mt-7 flex justify-center">
-                <Avatar name={child.name} photoUrl={child.photoUrl} size={104} ring />
+                <div className="relative shrink-0 print:hidden">
+                  <span
+                    aria-hidden="true"
+                    className="absolute -inset-3 rounded-full blur-xl"
+                    style={{ background: "radial-gradient(circle, rgba(251,191,36,0.4), transparent 70%)" }}
+                  />
+                  <Avatar
+                    name={child.name}
+                    photoUrl={child.photoUrl}
+                    size={88}
+                    ring
+                    className="relative"
+                    style={{ boxShadow: "0 0 0 4px rgba(255,255,255,0.92), 0 10px 24px -8px rgba(12,10,40,0.55)" }}
+                  />
+                </div>
               </div>
 
-              <h1 className="display mt-6 !text-[2.4rem] text-white sm:!text-[3.2rem]">
-                {child.name}&rsquo;s Milestone Report
-              </h1>
-
-              <dl className="mx-auto mt-8 grid max-w-[46rem] grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+              <dl className="cover-meta">
                 {[
                   ["Age", formatAge(age.chronologicalMonths)],
-                  ["Gender", child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"],
-                  ["Assessed on", formatDate(record.assessedOn)],
+                  [
+                    "Gender",
+                    child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—",
+                  ],
+                  ["Assessment date", formatDate(record.assessedOn)],
                   ["Stage", `Module ${mod.id} · ${mod.name}`],
                 ].map(([label, value]) => (
-                  <div key={label}>
-                    <dt className="text-[0.68rem] font-extrabold uppercase tracking-[0.1em] text-white/60">
-                      {label}
-                    </dt>
-                    <dd className="mt-1 text-[0.98rem] font-extrabold text-white">{value}</dd>
+                  <div key={label} className="cover-meta-item">
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
                   </div>
                 ))}
               </dl>
 
-              <div className="no-print mt-10">
+              <div className="no-print">
                 <Button
                   variant="sun"
                   size="lg"
                   onClick={() => window.print()}
                   iconLeft={<IconDownload size={18} />}
                 >
-                  Download this report
+                  Download Report
                 </Button>
+              </div>
+
+              {/* print-only: the avatar has no soft glow on paper, just a plain
+                  bordered circle beside the identity block. */}
+              <div className="hidden items-center gap-4 print:flex">
+                <Avatar name={child.name} photoUrl={child.photoUrl} size={64} ring />
+                <p className="text-[0.86rem] font-bold text-ink">{child.name}</p>
               </div>
             </div>
           </section>
@@ -240,33 +273,57 @@ export default function ReportPage({
             )}
 
             <Card variant="clay" className="mt-8 p-6 sm:p-8">
-              <p className="eyebrow mb-6">Progress, area by area</p>
-              <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
-                {ordered.map((score) => {
-                  const d = DOMAIN_BY_CODE[score.domain];
-                  const value = score.dq === null ? score.percent * 100 : score.dq;
-                  return (
-                    <div key={score.domain} className="flex items-center gap-4">
-                      <SectionTile code={score.domain} size={46} />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <span className="truncate text-[0.95rem] font-extrabold text-ink">
+              <p className="eyebrow mb-2">Progress, area by area</p>
+              <p className="mb-6 text-[0.82rem] font-medium text-ink-3">
+                Where each area sits against the expected stage for {child.name}&rsquo;s age.
+              </p>
+              <div className="overflow-x-auto">
+                <div className="progress-matrix">
+                  <span aria-hidden="true" />
+                  <div className="progress-matrix-headrow">
+                    {STAGES.map((s) => (
+                      <span key={s.label} className="progress-matrix-headcell">
+                        {s.label}
+                      </span>
+                    ))}
+                  </div>
+                  {ordered.map((score) => {
+                    const d = DOMAIN_BY_CODE[score.domain];
+                    const value = score.dq === null ? score.percent * 100 : score.dq;
+                    const color = domainColor(score.domain);
+                    const { index, frac } = stagePosition(value);
+                    const pct = ((index + frac) / STAGES.length) * 100;
+                    return (
+                      <Fragment key={score.domain}>
+                        <div className="progress-matrix-row-label">
+                          <SectionTile code={score.domain} size={34} />
+                          <span className="truncate text-[0.86rem] font-extrabold text-ink">
                             {d.name}
                           </span>
-                          <span className="tnum text-[0.88rem] font-extrabold text-ink-3">
-                            {Math.round(value)}
-                          </span>
                         </div>
-                        <Meter
-                          value={Math.min(100, value)}
-                          color={domainColor(score.domain)}
-                          className="mt-2"
-                          label={`${d.name}: ${Math.round(value)} out of an expected 100`}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                        <div
+                          className="progress-matrix-row-track"
+                          role="img"
+                          aria-label={`${d.name}: ${STAGES[index].label}, score ${Math.round(value)}`}
+                        >
+                          <div className="progress-matrix-grid">
+                            {STAGES.map((s) => (
+                              <span key={s.label} className="progress-matrix-cell" />
+                            ))}
+                          </div>
+                          <div
+                            className="progress-matrix-fill"
+                            style={{ width: `${pct}%`, background: color, opacity: 0.28 }}
+                          />
+                          <div
+                            className="progress-matrix-dot"
+                            style={{ left: `${pct}%`, ["--dot-color" as string]: color }}
+                          />
+                        </div>
+                      </Fragment>
+                    );
+                  })}
+                </div>
               </div>
             </Card>
           </Section>
@@ -319,11 +376,11 @@ export default function ReportPage({
               {/* the course recommendation */}
               <Card
                 variant="clay"
-                className="flex flex-col overflow-hidden"
+                className="recommend-card flex flex-col overflow-hidden"
                 style={{ background: "linear-gradient(160deg, var(--sun-100), var(--surface))" }}
               >
                 <div className="p-6">
-                  <Mascot size={68} mood="wave" className="animate-bob" />
+                  <Mascot size={68} mood="wave" className="animate-bob no-print" />
                   <p className="eyebrow mt-4">Recommended next</p>
                   <h3 className="mt-2 text-[1.2rem]">
                     Milestones Acceleration · Phase {mod.phase}
@@ -346,7 +403,7 @@ export default function ReportPage({
                   </ul>
                 </div>
 
-                <div className="mt-auto space-y-2.5 p-6 pt-0">
+                <div className="no-print mt-auto space-y-2.5 p-6 pt-0">
                   <ButtonLink
                     href="https://www.kaushalyageniuskid.com"
                     external
@@ -365,13 +422,26 @@ export default function ReportPage({
                     Talk to our team
                   </ButtonLink>
                 </div>
+
+                {/* Buttons don't work on paper — a printed report gets the
+                    plain addresses instead, written out in full. */}
+                <dl className="hidden print:block print:space-y-2 print:border-t print:border-line-soft print:p-6 print:pt-4 print:text-[9.5pt]">
+                  <div>
+                    <dt className="inline font-bold">Explore the programme: </dt>
+                    <dd className="inline">www.kaushalyageniuskid.com</dd>
+                  </div>
+                  <div>
+                    <dt className="inline font-bold">Talk to our team: </dt>
+                    <dd className="inline">support@kaushalyageniuskid.com</dd>
+                  </div>
+                </dl>
               </Card>
             </div>
           </Section>
 
           {/* ══ footer of the document ═══════════════════════════════════ */}
           <Section size="sm">
-            <Card variant="clay" className="flex flex-wrap items-center justify-between gap-5 p-6">
+            <Card variant="clay" className="no-print flex flex-wrap items-center justify-between gap-5 p-6">
               <div className="flex items-center gap-3">
                 <span className="grid size-11 place-items-center rounded-2xl bg-[var(--st-consult-soft)] text-[var(--st-consult)]">
                   <IconHeart size={20} />
@@ -383,7 +453,7 @@ export default function ReportPage({
                   </p>
                 </div>
               </div>
-              <div className="no-print flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-2.5">
                 <Button
                   variant="secondary"
                   onClick={() => window.print()}
@@ -399,13 +469,21 @@ export default function ReportPage({
               </div>
             </Card>
 
-            <div className="mt-8">
+            <div className="mt-8 print:mt-0">
               <Disclaimer text={DISCLAIMER} />
               <p className="mt-4 text-[0.74rem] leading-relaxed text-ink-3">
                 Milestones adapted from the CDC <em>Learn the Signs. Act Early.</em> checklists, the
                 NIDCD hearing and communication checklist, and WHO motor milestone data. Item bank{" "}
                 {record.bankVersion}.
               </p>
+
+              {/* print-only colophon — the closing line a real document has */}
+              <div className="mt-6 hidden border-t border-line-soft pt-4 text-[9pt] text-ink-3 print:flex print:items-center print:justify-between">
+                <span>
+                  Kaushalya Genius Kid Program · Prepared for {child.name} on {formatDate(record.assessedOn)}
+                </span>
+                <span>www.kaushalyageniuskid.com</span>
+              </div>
             </div>
           </Section>
         </Shell>
@@ -530,6 +608,31 @@ function DomainCard({
 }
 
 /* ══ helpers ═══════════════════════════════════════════════════════════════ */
+
+/** Presentation-only stage bands for the progress matrix — a coarser, five-way
+ * read of the same score the status chips already use (see STATUSES in
+ * lib/scoring.ts), for a chart that reads at a glance. Does not touch scoring. */
+const STAGES = [
+  { label: "Significant developmental delay", max: 50 },
+  { label: "Developmental delay", max: 70 },
+  { label: "Mild developmental gaps", max: 85 },
+  { label: "Typically developing", max: 115 },
+  { label: "Advanced development", max: Infinity },
+] as const;
+
+function stagePosition(value: number): { index: number; frac: number } {
+  let lo = 0;
+  for (let i = 0; i < STAGES.length; i++) {
+    const hi = STAGES[i].max;
+    if (value < hi || i === STAGES.length - 1) {
+      const span = i === STAGES.length - 1 ? 25 : hi - lo;
+      const frac = Math.min(1, Math.max(0, (value - lo) / span));
+      return { index: i, frac };
+    }
+    lo = hi;
+  }
+  return { index: 0, frac: 0 };
+}
 
 function pickActivities(score: DomainScore): Activity[] {
   const band = bandForAge(Math.round(score.developmentalMonths));

@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
-import { Baloo_2, Plus_Jakarta_Sans } from "next/font/google";
+import { Sora, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/components/theme-toggle";
 
 /**
  * Two voices, deliberately.
  *
- * Baloo 2 carries every heading — rounded and warm, so a page about a child
- * feels like it was made for one. Plus Jakarta Sans carries the interface and
- * the report: neutral, premium, and unambiguous at 12px, which is where a
- * rounded display face falls apart.
+ * Sora carries every heading — a geometric, confident grotesk that reads as
+ * agency-designed rather than a rounded "kids app" face. Plus Jakarta Sans
+ * carries the interface and the report: neutral, premium, and unambiguous at
+ * 12px, which is where a display face falls apart.
  */
-const baloo = Baloo_2({
+const sora = Sora({
   subsets: ["latin"],
   weight: ["500", "600", "700", "800"],
-  variable: "--font-baloo",
+  variable: "--font-display-raw",
   display: "swap",
 });
 
@@ -39,7 +39,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className={`${baloo.variable} ${jakarta.variable}`}>{children}</body>
+      <body className={`${sora.variable} ${jakarta.variable}`}>{children}</body>
     </html>
   );
 }

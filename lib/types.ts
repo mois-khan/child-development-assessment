@@ -94,6 +94,8 @@ export interface Child {
   gender: Gender;
   /** Weeks of gestation at birth. Undefined = born at term. */
   gestationalWeeks?: number;
+  /** City the family is based in. Optional, parent-entered free text. */
+  city?: string;
   createdAt?: string;
   /** Optional profile photo, stored as a data: URL. */
   photoUrl?: string;

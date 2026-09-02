@@ -343,12 +343,14 @@ export function Avatar({
   size = 44,
   ring = false,
   className = "",
+  style,
 }: {
   name: string;
   photoUrl?: string;
   size?: number;
   ring?: boolean;
   className?: string;
+  style?: CSSProperties;
 }) {
   const ringStyle: CSSProperties = ring
     ? { boxShadow: "0 0 0 3px var(--surface), 0 0 0 6px var(--accent-line)" }
@@ -364,14 +366,14 @@ export function Avatar({
         width={size}
         height={size}
         className={cx("shrink-0 rounded-full object-cover", className)}
-        style={{ width: size, height: size, ...ringStyle }}
+        style={{ width: size, height: size, ...ringStyle, ...style }}
       />
     );
   }
   return (
     <span
       className={cx("avatar-circle", className)}
-      style={{ width: size, height: size, fontSize: size * 0.38, ...ringStyle }}
+      style={{ width: size, height: size, fontSize: size * 0.38, ...ringStyle, ...style }}
       aria-hidden="true"
     >
       {initials(name)}

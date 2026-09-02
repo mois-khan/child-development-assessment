@@ -14,9 +14,9 @@
               logo. Backgrounds are warm off-white, never grey — grey plus
               children reads as a hospital.
 
-   Type       Baloo 2 for display (rounded, warm, confident) over Plus Jakarta
-              Sans for interface and long-form (premium, neutral, excellent at
-              small sizes). One playful voice, one professional voice.
+   Type       Sora for display (geometric, confident, agency-grade) over Plus
+              Jakarta Sans for interface and long-form (premium, neutral,
+              excellent at small sizes). One display voice, one interface voice.
 
    Motion     150-320ms, spring-ish easing, transform/opacity only. Every
               animation reports a cause: an answer landing, a section closing,
@@ -120,46 +120,8 @@
   --dur-slow: 380ms;
 }
 
-/* Dark mode is supported but light is the designed-for default. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ground: #12131f;
-    --ground-2: #0d0e18;
-    --surface: #1a1c2b;
-    --surface-2: #212335;
-    --surface-3: #2a2d42;
-    --ink: #edeefb;
-    --ink-2: #b6b9d4;
-    --ink-3: #8b8fac;
-    --line: #2e3146;
-    --line-soft: #262940;
-
-    --accent: #8f92ff;
-    --accent-hover: #a7a9ff;
-    --accent-soft: #23244a;
-    --accent-line: #3d3f76;
-    --on-accent: #12131f;
-
-    --st-on-track: #4ecfa0;
-    --st-emerging: #e2b95c;
-    --st-needs-focus: #f09a63;
-    --st-consult: #f0798b;
-    --on-status: #12131f;
-
-    --st-on-track-soft: #16332a;
-    --st-emerging-soft: #332b17;
-    --st-needs-focus-soft: #35251a;
-    --st-consult-soft: #351d24;
-
-    --focus-ring: #8f92ff;
-
-    --clay-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px -1px rgba(0, 0, 0, 0.3);
-    --clay: 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 28px -14px rgba(0, 0, 0, 0.75);
-    --clay-lg: 0 4px 8px rgba(0, 0, 0, 0.4), 0 28px 56px -24px rgba(0, 0, 0, 0.85);
-    --clay-brand: 0 2px 6px rgba(0, 0, 0, 0.4), 0 16px 30px -16px rgba(90, 84, 220, 0.55);
-  }
-}
-
+/* Light is always the default, regardless of OS preference — dark mode only
+   applies once the user explicitly picks it via the toggle (data-theme). */
 :root[data-theme="dark"] {
   --ground: #12131f;
   --ground-2: #0d0e18;
@@ -214,7 +176,7 @@
   --color-sun: var(--sun-400);
 
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-baloo), var(--font-jakarta), ui-sans-serif, sans-serif;
+  --font-display: var(--font-display-raw), var(--font-jakarta), ui-sans-serif, sans-serif;
 }
 
 /* ── base ────────────────────────────────────────────────────────────────── */
@@ -438,24 +400,19 @@ h4,
 }
 
 .btn-sun {
-  background: var(--sun-500);
-  color: #2b1500;
-  box-shadow:
-    0 1px 2px rgba(23, 24, 43, 0.08),
-    0 8px 20px -10px rgba(180, 83, 9, 0.4);
+  background: var(--sun-400);
+  color: #241400;
+  box-shadow: 0 1px 2px rgba(23, 24, 43, 0.06), 0 6px 16px -9px rgba(180, 83, 9, 0.4);
 }
 .btn-sun:hover:not(:disabled) {
-  background: var(--sun-700);
-  color: #fff;
+  background: var(--sun-300);
   transform: translateY(-1px);
-  box-shadow:
-    0 2px 4px rgba(23, 24, 43, 0.1),
-    0 14px 26px -12px rgba(180, 83, 9, 0.46);
+  box-shadow: 0 2px 4px rgba(23, 24, 43, 0.08), 0 10px 20px -10px rgba(180, 83, 9, 0.42);
 }
 .btn-sun:active:not(:disabled) {
-  background: var(--sun-700);
-  color: #fff;
-  box-shadow: 0 1px 2px rgba(23, 24, 43, 0.1);
+  background: var(--sun-400);
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(23, 24, 43, 0.08);
 }
 
 .btn-secondary {
@@ -652,6 +609,113 @@ h4,
   background: var(--sun-400);
 }
 
+/* ── progress matrix (report: section × developmental stage) ─────────────── */
+
+.progress-matrix {
+  display: grid;
+  grid-template-columns: minmax(9.25rem, 11.5rem) 1fr;
+  align-items: center;
+  gap: 0.7rem 1.1rem;
+  min-width: 32rem;
+}
+.progress-matrix-headrow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+.progress-matrix-headcell {
+  text-align: center;
+  padding: 0 0.3rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.progress-matrix-row-label {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+.progress-matrix-row-track {
+  position: relative;
+  height: 15px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  box-shadow: inset 0 2px 4px rgba(23, 24, 43, 0.06);
+}
+.progress-matrix-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-radius: inherit;
+  overflow: hidden;
+}
+.progress-matrix-cell {
+  border-right: 1px solid color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.progress-matrix-cell:last-child {
+  border-right: none;
+}
+.progress-matrix-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: var(--radius-pill);
+  transition: width 700ms var(--ease-out);
+}
+.progress-matrix-dot {
+  position: absolute;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 3px solid var(--dot-color, var(--accent));
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 3px rgba(23, 24, 43, 0.3);
+  transition: left 700ms var(--ease-out);
+}
+
+/* ── report cover: frosted meta strip ─────────────────────────────────────── */
+
+.cover-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+  margin: 0;
+}
+@media (min-width: 640px) {
+  .cover-meta {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+  }
+}
+.cover-meta-item {
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1.05rem;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.cover-meta-item dt {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+.cover-meta-item dd {
+  margin-top: 0.35rem;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #fff;
+}
+
 /* ── answer buttons (the assessment's core interaction) ──────────────────── */
 
 .answer {
@@ -750,12 +814,6 @@ h4,
   transition: background-color var(--dur) var(--ease-out);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .brand-plate {
-    background: #ffffff;
-    padding: 4px 10px;
-  }
-}
 :root[data-theme="dark"] .brand-plate {
   background: #ffffff;
   padding: 4px 10px;
@@ -1062,9 +1120,9 @@ h4,
   }
   .report-cover dl {
     margin: 0;
-    display: grid;
-    grid-template-columns: repeat(4, auto);
-    gap: 6mm;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5mm;
     text-align: left;
     max-width: none;
   }
@@ -1106,6 +1164,34 @@ h4,
     background: #fff;
     color: var(--ink);
     border: 1.5px solid var(--ink);
+  }
+
+  /* ── progress matrix: ink fill/dot, visible grid lines ────────────────── */
+  .progress-matrix-row-track {
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: none;
+  }
+  .progress-matrix-fill {
+    background: var(--ink) !important;
+  }
+  .progress-matrix-dot {
+    background: #fff !important;
+    border-color: var(--ink) !important;
+  }
+  .progress-matrix-cell {
+    border-right-color: var(--line);
+  }
+
+  /* ── cover meta strip: bordered chips, not frosted-glass-on-white ─────── */
+  .cover-meta {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .cover-meta-item {
+    background: #fff !important;
+    border: 1px solid var(--line);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   /* ── the course recommendation card loses its gold wash ──────────────── */
