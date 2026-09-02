@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, Newsreader } from "next/font/google";
 import "./globals.css";
+import { THEME_INIT_SCRIPT } from "@/components/theme-toggle";
 
 /**
  * Newsreader for headings, IBM Plex Sans for interface and data.
@@ -35,7 +36,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className={`${newsreader.variable} ${plex.variable}`}>
         {children}
       </body>

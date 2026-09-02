@@ -205,7 +205,16 @@ export default function StartPage() {
                   type="checkbox"
                   checked={preterm}
                   onChange={(e) => setPreterm(e.target.checked)}
-                  className="mt-[3px] size-4 shrink-0 accent-[var(--pine)]"
+                  className="mt-[3px] size-4 shrink-0 appearance-none rounded-[4px] border border-line bg-surface bg-center bg-no-repeat checked:border-[var(--pine)] checked:bg-[var(--pine)]"
+                  style={
+                    preterm
+                      ? {
+                          backgroundImage:
+                            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M4.5 10.5 8.2 14.2 15.5 6.5' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+                          backgroundSize: "13px",
+                        }
+                      : undefined
+                  }
                 />
                 <span>
                   <span className="block text-[0.92rem] font-semibold text-ink">

@@ -18,7 +18,6 @@ import {
   TopBar,
   Wordmark,
   domainColor,
-  statusColor,
 } from "@/components/ui";
 
 export default function ReportPage({
@@ -402,7 +401,7 @@ function DomainCard({ score, note }: { score: DomainScore; note: string }) {
           <SkillList
             label="Not yet"
             items={score.notYet}
-            color={statusColor(score.status)}
+            color="var(--ink-3)"
           />
         </div>
       </div>

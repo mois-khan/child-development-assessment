@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { STATUSES } from "@/lib/scoring";
 import type { DomainCode, StatusCode } from "@/lib/types";
 import { DOMAIN_BY_CODE } from "@/content/domains";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 /* ── brand ──────────────────────────────────────────────────────────────── */
 
@@ -209,9 +210,12 @@ export function TopBar({
         bordered ? "border-b border-line" : ""
       }`}
     >
-      <div className="mx-auto flex h-[4.25rem] w-full max-w-[64rem] items-center justify-between gap-4 px-5 sm:px-8">
+      <div className="mx-auto flex min-h-[4.25rem] w-full max-w-[64rem] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3 sm:px-8">
         <Wordmark />
-        {right}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {right}
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );
