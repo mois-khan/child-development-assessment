@@ -170,3 +170,22 @@ export const MODULE_BANDS: Record<number, AgeBand[]> = Object.fromEntries(
 export function bandIdsForModule(moduleId: number): string[] {
   return (MODULE_BANDS[moduleId] ?? []).map((b) => b.id);
 }
+
+/**
+ * "3–7 mo" / "1.5–3 yr" — short enough to sit under a diagram node. Both ends
+ * of a range always share one unit, so nothing reads as "12–1.5 yr".
+ */
+export function moduleAgeLabel(m: Module): string {
+  if (m.maxMonths <= 18) return `${m.minMonths}–${m.maxMonths} mo`;
+  const years = (months: number) => {
+    const y = months / 12;
+    return Number.isInteger(y) ? `${y}` : `${y.toFixed(1)}`;
+  };
+  return `${years(m.minMonths)}–${years(m.maxMonths)} yr`;
+}
+
+/** The seven stages in the shape the journey diagram wants. */
+export const MODULE_STAGES = MODULES.map((m) => ({
+  name: m.name,
+  ageLabel: moduleAgeLabel(m),
+}));

@@ -1,10 +1,9 @@
 "use client";
 
 import { use, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { DOMAIN_BY_CODE } from "@/content/domains";
+import { DOMAIN_BY_CODE, MODULE_STAGES, moduleForAge } from "@/content/domains";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
-import { scoreAssessment } from "@/lib/scoring";
+import { STATUSES, scoreAssessment } from "@/lib/scoring";
 import {
   assessmentsForChild,
   getChild,
@@ -13,7 +12,30 @@ import {
   type StoredAssessment,
 } from "@/lib/store";
 import type { AssessmentResult } from "@/lib/types";
-import { Avatar, Shell, StatusChip, TopBar } from "@/components/ui";
+import {
+  Avatar,
+  Badge,
+  BrainJourney,
+  Button,
+  ButtonLink,
+  Card,
+  Footer,
+  IconArrowRight,
+  IconCalendar,
+  IconChart,
+  IconDownload,
+  IconRefresh,
+  IconSparkle,
+  IconStarFilled,
+  Mascot,
+  Meter,
+  Section,
+  SectionTile,
+  Shell,
+  StatusChip,
+  TopBar,
+  domainColor,
+} from "@/components/ui";
 
 export default function ChildProfilePage({
   params,
@@ -31,11 +53,12 @@ export default function ChildProfilePage({
 
   const latest = useMemo(
     () => (child ? latestAssessmentForChild(child.id) : null),
+    // assessments is in the dep list so the card refreshes after a new check
     [child, assessments],
   );
 
-  const latestResult = useMemo<AssessmentResult | null>(() => {
-    if (!latest || !latest.completedAt) return null;
+  const result = useMemo<AssessmentResult | null>(() => {
+    if (!latest?.completedAt) return null;
     return scoreAssessment({
       child: latest.child,
       assessedOn: latest.assessedOn,
@@ -49,7 +72,7 @@ export default function ChildProfilePage({
       <>
         <TopBar />
         <Shell>
-          <p className="pt-24 text-center text-[0.9rem] text-ink-3">Loading…</p>
+          <p className="pt-24 text-center font-semibold text-ink-3">Loading…</p>
         </Shell>
       </>
     );
@@ -59,15 +82,17 @@ export default function ChildProfilePage({
     return (
       <>
         <TopBar />
-        <Shell>
-          <div className="pt-20">
-            <h1>We couldn&rsquo;t find that child</h1>
-            <p className="prose-read mt-3 max-w-[46ch]">
-              Profiles are saved in this browser only, so a link from another device won&rsquo;t open here.
+        <Shell width="narrow">
+          <div className="pt-20 text-center">
+            <Mascot size={92} mood="think" className="mx-auto" />
+            <h1 className="mt-6">We couldn&rsquo;t find that child</h1>
+            <p className="prose-read mx-auto mt-3 max-w-[40ch]">
+              Profiles are saved in this browser only, so a link from another device
+              won&rsquo;t open here.
             </p>
-            <Link href="/children" className="btn btn-primary mt-7">
+            <ButtonLink href="/children" className="mt-8">
               Go to your children
-            </Link>
+            </ButtonLink>
           </div>
         </Shell>
       </>
@@ -75,131 +100,242 @@ export default function ChildProfilePage({
   }
 
   const age = summariseAge(child.dob, todayISO(), child.gestationalWeeks);
+  const mod = moduleForAge(age.assessedMonths);
+  const completed = assessments.filter((a) => a.completedAt).length;
 
   return (
     <>
       <TopBar
         right={
-          <Link href="/children" className="btn btn-quiet btn-sm">
-            All children
-          </Link>
+          <ButtonLink href={`/children/${child.id}/assessments`} size="sm" iconRight={<IconArrowRight size={16} />}>
+            New check
+          </ButtonLink>
         }
       />
 
-      <main className="pb-24">
+      <main className="pb-8">
+        {/* ══ profile hero ═══════════════════════════════════════════════ */}
         <Shell width="wide">
-          {/* ── profile card ──────────────────────────────────────────── */}
-          <div className="card card-pastel-blue animate-rise mt-8 flex flex-wrap items-center justify-between gap-5 !p-6">
-            <div className="flex items-center gap-4">
-              {child.photoUrl ? (
-                <img
-                  src={child.photoUrl}
-                  alt={child.name}
-                  className="size-[62px] shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <Avatar name={child.name} size={62} />
-              )}
-              <div>
-                <h1 className="text-[1.5rem]">{child.name}</h1>
-                <p className="mt-1 text-[0.9rem] font-medium text-ink-2">
-                  {formatAge(age.chronologicalMonths)} old ·{" "}
-                  {child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"} · Born{" "}
-                  {formatDate(child.dob)}
-                </p>
+          <div
+            className="relative mt-7 overflow-hidden px-6 py-8 sm:px-10 sm:py-10"
+            style={{
+              borderRadius: "var(--radius-xl)",
+              background: "linear-gradient(150deg, var(--brand-600), var(--brand-800))",
+              boxShadow: "var(--clay-lg)",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              className="bloom"
+              style={{ width: 300, height: 300, top: -140, right: "6%", "--bloom-color": "#fbbf24", opacity: 0.3 } as React.CSSProperties}
+            />
+            <div className="relative flex flex-wrap items-center justify-between gap-6">
+              <div className="flex items-center gap-5">
+                <Avatar name={child.name} photoUrl={child.photoUrl} size={88} ring />
+                <div>
+                  <h1 className="text-white">{child.name}</h1>
+                  <p className="mt-1.5 text-[0.95rem] font-semibold text-white/75">
+                    {formatAge(age.chronologicalMonths)} ·{" "}
+                    {child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"} · born{" "}
+                    {formatDate(child.dob)}
+                  </p>
+                  <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-[0.82rem] font-bold text-white backdrop-blur">
+                    <IconSparkle size={15} />
+                    Module {mod.id} of 7 · {mod.name}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                {[
+                  { value: completed, label: "Reports" },
+                  { value: `${mod.id}/7`, label: "Stage" },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="min-w-[92px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur"
+                  >
+                    <p
+                      className="tnum text-[1.5rem] font-extrabold text-white"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {s.value}
+                    </p>
+                    <p className="text-[0.74rem] font-bold text-white/70">{s.label}</p>
+                  </div>
+                ))}
               </div>
             </div>
-            <Link href={`/children/${child.id}/assessments`} className="btn btn-primary">
-              Start an assessment
-            </Link>
           </div>
+        </Shell>
 
-          {/* ── latest report, always here ───────────────────────────── */}
-          <section className="mt-10">
-            <h2>Latest report</h2>
-            {!latest || !latestResult ? (
-              <div className="card mt-4 p-6 text-center">
-                <p className="text-[0.92rem] text-ink-2">
-                  No completed assessment yet. Once {child.name} finishes one, the report will always be
-                  right here.
+        {/* ══ latest report ══════════════════════════════════════════════ */}
+        <Section size="sm">
+          <Shell width="wide">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2>Latest report</h2>
+              {latest && result && (
+                <div className="flex flex-wrap gap-2.5">
+                  <ButtonLink href={`/report/${latest.id}`} variant="secondary" size="sm">
+                    Open full report
+                  </ButtonLink>
+                  <ButtonLink
+                    href={`/report/${latest.id}?download=1`}
+                    size="sm"
+                    iconLeft={<IconDownload size={16} />}
+                  >
+                    Download
+                  </ButtonLink>
+                </div>
+              )}
+            </div>
+
+            {!latest || !result ? (
+              <Card variant="clay" className="mt-5 p-8 text-center sm:p-12">
+                <Mascot size={88} mood="wave" className="animate-bob mx-auto" />
+                <h3 className="mt-5 text-[1.25rem]">No report yet</h3>
+                <p className="mx-auto mt-2 max-w-[40ch] text-[0.95rem] leading-relaxed text-ink-2">
+                  Run {child.name}&rsquo;s first milestone check — about ten minutes, and their
+                  report will live right here from then on.
                 </p>
-              </div>
+                <ButtonLink
+                  href={`/children/${child.id}/assessments`}
+                  size="lg"
+                  className="mt-7"
+                  iconRight={<IconArrowRight size={18} />}
+                >
+                  Start the check
+                </ButtonLink>
+              </Card>
             ) : (
-              <div className="card card-raised mt-4 overflow-hidden">
-                <div className="flex flex-wrap items-center justify-between gap-3 p-5">
+              <Card variant="clay" className="mt-5 overflow-hidden">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft p-6">
                   <div className="flex items-center gap-3">
-                    <StatusChip status={latestResult.overallStatus} solid />
-                    <span className="text-[0.83rem] text-ink-3">
-                      Assessed {formatDate(latest.assessedOn)}
+                    <StatusChip
+                      status={result.overallStatus}
+                      label={STATUSES[result.overallStatus].label}
+                      solid
+                      size="lg"
+                    />
+                    <span className="flex items-center gap-1.5 text-[0.85rem] font-semibold text-ink-3">
+                      <IconCalendar size={15} />
+                      {formatDate(latest.assessedOn)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Link href={`/report/${latest.id}`} className="btn btn-ghost btn-sm">
-                      View full report
-                    </Link>
-                    <Link href={`/report/${latest.id}?download=1`} className="btn btn-primary btn-sm">
-                      Download
-                    </Link>
-                  </div>
+                  {!result.suppressDq && result.overallDq !== null && (
+                    <span className="flex items-center gap-2 text-[0.85rem] font-semibold text-ink-3">
+                      <IconChart size={16} />
+                      Average{" "}
+                      <strong className="tnum text-[1.05rem] font-extrabold text-ink">
+                        {result.overallDq}
+                      </strong>
+                      <span className="text-ink-3">/ 100</span>
+                    </span>
+                  )}
                 </div>
-                <div className="grid grid-cols-1 gap-x-6 gap-y-3 border-t border-line-soft p-5 sm:grid-cols-2">
-                  {latestResult.domainScores.map((s) => {
+
+                <div className="grid gap-x-8 gap-y-5 p-6 sm:grid-cols-2">
+                  {result.domainScores.map((s) => {
+                    const d = DOMAIN_BY_CODE[s.domain];
                     const value = s.dq === null ? s.percent * 100 : s.dq;
                     return (
-                      <div key={s.domain}>
-                        <div className="flex items-baseline justify-between text-[0.8rem]">
-                          <span className="font-semibold text-ink-2">
-                            {DOMAIN_BY_CODE[s.domain].short}
-                          </span>
-                          <span className="tabular-nums text-ink-3">{Math.round(value)}</span>
-                        </div>
-                        <div className="meter-track mt-1.5">
-                          <div
-                            className="meter-fill"
-                            style={{
-                              width: `${Math.min(100, value)}%`,
-                              background: "var(--accent)",
-                            }}
+                      <div key={s.domain} className="flex items-center gap-3.5">
+                        <SectionTile code={s.domain} size={40} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="truncate text-[0.88rem] font-bold text-ink">
+                              {d.name}
+                            </span>
+                            <span className="tnum text-[0.82rem] font-extrabold text-ink-3">
+                              {Math.round(value)}
+                            </span>
+                          </div>
+                          <Meter
+                            value={Math.min(100, value)}
+                            color={domainColor(s.domain)}
+                            className="mt-1.5 !h-2.5"
+                            label={`${d.name}: ${Math.round(value)} out of an expected 100`}
                           />
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
+              </Card>
             )}
-          </section>
+          </Shell>
+        </Section>
 
-          {/* ── all assessments ──────────────────────────────────────── */}
-          {assessments.length > 0 && (
-            <section className="mt-10">
-              <h2>All assessments</h2>
-              <ul className="mt-4 list-none space-y-2.5 p-0">
+        {/* ══ where they are on the journey ══════════════════════════════ */}
+        <Section size="sm">
+          <Shell width="wide">
+            <h2>Their stage</h2>
+            <Card variant="clay" className="mt-5 overflow-x-auto p-6 sm:p-8">
+              <BrainJourney
+                stages={MODULE_STAGES}
+                current={mod.id}
+                className="h-auto w-full min-w-[680px]"
+              />
+            </Card>
+          </Shell>
+        </Section>
+
+        {/* ══ history ════════════════════════════════════════════════════ */}
+        {assessments.length > 0 && (
+          <Section size="sm">
+            <Shell width="wide">
+              <h2>All checks</h2>
+              <ul className="mt-5 list-none space-y-3 p-0">
                 {assessments.map((a) => (
                   <li key={a.id}>
-                    <Link
+                    <a
                       href={a.completedAt ? `/report/${a.id}` : `/assessment/${a.id}`}
-                      className="card flex items-center justify-between gap-3 p-4 transition-colors hover:border-[var(--accent)]"
+                      className="clay clay-press flex items-center justify-between gap-4 p-4 sm:p-5"
                     >
-                      <div>
-                        <p className="text-[0.92rem] font-semibold text-ink">
-                          Genius Milestones Check
-                        </p>
-                        <p className="mt-0.5 text-[0.78rem] text-ink-3">
-                          {formatDate(a.assessedOn)}
-                        </p>
+                      <div className="flex items-center gap-4">
+                        <span
+                          className="grid size-11 shrink-0 place-items-center rounded-2xl"
+                          style={{
+                            background: a.completedAt
+                              ? "var(--st-on-track-soft)"
+                              : "var(--sun-100)",
+                            color: a.completedAt ? "var(--st-on-track)" : "var(--sun-700)",
+                          }}
+                        >
+                          {a.completedAt ? <IconStarFilled size={20} /> : <IconRefresh size={20} />}
+                        </span>
+                        <div>
+                          <p className="text-[0.98rem] font-extrabold text-ink">
+                            Genius Milestone Check
+                          </p>
+                          <p className="text-[0.82rem] font-semibold text-ink-3">
+                            {formatDate(a.assessedOn)}
+                          </p>
+                        </div>
                       </div>
-                      <span className="chip">
+                      <Badge tone={a.completedAt ? "success" : "sun"}>
                         {a.completedAt ? "Completed" : "In progress"}
-                      </span>
-                    </Link>
+                      </Badge>
+                    </a>
                   </li>
                 ))}
               </ul>
-            </section>
-          )}
-        </Shell>
+
+              <div className="mt-6">
+                <ButtonLink
+                  href={`/children/${child.id}/assessments`}
+                  variant="secondary"
+                  iconRight={<IconArrowRight size={17} />}
+                >
+                  Run another check
+                </ButtonLink>
+              </div>
+            </Shell>
+          </Section>
+        )}
       </main>
+
+      <Footer />
     </>
   );
 }

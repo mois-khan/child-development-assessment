@@ -1,148 +1,200 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Kaushalya Genius Kid Program — design tokens
+   KAUSHALYA GENIUS KID PROGRAM — DESIGN SYSTEM v2
+   ───────────────────────────────────────────────────────────────────────────
+   Style      Claymorphism. Soft 3D, chunky, toy-like surfaces with double
+              shadows (outer drop + inner light), generous radii (18-32px) and
+              a springy press. Chosen because it is the one style that reads as
+              *premium* and *made for children* at the same time — flat design
+              reads clinical here, glass reads corporate.
 
-   Register: playful and warm, built for parents of small children. Rounder
-   shapes, one confident blue accent, soft pastel cards for visual variety —
-   friendly rather than clinical, but the report content itself still stays
-   plain-spoken and easy to trust.
+   Colour     Indigo-blue brand (per brief) carrying the chrome, with a six-hue
+              section palette and a sunshine accent lifted from the KGK sun
+              logo. Backgrounds are warm off-white, never grey — grey plus
+              children reads as a hospital.
 
-   Type   IBM Plex Sans everywhere — headings and body both. One simple,
-          rounded, highly-legible family reads as friendly at every size,
-          and its Devanagari sibling covers Hindi later.
-   Colour One accent blue (matches the Kaushalya reference UI), a soft
-          near-white ground, and a warm status ramp. The six section hues
-          carry the rest of the colour.
+   Type       Baloo 2 for display (rounded, warm, confident) over Plus Jakarta
+              Sans for interface and long-form (premium, neutral, excellent at
+              small sizes). One playful voice, one professional voice.
+
+   Motion     150-320ms, spring-ish easing, transform/opacity only. Every
+              animation reports a cause: an answer landing, a section closing,
+              a reward arriving.
    ═════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* neutrals — soft blue-grey, to sit under the blue accent */
-  --ground: #f5f6fc;
-  --ground-2: #edf0fa;
+  /* ── brand: indigo-blue ─────────────────────────────────────────────── */
+  --brand-50: #eef1ff;
+  --brand-100: #e0e4ff;
+  --brand-200: #c7ccff;
+  --brand-300: #a5a9fb;
+  --brand-400: #8285f5;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+  --brand-800: #372fa8;
+  --brand-900: #2c2782;
+
+  --accent: var(--brand-600);
+  --accent-hover: var(--brand-700);
+  --accent-soft: var(--brand-50);
+  --accent-line: var(--brand-200);
+  --on-accent: #ffffff;
+
+  /* ── sunshine, from the KGK sun logo ────────────────────────────────── */
+  --sun-100: #fef3c7;
+  --sun-300: #fcd34d;
+  --sun-400: #fbbf24;
+  --sun-500: #f59e0b;
+  --sun-700: #b45309;
+
+  /* ── six section hues ───────────────────────────────────────────────── */
+  --sec-visual: #8b5cf6;
+  --sec-visual-soft: #f3eeff;
+  --sec-auditory: #0ea5e9;
+  --sec-auditory-soft: #e5f5fe;
+  --sec-tactile: #f43f5e;
+  --sec-tactile-soft: #ffe9ee;
+  --sec-mobility: #f97316;
+  --sec-mobility-soft: #fff0e4;
+  --sec-language: #10b981;
+  --sec-language-soft: #e3f8f0;
+  --sec-manual: #4f46e5;
+  --sec-manual-soft: #eaebff;
+
+  /* ── neutrals: warm off-white, never clinical grey ──────────────────── */
+  --ground: #f7f7fc;
+  --ground-2: #eff0fa;
   --surface: #ffffff;
-  --surface-2: #f4f5fb;
-  --surface-3: #e9ecf7;
-  --ink: #1e2233;
-  --ink-2: #4b5169;
-  /* 4.9:1 on white — muted text still has to clear AA. */
-  --ink-3: #6c7290;
-  --line: #e3e6f4;
-  --line-soft: #edeff9;
+  --surface-2: #f6f7fd;
+  --surface-3: #eceefa;
+  --ink: #17182b;
+  --ink-2: #4a4d68;
+  --ink-3: #71748f;
+  --line: #e6e8f5;
+  --line-soft: #f0f1fa;
 
-  /* primary — playful blue */
-  --accent: #5457e5;
-  --accent-hover: #4245c9;
-  --accent-soft: #edeefd;
-  --accent-line: #c9cbfa;
-
-  /* status — a warm, friendly ramp, not a traffic light */
-  --st-on-track: #17a673;
-  --st-emerging: #d69e1e;
-  --st-needs-focus: #e8792b;
-  --st-consult: #e2493b;
+  /* ── status ─────────────────────────────────────────────────────────── */
+  --st-on-track: #0f9d6e;
+  --st-emerging: #d08700;
+  --st-needs-focus: #ea6f1e;
+  --st-consult: #e0455a;
   --on-status: #ffffff;
 
-  --st-on-track-soft: #e5f7ef;
-  --st-emerging-soft: #fbf1dc;
-  --st-needs-focus-soft: #fdedde;
-  --st-consult-soft: #fbe6e3;
+  --st-on-track-soft: #e2f7ef;
+  --st-emerging-soft: #fdf3dc;
+  --st-needs-focus-soft: #fdeee2;
+  --st-consult-soft: #fdeaed;
 
-  --focus-ring: #5457e5;
+  --focus-ring: var(--brand-600);
 
-  /* pastel cards — playful accent panels, echoing the reference UI */
-  --pastel-blue-1: #e2e8ff;
-  --pastel-blue-2: #aebbff;
-  --pastel-green-1: #e0f7e3;
-  --pastel-green-2: #b3ecbb;
-  --pastel-pink-1: #fde3f2;
-  --pastel-pink-2: #f7b3dd;
-  --pastel-amber-1: #fff2df;
-  --pastel-amber-2: #ffd699;
+  /* ── elevation: one ambient layer + one directional layer ────────────
+     No inset gloss/bevel — that double-highlight trick is what makes a
+     surface read as a toy rather than a designed product. Depth comes from
+     two honest drop shadows only, the way it would on a real desk. */
+  --clay-sm: 0 1px 2px rgba(23, 24, 43, 0.05), 0 1px 3px -1px rgba(23, 24, 43, 0.06);
+  --clay: 0 1px 2px rgba(23, 24, 43, 0.04), 0 8px 20px -10px rgba(23, 24, 43, 0.16);
+  --clay-lg: 0 2px 4px rgba(23, 24, 43, 0.04), 0 20px 40px -20px rgba(23, 24, 43, 0.22);
+  --clay-brand: 0 2px 4px rgba(79, 70, 229, 0.14), 0 14px 26px -14px rgba(79, 70, 229, 0.4);
 
-  --shadow-xs: 0 1px 2px rgba(30, 34, 51, 0.05);
-  --shadow-sm: 0 1px 2px rgba(30, 34, 51, 0.05), 0 1px 3px rgba(30, 34, 51, 0.05);
-  --shadow-md: 0 2px 4px rgba(30, 34, 51, 0.04), 0 14px 30px -18px rgba(30, 34, 51, 0.28);
-  --shadow-lg: 0 4px 10px rgba(30, 34, 51, 0.06), 0 28px 52px -24px rgba(30, 34, 51, 0.32);
+  /* legacy aliases, still referenced in a few places */
+  --shadow-xs: var(--clay-sm);
+  --shadow-sm: var(--clay-sm);
+  --shadow-md: var(--clay);
+  --shadow-lg: var(--clay-lg);
 
-  --radius-sm: 10px;
-  --radius: 16px;
-  --radius-lg: 22px;
+  /* ── radii: chunky, toy-like ────────────────────────────────────────── */
+  --radius-xs: 10px;
+  --radius-sm: 14px;
+  --radius: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
   --radius-pill: 999px;
+
+  /* ── motion ─────────────────────────────────────────────────────────── */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 160ms;
+  --dur: 240ms;
+  --dur-slow: 380ms;
 }
 
+/* Dark mode is supported but light is the designed-for default. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --ground: #141622;
-    --ground-2: #101220;
-    --surface: #1b1e2e;
-    --surface-2: #212437;
-    --surface-3: #292c42;
-    --ink: #eceefb;
-    --ink-2: #b7bcd8;
-    --ink-3: #888ead;
-    --line: #2f3350;
-    --line-soft: #262a42;
+    --ground: #12131f;
+    --ground-2: #0d0e18;
+    --surface: #1a1c2b;
+    --surface-2: #212335;
+    --surface-3: #2a2d42;
+    --ink: #edeefb;
+    --ink-2: #b6b9d4;
+    --ink-3: #8b8fac;
+    --line: #2e3146;
+    --line-soft: #262940;
 
-    --accent: #8a8cf5;
-    --accent-hover: #a3a5f8;
-    --accent-soft: #262a4d;
-    --accent-line: #40437a;
+    --accent: #8f92ff;
+    --accent-hover: #a7a9ff;
+    --accent-soft: #23244a;
+    --accent-line: #3d3f76;
+    --on-accent: #12131f;
 
-    --st-on-track: #59cf9d;
-    --st-emerging: #e0b756;
-    --st-needs-focus: #ef9a5f;
-    --st-consult: #ef7767;
-    --on-status: #141622;
+    --st-on-track: #4ecfa0;
+    --st-emerging: #e2b95c;
+    --st-needs-focus: #f09a63;
+    --st-consult: #f0798b;
+    --on-status: #12131f;
 
-    --st-on-track-soft: #1a3329;
-    --st-emerging-soft: #362c19;
-    --st-needs-focus-soft: #382418;
-    --st-consult-soft: #3a1e19;
+    --st-on-track-soft: #16332a;
+    --st-emerging-soft: #332b17;
+    --st-needs-focus-soft: #35251a;
+    --st-consult-soft: #351d24;
 
-    --focus-ring: #8a8cf5;
+    --focus-ring: #8f92ff;
 
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
-    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4), 0 14px 30px -18px rgba(0, 0, 0, 0.9);
-    --shadow-lg: 0 4px 10px rgba(0, 0, 0, 0.45), 0 28px 52px -24px rgba(0, 0, 0, 0.95);
+    --clay-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px -1px rgba(0, 0, 0, 0.3);
+    --clay: 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 28px -14px rgba(0, 0, 0, 0.75);
+    --clay-lg: 0 4px 8px rgba(0, 0, 0, 0.4), 0 28px 56px -24px rgba(0, 0, 0, 0.85);
+    --clay-brand: 0 2px 6px rgba(0, 0, 0, 0.4), 0 16px 30px -16px rgba(90, 84, 220, 0.55);
   }
 }
 
 :root[data-theme="dark"] {
-  --ground: #141622;
-  --ground-2: #101220;
-  --surface: #1b1e2e;
-  --surface-2: #212437;
-  --surface-3: #292c42;
-  --ink: #eceefb;
-  --ink-2: #b7bcd8;
-  --ink-3: #888ead;
-  --line: #2f3350;
-  --line-soft: #262a42;
+  --ground: #12131f;
+  --ground-2: #0d0e18;
+  --surface: #1a1c2b;
+  --surface-2: #212335;
+  --surface-3: #2a2d42;
+  --ink: #edeefb;
+  --ink-2: #b6b9d4;
+  --ink-3: #8b8fac;
+  --line: #2e3146;
+  --line-soft: #262940;
 
-  --accent: #8a8cf5;
-  --accent-hover: #a3a5f8;
-  --accent-soft: #262a4d;
-  --accent-line: #40437a;
+  --accent: #8f92ff;
+  --accent-hover: #a7a9ff;
+  --accent-soft: #23244a;
+  --accent-line: #3d3f76;
+  --on-accent: #12131f;
 
-  --st-on-track: #59cf9d;
-  --st-emerging: #e0b756;
-  --st-needs-focus: #ef9a5f;
-  --st-consult: #ef7767;
-  --on-status: #141622;
+  --st-on-track: #4ecfa0;
+  --st-emerging: #e2b95c;
+  --st-needs-focus: #f09a63;
+  --st-consult: #f0798b;
+  --on-status: #12131f;
 
-  --st-on-track-soft: #1a3329;
-  --st-emerging-soft: #362c19;
-  --st-needs-focus-soft: #382418;
-  --st-consult-soft: #3a1e19;
+  --st-on-track-soft: #16332a;
+  --st-emerging-soft: #332b17;
+  --st-needs-focus-soft: #35251a;
+  --st-consult-soft: #351d24;
 
-  --focus-ring: #8a8cf5;
+  --focus-ring: #8f92ff;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
-  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4), 0 14px 30px -18px rgba(0, 0, 0, 0.9);
-  --shadow-lg: 0 4px 10px rgba(0, 0, 0, 0.45), 0 28px 52px -24px rgba(0, 0, 0, 0.95);
+  --clay-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px -1px rgba(0, 0, 0, 0.3);
+  --clay: 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 28px -14px rgba(0, 0, 0, 0.75);
+  --clay-lg: 0 4px 8px rgba(0, 0, 0, 0.4), 0 28px 56px -24px rgba(0, 0, 0, 0.85);
+  --clay-brand: 0 2px 6px rgba(0, 0, 0, 0.4), 0 16px 30px -16px rgba(90, 84, 220, 0.55);
 }
 
 @theme inline {
@@ -159,9 +211,10 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-line: var(--accent-line);
+  --color-sun: var(--sun-400);
 
-  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-baloo), var(--font-jakarta), ui-sans-serif, sans-serif;
 }
 
 /* ── base ────────────────────────────────────────────────────────────────── */
@@ -173,6 +226,7 @@
 html {
   background: var(--ground);
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -183,6 +237,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 .display,
@@ -191,44 +246,51 @@ h2,
 h3 {
   font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: -0.015em;
-  line-height: 1.14;
+  letter-spacing: -0.01em;
+  line-height: 1.12;
   text-wrap: balance;
-  color: var(--ink);
+  /* No colour set here on purpose: it inherits body's ink colour, which
+     keeps headings dark by default WITHOUT out-ranking a `text-white` (or
+     any text-* colour) class placed on a heading. Tailwind's utilities live
+     in a CSS @layer, and unlayered author rules beat layered ones regardless
+     of specificity — an explicit `color: var(--ink)` here would always have
+     won over `.text-white`, which is exactly why headings on the purple
+     hero/CTA/report-cover panels were rendering in dark ink and going
+     unreadable. Inheriting instead of declaring sidesteps that entirely. */
 }
 
 .display {
-  font-size: clamp(2.1rem, 5.4vw, 3.05rem);
-  line-height: 1.06;
+  font-size: clamp(2.4rem, 5.6vw, 4rem);
+  line-height: 1.04;
   letter-spacing: -0.02em;
 }
 
 h1 {
-  font-size: clamp(1.75rem, 4vw, 2.2rem);
+  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
 }
-
 h2 {
-  font-size: 1.4rem;
+  font-size: clamp(1.45rem, 2.4vw, 1.9rem);
 }
-
 h3 {
-  font-size: 1.08rem;
-  font-weight: 600;
+  font-size: 1.12rem;
+  font-weight: 700;
 }
 
 h4,
 .label,
 .eyebrow {
   font-family: var(--font-sans);
-  font-weight: 600;
-  letter-spacing: 0;
+  font-weight: 700;
   color: var(--ink);
 }
 
 .eyebrow {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
@@ -238,16 +300,15 @@ h4,
 }
 
 .lede {
-  font-size: 1.06rem;
+  font-size: clamp(1.02rem, 1.3vw, 1.15rem);
   line-height: 1.62;
   color: var(--ink-2);
 }
 
-/* Long-form report prose — plain sans, easy and quick to read. */
 .prose-read {
   font-family: var(--font-sans);
   font-size: 1.02rem;
-  line-height: 1.68;
+  line-height: 1.7;
   color: var(--ink-2);
 }
 
@@ -256,9 +317,9 @@ h4,
 }
 
 :focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 ::selection {
@@ -266,115 +327,178 @@ h4,
   color: var(--ink);
 }
 
-/* ── surfaces ────────────────────────────────────────────────────────────── */
+/* ── clay surfaces ───────────────────────────────────────────────────────── */
 
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--clay-sm);
 }
 
-.card-raised {
-  box-shadow: var(--shadow-md);
-}
-
-/* Playful pastel panels — used for hero feature cards and module intros.
-   These are always a light gradient, so their text stays fixed dark ink
-   regardless of the site's light/dark theme — otherwise dark-mode's pale
-   ink colour goes illegible on a light pastel background. */
-.card-pastel {
-  --ink: #1b2036;
-  --ink-2: #3d4260;
-  --ink-3: #5b6088;
-  --accent: #4245c9;
-  --accent-hover: #33369e;
-  --on-status: #ffffff;
-  --line: #d6d9f2;
-  --line-soft: #e4e6f7;
-  --surface: #ffffff;
-  --surface-2: #f4f5fb;
-  border: none;
+.clay {
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  color: var(--ink);
-  background: linear-gradient(160deg, var(--p1), var(--p2));
+  box-shadow: var(--clay);
 }
-.card-pastel-blue {
-  --p1: var(--pastel-blue-1);
-  --p2: var(--pastel-blue-2);
+
+.clay-lg {
+  box-shadow: var(--clay-lg);
 }
-.card-pastel-green {
-  --p1: var(--pastel-green-1);
-  --p2: var(--pastel-green-2);
+
+/* Interactive clay: lifts on hover, squashes on press. */
+.clay-press {
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
 }
-.card-pastel-pink {
-  --p1: var(--pastel-pink-1);
-  --p2: var(--pastel-pink-2);
+.clay-press:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--clay-lg);
 }
-.card-pastel-amber {
-  --p1: var(--pastel-amber-1);
-  --p2: var(--pastel-amber-2);
+.clay-press:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+  box-shadow: var(--clay-sm);
+}
+
+/* Tinted panels — each section/feature gets its own soft ground. */
+.tint {
+  border: 1px solid color-mix(in srgb, var(--tint-color) 18%, transparent);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(
+      120% 120% at 12% 0%,
+      color-mix(in srgb, var(--tint-color) 16%, var(--surface)) 0%,
+      var(--surface) 62%
+    );
+  box-shadow: var(--clay-sm);
 }
 
 /* ── buttons ─────────────────────────────────────────────────────────────── */
 
 .btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   font-family: var(--font-sans);
-  font-size: 0.94rem;
-  font-weight: 700;
-  letter-spacing: -0.003em;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.005em;
   border-radius: var(--radius-pill);
-  padding: 0.75rem 1.5rem;
+  padding: 0.85rem 1.7rem;
+  min-height: 48px;
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
+  text-decoration: none;
   transition:
-    background-color 0.16s ease,
-    border-color 0.16s ease,
-    color 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.08s ease;
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .btn:active:not(:disabled) {
-  transform: translateY(1px) scale(0.99);
+  transform: translateY(1px);
 }
 
 .btn:disabled {
-  opacity: 0.42;
+  opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
+/* One shadow each — an ambient neutral layer plus a single tinted layer for
+   depth. No inset "gloss" highlights: that double-bevel is what reads as a
+   toy rather than a product. Colour communicates state (hover = one step
+   darker), not a filter or a second gradient stop. */
 .btn-primary {
-  background: var(--accent);
-  color: var(--on-status);
-  box-shadow: var(--shadow-sm);
+  background: var(--brand-600);
+  color: var(--on-accent);
+  box-shadow:
+    0 1px 2px rgba(23, 24, 43, 0.08),
+    0 8px 20px -10px rgba(79, 70, 229, 0.45);
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-  box-shadow: var(--shadow-md);
+  background: var(--brand-700);
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(23, 24, 43, 0.1),
+    0 14px 28px -12px rgba(79, 70, 229, 0.5);
+}
+.btn-primary:active:not(:disabled) {
+  background: var(--brand-700);
+  box-shadow: 0 1px 2px rgba(23, 24, 43, 0.1);
+}
+
+.btn-sun {
+  background: var(--sun-500);
+  color: #2b1500;
+  box-shadow:
+    0 1px 2px rgba(23, 24, 43, 0.08),
+    0 8px 20px -10px rgba(180, 83, 9, 0.4);
+}
+.btn-sun:hover:not(:disabled) {
+  background: var(--sun-700);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(23, 24, 43, 0.1),
+    0 14px 26px -12px rgba(180, 83, 9, 0.46);
+}
+.btn-sun:active:not(:disabled) {
+  background: var(--sun-700);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(23, 24, 43, 0.1);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+  box-shadow: 0 1px 2px rgba(23, 24, 43, 0.05);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -6px rgba(23, 24, 43, 0.14);
+}
+
+.btn-soft {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  border-color: transparent;
+}
+.btn-soft:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
 }
 
 .btn-ghost {
-  background: var(--surface);
+  background: transparent;
   color: var(--ink-2);
-  border-color: var(--line);
+  min-height: 42px;
+  padding: 0.6rem 1rem;
 }
 .btn-ghost:hover:not(:disabled) {
   background: var(--surface-2);
   color: var(--ink);
-  border-color: var(--ink-3);
 }
 
+/* legacy alias */
 .btn-quiet {
   background: transparent;
   color: var(--ink-3);
-  padding: 0.5rem 0.75rem;
+  min-height: 40px;
+  padding: 0.5rem 0.9rem;
+  font-weight: 700;
 }
 .btn-quiet:hover:not(:disabled) {
   color: var(--ink);
@@ -383,79 +507,92 @@ h4,
 
 .btn-sm {
   font-size: 0.85rem;
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1.1rem;
+  min-height: 40px;
+}
+
+.btn-lg {
+  font-size: 1.05rem;
+  padding: 1.05rem 2.2rem;
+  min-height: 58px;
+}
+
+.btn-block {
+  width: 100%;
 }
 
 /* ── forms ───────────────────────────────────────────────────────────────── */
 
 .label {
   display: block;
-  font-size: 0.83rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--ink-2);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
 }
 
 .field {
   width: 100%;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 0.78rem 0.9rem;
+  padding: 0.9rem 1rem;
+  min-height: 52px;
   color: var(--ink);
   font-family: inherit;
   font-size: 1rem;
+  font-weight: 500;
+  box-shadow: inset 0 2px 4px rgba(23, 24, 43, 0.04);
   transition:
-    border-color 0.16s ease,
-    box-shadow 0.16s ease,
-    background-color 0.16s ease;
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
 }
 .field::placeholder {
   color: var(--ink-3);
+  font-weight: 400;
 }
 .field:hover:not(:focus) {
-  border-color: var(--ink-3);
+  border-color: var(--accent-line);
 }
 .field:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
-
 .field-valid {
-  border-color: var(--accent-line);
-  background: color-mix(in srgb, var(--accent-soft) 35%, var(--surface));
+  border-color: color-mix(in srgb, var(--st-on-track) 45%, var(--line));
+  background: color-mix(in srgb, var(--st-on-track-soft) 45%, var(--surface));
 }
-
 .field-error {
   border-color: var(--st-consult);
 }
 .field-error:focus {
-  box-shadow: 0 0 0 3px var(--st-consult-soft);
+  box-shadow: 0 0 0 4px var(--st-consult-soft);
 }
 
 .hint {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   line-height: 1.5;
   color: var(--ink-3);
-  margin-top: 0.4rem;
+  margin-top: 0.5rem;
 }
-
 .hint-error {
   color: var(--st-consult);
+  font-weight: 600;
 }
 
-/* ── chips ───────────────────────────────────────────────────────────────── */
+/* ── chips & badges ──────────────────────────────────────────────────────── */
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.005em;
-  padding: 0.3rem 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  padding: 0.38rem 0.8rem;
   border-radius: var(--radius-pill);
   background: var(--chip-bg, var(--surface-2));
   color: var(--chip-fg, var(--ink-2));
@@ -463,185 +600,216 @@ h4,
   white-space: nowrap;
 }
 
-/* Module / section wayfinding chip, shown on the sticky assessment header. */
-.module-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-soft);
-  border-radius: var(--radius-pill);
-  padding: 0.32rem 0.75rem 0.32rem 0.55rem;
-}
-
-/* ── segmented answer control ────────────────────────────────────────────── */
-
-.seg {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  padding: 4px;
-}
-
-.seg-btn {
-  position: relative;
-  font-family: var(--font-sans);
-  font-size: 0.87rem;
-  font-weight: 700;
-  color: var(--ink-2);
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius-pill);
-  padding: 0.55rem 0.4rem;
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.seg-btn:hover:not([aria-checked="true"]) {
-  background: var(--surface);
-  color: var(--ink);
-}
-
-.seg-btn[aria-checked="true"] {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: var(--shadow-sm);
-}
-.seg-btn[aria-checked="true"][data-value="2"] {
-  color: var(--st-on-track);
-  box-shadow: inset 0 0 0 1.5px var(--st-on-track), var(--shadow-sm);
-}
-.seg-btn[aria-checked="true"][data-value="1"] {
-  color: var(--st-emerging);
-  box-shadow: inset 0 0 0 1.5px var(--st-emerging), var(--shadow-sm);
-}
-.seg-btn[aria-checked="true"][data-value="0"] {
-  color: var(--ink-2);
-  box-shadow: inset 0 0 0 1.5px var(--ink-3), var(--shadow-sm);
-}
-
-/* ── question card ───────────────────────────────────────────────────────── */
-
-.q-card {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1.1rem 1.15rem;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.q-card[data-answered="true"] {
-  border-color: var(--accent-line);
-  background: color-mix(in srgb, var(--accent-soft) 30%, var(--surface));
+.chip-lg {
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
 }
 
 /* ── progress ────────────────────────────────────────────────────────────── */
 
-.progress-track {
-  height: 6px;
-  width: 100%;
-  background: var(--line);
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: var(--radius-pill);
-  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.step-dot {
-  height: 5px;
-  border-radius: var(--radius-pill);
-  background: var(--line);
-  transition: background-color 0.3s ease;
-}
-.step-dot[data-state="done"] {
-  background: var(--accent);
-}
-.step-dot[data-state="current"] {
-  background: var(--accent);
-  opacity: 0.45;
-}
-
-/* A wide, friendly progress bar used throughout the report. */
 .meter-track {
-  height: 12px;
+  height: 14px;
   width: 100%;
-  background: var(--surface-2);
+  background: var(--surface-3);
   border-radius: var(--radius-pill);
   overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(23, 24, 43, 0.08);
 }
 .meter-fill {
   height: 100%;
   border-radius: var(--radius-pill);
-  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  background: linear-gradient(90deg, var(--brand-400), var(--brand-600));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: width 700ms var(--ease-out);
 }
 
-/* ── sticky bottom action bar ────────────────────────────────────────────── */
+.progress-track {
+  height: 10px;
+  width: 100%;
+  background: var(--surface-3);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(23, 24, 43, 0.08);
+}
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--sun-400), var(--brand-500));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: width 500ms var(--ease-out);
+}
+
+.step-dot {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  transition: background-color var(--dur) var(--ease-out);
+}
+.step-dot[data-state="done"] {
+  background: var(--brand-500);
+}
+.step-dot[data-state="current"] {
+  background: var(--sun-400);
+}
+
+/* ── answer buttons (the assessment's core interaction) ──────────────────── */
+
+.answer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 1.05rem 1.25rem;
+  border-radius: var(--radius);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--clay-sm);
+  font-family: var(--font-sans);
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+.answer:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--tone) 55%, var(--line));
+  box-shadow: var(--clay);
+}
+.answer:active:not(:disabled) {
+  transform: translateY(1px) scale(0.995);
+}
+.answer[data-selected="true"] {
+  border-color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 8%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 14%, transparent);
+}
+.answer-key {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--tone) 15%, var(--surface));
+  color: var(--tone);
+}
+.answer[data-selected="true"] .answer-key {
+  background: var(--tone);
+  color: #fff;
+}
+
+/* ── sticky action bar ───────────────────────────────────────────────────── */
 
 .action-bar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 30;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(10px);
+  z-index: 40;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(16px);
   border-top: 1px solid var(--line);
-  padding: 0.65rem max(1.25rem, env(safe-area-inset-left));
-  padding-bottom: max(0.65rem, env(safe-area-inset-bottom));
+  padding: 0.9rem max(1.25rem, env(safe-area-inset-left));
+  padding-bottom: max(0.9rem, env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 28px -18px rgba(23, 24, 43, 0.35);
 }
 
-/* ── video suggestion card ───────────────────────────────────────────────── */
+/* ── decorative ──────────────────────────────────────────────────────────── */
 
-.video-thumb {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius);
-  background: linear-gradient(160deg, var(--surface-3), var(--surface-2));
-  display: flex;
+/* Soft colour blooms behind hero sections. Purely decorative, aria-hidden.
+   Painted as a radial gradient rather than a blurred circle: a 72px blur over
+   a 460px element costs real milliseconds every frame on a mid-range Android,
+   and this is visually indistinguishable for free. */
+.bloom {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.5;
+  pointer-events: none;
+  background-image: radial-gradient(
+    closest-side,
+    var(--bloom-color, currentColor) 0%,
+    color-mix(in srgb, var(--bloom-color, currentColor) 55%, transparent) 45%,
+    transparent 100%
+  );
+}
+
+/* The KGK logo is drawn in near-black type. On a dark ground it disappears, so
+   in dark mode it sits on a light plate rather than being recoloured — the
+   brand mark itself must not change. */
+.brand-plate {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  border-radius: 12px;
+  transition: background-color var(--dur) var(--ease-out);
 }
 
-.video-play {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  size: 3rem;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 999px;
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-  color: var(--accent);
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand-plate {
+    background: #ffffff;
+    padding: 4px 10px;
+  }
 }
-
-/* ── child / profile card ────────────────────────────────────────────────── */
+:root[data-theme="dark"] .brand-plate {
+  background: #ffffff;
+  padding: 4px 10px;
+}
 
 .avatar-circle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
+  font-family: var(--font-display);
   font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--on-accent);
+  background: var(--brand-600);
   flex-shrink: 0;
+}
+
+.video-thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--surface-3), var(--surface-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--clay-sm);
+}
+.video-play {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--clay);
+  transition: transform var(--dur) var(--ease-spring);
+}
+.video-thumb:hover .video-play {
+  transform: scale(1.08);
+}
+
+.q-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  box-shadow: var(--clay-sm);
+}
+.q-card[data-answered="true"] {
+  border-color: var(--accent-line);
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
 }
 
 /* ── motion ──────────────────────────────────────────────────────────────── */
@@ -649,7 +817,7 @@ h4,
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -663,7 +831,7 @@ h4,
     opacity: 0;
   }
   60% {
-    transform: scale(1.08);
+    transform: scale(1.1);
     opacity: 1;
   }
   100% {
@@ -678,13 +846,60 @@ h4,
   }
 }
 
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.06);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-42px) scale(1);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-12vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(78vh) rotate(540deg);
+    opacity: 0;
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
 @keyframes ring-pop {
   0% {
     transform: scale(0.4);
     opacity: 0;
   }
   55% {
-    transform: scale(1.12);
+    transform: scale(1.14);
     opacity: 1;
   }
   100% {
@@ -693,43 +908,40 @@ h4,
   }
 }
 
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-10vh) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(60vh) rotate(360deg);
-    opacity: 0;
-  }
-}
-
 .animate-rise {
-  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise var(--dur-slow) var(--ease-out) both;
 }
-
 .animate-pop {
-  animation: pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: pop 320ms var(--ease-spring) both;
 }
-
-.tick path {
-  stroke-dasharray: 22;
-  stroke-dashoffset: 22;
-  animation: draw 0.35s ease-out 0.05s forwards;
+.animate-slide-in {
+  animation: slide-in 320ms var(--ease-out) both;
 }
-
+.animate-float-up {
+  animation: float-up 1000ms var(--ease-out) both;
+}
+.animate-bob {
+  animation: bob 3.5s ease-in-out infinite;
+}
 .celebrate-ring {
-  animation: ring-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: ring-pop 520ms var(--ease-spring) both;
 }
-
 .confetti-piece {
   position: absolute;
   top: 0;
-  border-radius: 2px;
+  border-radius: 3px;
   animation: confetti-fall linear forwards;
+}
+.tick path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: draw 340ms var(--ease-out) 60ms forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
@@ -742,50 +954,175 @@ h4,
   }
 }
 
-/* ── print ───────────────────────────────────────────────────────────────── */
+/* ── print (the report is a document parents keep) ───────────────────────── */
 
+/* ══════════════════════════════════════════════════════════════════════════
+   PRINT — a typeset document, not a screenshot of the app.
+
+   The screen version is a colourful clay-morphic product UI; a downloaded
+   report is a document a parent keeps and a paediatrician reads. Those are
+   different artefacts. This block does not just strip shadows — it repaints
+   every coloured surface (icon tiles, status pills, progress bars, the cover)
+   to a restrained ink-on-white palette, because a printer or a PDF viewer
+   showing solid brand-purple and six candy section colours reads as "printed
+   webpage", not "report".
+
+   Note on specificity: rules against `.card`, `.chip`, `.meter-fill` etc. win
+   here purely because this block is later in the cascade at equal
+   specificity — no !important needed. `.section-tile` is the one exception:
+   its colour comes from an inline `style` prop (computed per section in JS),
+   so only an `!important` rule can reach it.
+   ══════════════════════════════════════════════════════════════════════ */
 @media print {
-  * {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    color-adjust: exact;
-  }
   :root {
     --ground: #ffffff;
     --ground-2: #ffffff;
     --surface: #ffffff;
     --surface-2: #ffffff;
-    --surface-3: #ffffff;
-    --ink: #14162a;
-    --ink-2: #3a3f57;
-    --ink-3: #63698a;
-    --line: #cfd2e6;
-    --line-soft: #e3e5f3;
-    --shadow-xs: none;
-    --shadow-sm: none;
-    --shadow-md: none;
-    --shadow-lg: none;
+    --surface-3: #f4f4f8;
+    --ink: #16171f;
+    --ink-2: #3d4051;
+    --ink-3: #64677a;
+    --line: #d7d9e3;
+    --line-soft: #e8e9f0;
+    --clay-sm: none;
+    --clay: none;
+    --clay-lg: none;
+    --clay-brand: none;
   }
+
   .no-print {
     display: none !important;
   }
+
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: var(--ink);
+    font-size: 10.5pt;
+    line-height: 1.5;
+  }
+
+  /* ── document type rhythm ────────────────────────────────────────────── */
+  h1 {
+    font-size: 20pt;
+  }
+  h2 {
+    font-size: 15pt;
+  }
+  h3 {
+    font-size: 12pt;
+  }
+  .display {
+    font-size: 22pt !important;
+    letter-spacing: -0.01em;
+  }
+  .lede {
+    font-size: 10.5pt;
+  }
+  .prose-read {
+    font-size: 10.5pt;
+    line-height: 1.6;
+  }
+
+  /* ── surfaces: flat, bordered, no colour washes ──────────────────────── */
   .card,
+  .clay,
   .q-card,
-  .card-pastel {
-    box-shadow: none;
+  .tint {
+    background: #fff;
+    box-shadow: none !important;
+    border: 1px solid var(--line);
     break-inside: avoid;
   }
   .print-break {
     break-before: page;
   }
-  body {
-    background: #ffffff;
-    font-size: 11pt;
+  .bloom,
+  .confetti-piece {
+    display: none !important;
   }
+
+  /* ── the cover: a letterhead, not a purple hero panel ────────────────── */
+  .report-cover {
+    background: #fff !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-bottom: 2px solid var(--ink) !important;
+    border-radius: 0 !important;
+    padding: 0 0 8mm !important;
+    text-align: left !important;
+  }
+  .report-cover * {
+    color: var(--ink) !important;
+  }
+  .report-cover dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    gap: 6mm;
+    text-align: left;
+    max-width: none;
+  }
+  .report-cover .avatar-circle,
+  .report-cover img {
+    box-shadow: none !important;
+    border: 1.5px solid var(--ink) !important;
+  }
+
+  /* ── status pills and tags: outline, not solid fills ─────────────────── */
+  .chip {
+    background: #fff;
+    color: var(--ink) !important;
+    border: 1.1px solid var(--ink-3);
+    font-weight: 700;
+  }
+
+  /* ── section icon tiles: ink outline instead of six candy colours ────── */
+  .section-tile {
+    background: #fff !important;
+    color: var(--ink) !important;
+    box-shadow: none !important;
+    border: 1.3px solid var(--ink-2);
+  }
+
+  /* ── progress bars: solid ink fill, bordered track ────────────────────── */
+  .meter-track {
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: none;
+  }
+  .meter-fill {
+    background: var(--ink) !important;
+    box-shadow: none !important;
+  }
+
+  /* ── avatars: flat, bordered ───────────────────────────────────────────── */
+  .avatar-circle {
+    background: #fff;
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+  }
+
+  /* ── the course recommendation card loses its gold wash ──────────────── */
+  .recommend-card {
+    background: #fff !important;
+  }
+
   a[href]::after {
     content: "";
   }
+  .print-url::after {
+    content: " — " attr(href);
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+
   @page {
-    margin: 14mm;
+    margin: 16mm 14mm;
   }
 }

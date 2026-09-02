@@ -1,186 +1,440 @@
-import Link from "next/link";
-import { DOMAINS } from "@/content/domains";
+import Image from "next/image";
+import { DOMAINS, MODULES, MODULE_STAGES } from "@/content/domains";
 import { ITEMS } from "@/content/items";
 import { DISCLAIMER } from "@/lib/narrative";
 import {
+  Badge,
+  Blooms,
+  BrainJourney,
+  Button,
+  ButtonLink,
+  Card,
   Disclaimer,
-  SectionLabel,
+  Footer,
+  IconArrowRight,
+  IconBolt,
+  IconCheck,
+  IconClock,
+  IconHeart,
+  IconShield,
+  IconSparkle,
+  IconStarFilled,
+  IconTrophy,
+  IconUsers,
+  Mascot,
+  Section,
+  SectionHeading,
+  SectionTile,
   Shell,
-  Tick,
+  Stat,
   TopBar,
   domainColor,
 } from "@/components/ui";
 
-const STEPS: [string, string][] = [
-  [
-    "Add your child",
-    "Just their name, birthday and gender. We use that to pick the right questions for their age.",
-  ],
-  [
-    "Answer what you see today",
-    "Every question comes with a simple way to check, so you can try it rather than guess. “Not yet” is a useful answer, not a bad one.",
-  ],
-  [
-    "Get a fun, easy-to-read report",
-    "Where your child is strong, where they'd love a little more practice, and fun videos and activities to try together.",
-  ],
+const TRUST = [
+  { value: "10K+", label: "Children benefited", icon: <IconHeart size={20} /> },
+  { value: "17+", label: "Years of KGK Program", icon: <IconTrophy size={20} /> },
+  { value: "200K+", label: "Parents in workshops", icon: <IconUsers size={20} /> },
+  { value: "42", label: "Milestones tracked", icon: <IconStarFilled size={20} /> },
 ];
 
-const CARDS: [string, string, "blue" | "green" | "pink"][] = [
-  [
-    "Six fun areas to explore",
-    "Visual, auditory, tactile, mobility, language and manual skills — checked with simple, playful questions.",
-    "blue",
-  ],
-  [
-    "Grows with your child",
-    "The right module is chosen automatically for their age, from newborn all the way to six years old.",
-    "green",
-  ],
-  [
-    "A report to keep",
-    "Clear progress bars, a friendly summary, and videos to watch together — saved on their profile for good.",
-    "pink",
-  ],
+const STEPS: {
+  title: string;
+  body: string;
+  image: string;
+  alt: string;
+  tint: string;
+}[] = [
+  {
+    title: "Add your child",
+    body: "Name, birthday, a photo if you like. We work out their age and pick the exact module built for it — nothing you see will be irrelevant.",
+    image: "/images/play-blocks.jpg",
+    alt: "A baby playing with wooden blocks",
+    tint: "var(--sec-manual)",
+  },
+  {
+    title: "Answer what you see today",
+    body: "Short, friendly questions — one at a time, each with a simple way to check together. Around ten minutes, and you can stop and come back.",
+    image: "/images/parent-reading.jpg",
+    alt: "A parent reading a book with their child",
+    tint: "var(--sec-language)",
+  },
+  {
+    title: "Get a report you keep",
+    body: "Clear progress bars across all six areas, a plain-language summary, videos to watch together, and the next course to take.",
+    image: "/images/outdoor-play.jpg",
+    alt: "A child playing outdoors in autumn leaves",
+    tint: "var(--sec-visual)",
+  },
 ];
 
 export default function Home() {
   return (
     <>
       <TopBar
-        bordered={false}
         right={
-          <Link href="/children" className="btn btn-primary btn-sm">
+          <ButtonLink href="/children" size="sm" iconRight={<IconArrowRight size={16} />}>
             Get started
-          </Link>
+          </ButtonLink>
         }
       />
 
-      <main className="pb-24">
-        <Shell>
-          {/* ── hero ──────────────────────────────────────────────────── */}
-          <section className="pt-12 sm:pt-20">
-            <p className="eyebrow eyebrow-accent animate-rise">
-              Kaushalya Genius Kid Program · Ages 0–6
-            </p>
+      <main>
+        {/* ══ hero ═════════════════════════════════════════════════════════ */}
+        <div className="relative overflow-hidden">
+          <Blooms />
+          <Shell width="full" className="relative">
+            <div className="grid items-center gap-12 pb-8 pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:pb-20 lg:pt-20">
+              <div>
+                <span className="animate-rise inline-flex items-center gap-2 rounded-full border border-[var(--accent-line)] bg-[var(--surface)] px-4 py-2 text-[0.8rem] font-bold text-accent shadow-[var(--clay-sm)]">
+                  <IconSparkle size={16} />
+                  Ages 0–6 · 7 modules · 6 areas
+                </span>
 
-            <h1
-              className="display animate-rise mt-5"
-              style={{ animationDelay: "60ms" }}
-            >
-              Every child is born a genius —{" "}
-              <span style={{ color: "var(--accent)" }}>let&rsquo;s find theirs.</span>
-            </h1>
+                <h1
+                  className="display animate-rise mt-6"
+                  style={{ animationDelay: "60ms" }}
+                >
+                  Every child is born a genius.
+                  <br />
+                  <span style={{ color: "var(--accent)" }}>Let&rsquo;s find theirs.</span>
+                </h1>
 
-            <p
-              className="lede animate-rise mt-6 max-w-[46ch]"
-              style={{ animationDelay: "120ms" }}
-            >
-              A short, playful check-up for how your child is growing. Answer a
-              few simple questions, and get a clear, friendly report with fun
-              things to try together at home.
-            </p>
+                <p
+                  className="lede animate-rise mt-6 max-w-[52ch]"
+                  style={{ animationDelay: "120ms" }}
+                >
+                  A ten-minute milestone check across the six areas of your child&rsquo;s brain
+                  development — with a keepsake report, videos, and the exact next step for
+                  the stage they&rsquo;re in right now.
+                </p>
 
-            <div
-              className="animate-rise mt-9 flex flex-wrap items-center gap-x-4 gap-y-3"
-              style={{ animationDelay: "180ms" }}
-            >
-              <Link href="/children" className="btn btn-primary">
-                Start with your child
-              </Link>
-              <ul className="flex list-none flex-wrap items-center gap-x-4 gap-y-1 p-0 text-[0.85rem] text-ink-3">
-                {["About 10 minutes", "Fun for kids", "Just ₹99"].map((t) => (
-                  <li key={t} className="flex items-center gap-1.5">
-                    <Tick size={14} animate={false} color="var(--accent)" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-
-          {/* ── playful feature cards ────────────────────────────────── */}
-          <section className="mt-16">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {CARDS.map(([title, body, color]) => (
-                <div key={title} className={`card-pastel card-pastel-${color}`}>
-                  <h3 className="text-[1.02rem]">{title}</h3>
-                  <p className="mt-2 text-[0.87rem] leading-relaxed text-ink-2">
-                    {body}
-                  </p>
+                <div
+                  className="animate-rise mt-9 flex flex-wrap items-center gap-3"
+                  style={{ animationDelay: "180ms" }}
+                >
+                  <ButtonLink href="/children" size="lg" iconRight={<IconArrowRight size={18} />}>
+                    Start the check
+                  </ButtonLink>
+                  <ButtonLink href="#how" variant="secondary" size="lg">
+                    See how it works
+                  </ButtonLink>
                 </div>
-              ))}
-            </div>
-          </section>
 
-          {/* ── the six areas ─────────────────────────────────────────── */}
-          <section className="mt-20">
-            <SectionLabel>The six areas we look at</SectionLabel>
-            <ul className="mt-6 grid list-none grid-cols-1 gap-x-8 gap-y-6 p-0 sm:grid-cols-2">
-              {DOMAINS.map((d) => (
-                <li key={d.code} className="border-t border-line pt-4">
-                  <span
-                    aria-hidden="true"
-                    className="mb-3 block h-[3px] w-8 rounded-full"
-                    style={{ background: domainColor(d.code) }}
-                  />
-                  <h3 className="text-[1.02rem]">{d.name}</h3>
-                  <p className="mt-1.5 text-[0.88rem] leading-relaxed text-ink-2">
-                    {d.blurb}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
+                <ul
+                  className="animate-rise mt-8 flex list-none flex-wrap items-center gap-x-6 gap-y-2 p-0 text-[0.88rem] font-semibold text-ink-2"
+                  style={{ animationDelay: "240ms" }}
+                >
+                  {[
+                    { icon: <IconClock size={17} />, text: "About 10 minutes" },
+                    { icon: <IconShield size={17} />, text: "Private to your device" },
+                    { icon: <IconBolt size={17} />, text: "Instant report" },
+                  ].map((f) => (
+                    <li key={f.text} className="flex items-center gap-2">
+                      <span className="text-accent">{f.icon}</span>
+                      {f.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-          {/* ── how it works ──────────────────────────────────────────── */}
-          <section className="mt-20">
-            <SectionLabel>How it works</SectionLabel>
-            <ol className="mt-6 list-none space-y-7 p-0">
-              {STEPS.map(([title, body], i) => (
-                <li key={title} className="grid grid-cols-[1.9rem_1fr] gap-4">
-                  <span
-                    aria-hidden="true"
-                    className="mt-0.5 text-[0.95rem] font-bold tabular-nums text-accent"
+              {/* photo collage */}
+              <div className="animate-rise relative" style={{ animationDelay: "140ms" }}>
+                <div className="relative mx-auto aspect-[4/3.4] w-full max-w-[560px]">
+                  <div
+                    className="clay clay-lg absolute left-0 top-4 w-[62%] overflow-hidden"
+                    style={{ borderRadius: "var(--radius-xl)" }}
                   >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <h3 className="text-[1.02rem]">{title}</h3>
-                    <p className="mt-1.5 max-w-[54ch] text-[0.9rem] leading-relaxed text-ink-2">
-                      {body}
-                    </p>
+                    <Image
+                      src="/images/hero-parent-child.jpg"
+                      alt="A parent lifting their laughing baby in a sunny park"
+                      width={700}
+                      height={466}
+                      priority
+                      className="h-full w-full object-cover"
+                      style={{ aspectRatio: "4/3.2" }}
+                    />
                   </div>
-                </li>
-              ))}
-            </ol>
-          </section>
 
-          {/* ── close ─────────────────────────────────────────────────── */}
-          <section className="mt-20">
-            <div className="card-pastel card-pastel-blue text-center">
-              <h2 className="text-[1.3rem]">Ready when you are.</h2>
-              <p className="mx-auto mt-2 max-w-[40ch] text-[0.92rem] leading-relaxed text-ink-2">
-                Find a calm ten minutes with your child nearby — some questions
-                ask you to try something fun together.
-              </p>
-              <Link href="/children" className="btn btn-primary mt-6">
-                Start with your child
-              </Link>
+                  <div
+                    className="clay clay-lg absolute bottom-2 right-0 w-[52%] overflow-hidden"
+                    style={{ borderRadius: "var(--radius-xl)" }}
+                  >
+                    <Image
+                      src="/images/joy-toddler.jpg"
+                      alt="A laughing toddler"
+                      width={560}
+                      height={560}
+                      className="h-full w-full object-cover"
+                      style={{ aspectRatio: "1/1" }}
+                    />
+                  </div>
+
+                  {/* floating stat card */}
+                  <Card
+                    variant="clay"
+                    className="clay-lg absolute -left-2 bottom-8 flex items-center gap-3 px-4 py-3 sm:left-6"
+                  >
+                    <span className="grid size-10 place-items-center rounded-2xl bg-[var(--st-on-track-soft)] text-[var(--st-on-track)]">
+                      <IconCheck size={20} />
+                    </span>
+                    <div className="leading-tight">
+                      <p className="text-[0.95rem] font-extrabold text-ink">On track</p>
+                      <p className="text-[0.74rem] font-semibold text-ink-3">Language · 24 mo</p>
+                    </div>
+                  </Card>
+
+                  {/* mascot */}
+                  <Mascot
+                    size={92}
+                    mood="cheer"
+                    className="animate-bob absolute -top-3 right-6 drop-shadow-lg"
+                  />
+                </div>
+              </div>
             </div>
-          </section>
+          </Shell>
+        </div>
 
-          <section className="mt-12">
-            <Disclaimer text={DISCLAIMER} />
-            <p className="mt-4 text-[0.74rem] leading-relaxed text-ink-3">
-              Built on a bank of {ITEMS.length} milestones drawn from the
-              CDC&rsquo;s <em>Learn the Signs. Act Early.</em> checklists, the
-              NIDCD hearing and communication checklist, and WHO motor milestone
-              data.
-            </p>
-          </section>
+        {/* ══ trust strip ══════════════════════════════════════════════════ */}
+        <Shell width="wide">
+          <Card variant="clay" className="grid grid-cols-2 gap-6 px-6 py-8 sm:px-10 lg:grid-cols-4">
+            {TRUST.map((t) => (
+              <Stat key={t.label} value={t.value} label={t.label} icon={t.icon} />
+            ))}
+          </Card>
         </Shell>
+
+        {/* ══ the six areas ════════════════════════════════════════════════ */}
+        <Section id="areas">
+          <Shell width="wide">
+            <SectionHeading
+              eyebrow="What we look at"
+              title="Six areas, checked one by one"
+              description="The same six competences the Kaushalya programme is built around. Each one gets its own short set of questions, chosen for your child's stage."
+              align="center"
+            />
+
+            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {DOMAINS.map((d, i) => (
+                <Card
+                  key={d.code}
+                  variant="tint"
+                  tint={domainColor(d.code)}
+                  className="animate-rise p-6"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <SectionTile code={d.code} size={54} />
+                  <h3 className="mt-4">{d.name}</h3>
+                  <p className="mt-2 text-[0.9rem] leading-relaxed text-ink-2">{d.blurb}</p>
+                </Card>
+              ))}
+            </div>
+          </Shell>
+        </Section>
+
+        {/* ══ the seven stages diagram ═════════════════════════════════════ */}
+        <Section className="bg-[var(--surface)]" size="lg">
+          <Shell width="wide">
+            <SectionHeading
+              eyebrow="The KGKP method"
+              title="Seven stages of brain development"
+              description="Your child climbs one stage at a time, from the newborn reflexes of the medulla to the sophisticated cortex of a six-year-old. We find the stage they are on today, then check all six areas at exactly that level."
+              align="center"
+            />
+
+            {/* Full width, because the diagram is the point of this section —
+                squeezed into a half-column its labels stop being readable. */}
+            <Card variant="clay" className="mt-11 p-5 sm:p-8">
+              <div className="overflow-x-auto">
+                <BrainJourney
+                  stages={MODULE_STAGES}
+                  current={4}
+                  className="h-auto w-full min-w-[720px]"
+                />
+              </div>
+              <p className="mt-3 text-center text-[0.86rem] font-semibold text-ink-3">
+                Example: a 9-month-old sits on stage 4, Initial Cortex
+              </p>
+            </Card>
+
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-2.5">
+              {MODULES.map((m) => (
+                <Badge key={m.id} tone="neutral">
+                  {m.phase} · {m.name}
+                </Badge>
+              ))}
+            </div>
+
+            <div className="mt-9 text-center">
+              <ButtonLink
+                href="/children"
+                variant="secondary"
+                iconRight={<IconArrowRight size={17} />}
+              >
+                Find your child&rsquo;s stage
+              </ButtonLink>
+            </div>
+          </Shell>
+        </Section>
+
+        {/* ══ how it works ═════════════════════════════════════════════════ */}
+        <Section id="how" size="lg">
+          <Shell width="wide">
+            <SectionHeading
+              eyebrow="How it works"
+              title="Three steps, one calm evening"
+              align="center"
+            />
+
+            <div className="mt-12 grid gap-6 lg:grid-cols-3">
+              {STEPS.map((s, i) => (
+                <Card
+                  key={s.title}
+                  variant="clay"
+                  className="animate-rise overflow-hidden"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  <div className="relative h-52 w-full overflow-hidden">
+                    <Image
+                      src={s.image}
+                      alt={s.alt}
+                      width={640}
+                      height={420}
+                      className="h-full w-full object-cover"
+                    />
+                    <span
+                      className="absolute left-4 top-4 grid size-11 place-items-center rounded-2xl text-[1.05rem] font-extrabold text-white shadow-[var(--clay)]"
+                      style={{ background: s.tint, fontFamily: "var(--font-display)" }}
+                    >
+                      {i + 1}
+                    </span>
+                  </div>
+                  <div className="p-6">
+                    <h3>{s.title}</h3>
+                    <p className="mt-2 text-[0.92rem] leading-relaxed text-ink-2">{s.body}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </Shell>
+        </Section>
+
+        {/* ══ what you get ═════════════════════════════════════════════════ */}
+        <Section className="bg-[var(--surface)]">
+          <Shell width="wide">
+            <div className="grid items-center gap-12 lg:grid-cols-2">
+              <div className="relative">
+                <div className="clay clay-lg overflow-hidden" style={{ borderRadius: "var(--radius-xl)" }}>
+                  <Image
+                    src="/images/playful-child.jpg"
+                    alt="A smiling child playing happily indoors"
+                    width={860}
+                    height={574}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <Card
+                  variant="clay"
+                  className="clay-lg absolute -bottom-6 -right-2 w-[62%] max-w-[280px] p-4 sm:right-6"
+                >
+                  <p className="eyebrow">Language competence</p>
+                  <div className="mt-2.5 flex items-center gap-3">
+                    <div className="meter-track">
+                      <div
+                        className="meter-fill"
+                        style={{ width: "78%", background: "linear-gradient(90deg,#34d399,#10b981)" }}
+                      />
+                    </div>
+                    <span className="tnum text-[0.85rem] font-extrabold text-ink">78</span>
+                  </div>
+                  <p className="mt-2 text-[0.76rem] font-semibold text-ink-3">
+                    Two-word sentences arriving
+                  </p>
+                </Card>
+              </div>
+
+              <div>
+                <SectionHeading
+                  eyebrow="The report"
+                  title="A keepsake, not a verdict"
+                  description="Every check ends with a report written in plain language — no jargon, no scores you have to decode. It lives on your child's profile so you can open or download it any time."
+                />
+                <ul className="mt-7 list-none space-y-3.5 p-0">
+                  {[
+                    "Progress bars for all six areas, at a glance",
+                    "A short, kind summary of where they are",
+                    "Videos to watch together where practice would help",
+                    "The exact Kaushalya course for their stage",
+                  ].map((line) => (
+                    <li key={line} className="flex items-start gap-3">
+                      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--st-on-track-soft)] text-[var(--st-on-track)]">
+                        <IconCheck size={14} />
+                      </span>
+                      <span className="text-[0.96rem] font-medium leading-relaxed text-ink-2">
+                        {line}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </Shell>
+        </Section>
+
+        {/* ══ closing CTA ══════════════════════════════════════════════════ */}
+        <Section size="lg">
+          <Shell width="wide">
+            <div
+              className="relative overflow-hidden px-6 py-14 text-center sm:px-12"
+              style={{
+                borderRadius: "var(--radius-xl)",
+                background: "linear-gradient(150deg, var(--brand-600), var(--brand-800))",
+                boxShadow: "var(--clay-lg)",
+              }}
+            >
+              <span
+                aria-hidden="true"
+                className="bloom"
+                style={{ width: 320, height: 320, top: -120, left: "12%", "--bloom-color": "#8285f5", opacity: 0.55 } as React.CSSProperties}
+              />
+              <span
+                aria-hidden="true"
+                className="bloom"
+                style={{ width: 260, height: 260, bottom: -120, right: "10%", "--bloom-color": "#fbbf24", opacity: 0.32 } as React.CSSProperties}
+              />
+
+              <div className="relative">
+                <Mascot size={78} mood="wave" className="animate-bob mx-auto" />
+                <h2 className="mt-5 text-white">Ready when you are.</h2>
+                <p className="mx-auto mt-3 max-w-[46ch] text-[1rem] leading-relaxed text-white/80">
+                  Find a calm ten minutes with your child nearby — some questions ask you to
+                  try something fun together.
+                </p>
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                  <ButtonLink href="/children" variant="sun" size="lg" iconRight={<IconArrowRight size={18} />}>
+                    Start for ₹99
+                  </ButtonLink>
+                  <span className="text-[0.85rem] font-semibold text-white/70">
+                    Free during launch with code GENIUS99
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-10">
+              <Disclaimer text={DISCLAIMER} />
+              <p className="mt-4 text-center text-[0.76rem] leading-relaxed text-ink-3">
+                Built on a bank of {ITEMS.length} milestones drawn from the CDC&rsquo;s{" "}
+                <em>Learn the Signs. Act Early.</em> checklists, the NIDCD hearing and
+                communication checklist, and WHO motor milestone data.
+              </p>
+            </div>
+          </Shell>
+        </Section>
       </main>
+
+      <Footer />
     </>
   );
 }

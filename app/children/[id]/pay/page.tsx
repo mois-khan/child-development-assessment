@@ -2,15 +2,31 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { DOMAINS, bandIdsForModule, moduleForAge } from "@/content/domains";
 import { itemsForModule } from "@/content/items";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { createAssessment, getChild, markUnlocked, type SavedChild } from "@/lib/store";
-import { ChildCard, ModuleChip, Shell, Tick, TopBar } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  ButtonLink,
+  Card,
+  ChildCard,
+  Footer,
+  IconArrowRight,
+  IconCheck,
+  IconClock,
+  IconShield,
+  IconSparkle,
+  Mascot,
+  Section,
+  Shell,
+  TopBar,
+} from "@/components/ui";
 
 const ASSESSMENT_SLUG = "genius-milestones-check";
 const VALID_COUPON = "GENIUS99";
+const PRICE = 99;
 
 export default function PayPage({
   params,
@@ -34,9 +50,7 @@ export default function PayPage({
     () => (child ? summariseAge(child.dob, today, child.gestationalWeeks) : null),
     [child, today],
   );
-
   const currentModule = age ? moduleForAge(age.assessedMonths) : null;
-
   const questionCount = useMemo(() => {
     if (!currentModule) return 0;
     return DOMAINS.reduce((n, d) => n + itemsForModule(currentModule.id, d.code).length, 0);
@@ -69,21 +83,22 @@ export default function PayPage({
       <>
         <TopBar />
         <Shell>
-          <p className="pt-24 text-center text-[0.9rem] text-ink-3">Loading…</p>
+          <p className="pt-24 text-center font-semibold text-ink-3">Loading…</p>
         </Shell>
       </>
     );
   }
-  if (child === null || !age) {
+  if (child === null || !age || !currentModule) {
     return (
       <>
         <TopBar />
-        <Shell>
-          <div className="pt-20">
-            <h1>We couldn&rsquo;t find that child</h1>
-            <Link href="/children" className="btn btn-primary mt-7">
+        <Shell width="narrow">
+          <div className="pt-20 text-center">
+            <Mascot size={90} mood="think" className="mx-auto" />
+            <h1 className="mt-6">We couldn&rsquo;t find that child</h1>
+            <ButtonLink href="/children" className="mt-8">
               Go to your children
-            </Link>
+            </ButtonLink>
           </div>
         </Shell>
       </>
@@ -92,94 +107,128 @@ export default function PayPage({
 
   return (
     <>
-      <TopBar
-        right={
-          <Link href={`/children/${child.id}/assessments`} className="btn btn-quiet btn-sm">
-            Back
-          </Link>
-        }
-      />
-      <main className="pb-24">
-        <Shell>
-          <div className="animate-rise mt-8 flex items-center justify-between gap-3">
-            <div>
-              <p className="eyebrow eyebrow-accent">Step 2 of 2</p>
-              <h1 className="mt-3">Unlock the check</h1>
-            </div>
-            <ChildCard name={child.name} ageLabel={`${formatAge(age.chronologicalMonths)} old`} photoUrl={child.photoUrl} />
-          </div>
+      <TopBar />
 
-          <div className="card card-pastel-amber animate-rise mt-8 !p-6">
-            <div className="flex items-center justify-between">
+      <main>
+        <Section size="sm">
+          <Shell width="reading">
+            <div className="flex flex-wrap items-end justify-between gap-5">
               <div>
-                <h3 className="text-[1.02rem]">Genius Milestones Check</h3>
-                <p className="mt-1 text-[0.85rem] text-ink-2">
-                  {questionCount} questions, about ten minutes
-                </p>
-                {currentModule && (
-                  <div className="mt-2.5">
-                    <ModuleChip moduleLabel={`Module ${currentModule.id} of 7 · ${currentModule.name}`} />
-                  </div>
-                )}
+                <p className="eyebrow eyebrow-accent">Step 2 of 2</p>
+                <h1 className="mt-3">Unlock the check</h1>
               </div>
-              <p className="text-[1.5rem] font-bold text-ink">₹99</p>
+              <ChildCard
+                name={child.name}
+                photoUrl={child.photoUrl}
+                ageLabel={`${formatAge(age.chronologicalMonths)} old`}
+              />
             </div>
-          </div>
 
-          <div className="card animate-rise mt-5 p-6">
-            {applied ? (
-              <div className="flex items-center gap-3">
-                <span className="animate-pop flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--st-on-track-soft)]">
-                  <Tick size={18} color="var(--st-on-track)" />
-                </span>
+            {/* order summary */}
+            <Card variant="clay" className="clay-lg mt-8 overflow-hidden">
+              <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-7">
                 <div>
-                  <p className="text-[0.95rem] font-semibold text-ink">Code applied — this one&rsquo;s free!</p>
-                  <p className="text-[0.8rem] text-ink-3">Coupon GENIUS99</p>
+                  <h2 className="text-[1.3rem]">Genius Milestone Check</h2>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge tone="accent">
+                      <IconSparkle size={14} /> Module {currentModule.id} · {currentModule.name}
+                    </Badge>
+                    <Badge tone="neutral">{questionCount} questions</Badge>
+                    <Badge tone="neutral">
+                      <IconClock size={14} /> ~10 min
+                    </Badge>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p
+                    className="tnum text-[2rem] font-extrabold leading-none text-ink"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    {applied ? "₹0" : `₹${PRICE}`}
+                  </p>
+                  {applied && (
+                    <p className="tnum mt-1 text-[0.85rem] font-bold text-ink-3 line-through">
+                      ₹{PRICE}
+                    </p>
+                  )}
                 </div>
               </div>
-            ) : (
-              <>
-                <p className="text-[0.85rem] text-ink-3">
-                  Online payment is coming soon. For now, use your coupon code below to unlock the check
-                  for free.
-                </p>
-                <form onSubmit={applyCoupon} className="mt-4 flex flex-wrap items-start gap-3">
-                  <div className="min-w-[12rem] flex-1">
-                    <input
-                      className={`field ${error ? "field-error" : ""}`}
-                      placeholder="Coupon code"
-                      value={coupon}
-                      onChange={(e) => {
-                        setCoupon(e.target.value);
-                        setError("");
-                      }}
-                      autoComplete="off"
-                    />
-                    {error && <p className="hint hint-error">{error}</p>}
-                  </div>
-                  <button type="submit" className="btn btn-ghost">
-                    Apply code
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
 
-          <div className="mt-8 flex items-center gap-3">
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={!applied || starting}
-              onClick={startAssessment}
-            >
-              {starting ? "Preparing questions…" : "Start assessment"}
-            </button>
-            {!applied && (
-              <span className="text-[0.83rem] text-ink-3">Apply a coupon code to continue</span>
-            )}
-          </div>
-        </Shell>
+              <div className="border-t border-line-soft bg-[var(--surface-2)] p-6 sm:p-7">
+                {applied ? (
+                  <div className="flex items-center gap-4">
+                    <span className="animate-pop grid size-12 shrink-0 place-items-center rounded-full bg-[var(--st-on-track-soft)] text-[var(--st-on-track)]">
+                      <IconCheck size={26} />
+                    </span>
+                    <div>
+                      <p className="text-[1.02rem] font-extrabold text-ink">
+                        Code applied — this one&rsquo;s on us
+                      </p>
+                      <p className="text-[0.85rem] font-semibold text-ink-3">
+                        Coupon {VALID_COUPON} · launch offer
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[0.9rem] font-medium leading-relaxed text-ink-2">
+                      Online payment is arriving shortly. During launch, use your coupon code to
+                      unlock the check for free.
+                    </p>
+                    <form onSubmit={applyCoupon} className="mt-4 flex flex-wrap items-start gap-3">
+                      <div className="min-w-[13rem] flex-1">
+                        <input
+                          className={`field ${error ? "field-error" : ""}`}
+                          placeholder="Enter coupon code"
+                          value={coupon}
+                          onChange={(e) => {
+                            setCoupon(e.target.value);
+                            setError("");
+                          }}
+                          autoComplete="off"
+                          aria-label="Coupon code"
+                        />
+                        {error && <p className="hint hint-error">{error}</p>}
+                      </div>
+                      <Button type="submit" variant="secondary" size="lg">
+                        Apply
+                      </Button>
+                    </form>
+                  </>
+                )}
+              </div>
+            </Card>
+
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Button
+                size="lg"
+                disabled={!applied || starting}
+                onClick={startAssessment}
+                iconRight={<IconArrowRight size={18} />}
+              >
+                {starting ? "Preparing questions…" : "Start the check"}
+              </Button>
+              {!applied && (
+                <span className="text-[0.88rem] font-semibold text-ink-3">
+                  Apply a coupon code to continue
+                </span>
+              )}
+            </div>
+
+            <div className="mt-8 flex items-start gap-3 rounded-[var(--radius)] border border-line bg-[var(--surface)] p-4">
+              <span className="mt-0.5 text-accent">
+                <IconShield size={20} />
+              </span>
+              <p className="text-[0.85rem] leading-relaxed text-ink-2">
+                Everything you enter stays on this device. We never send your child&rsquo;s answers
+                or photo anywhere.
+              </p>
+            </div>
+          </Shell>
+        </Section>
       </main>
+
+      <Footer />
     </>
   );
 }
