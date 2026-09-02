@@ -81,7 +81,7 @@ export function ProfileRadar({ result }: { result: AssessmentResult }) {
         <polygon
           points={ring(100)}
           fill="none"
-          stroke="var(--pine)"
+          stroke="var(--accent)"
           strokeWidth="1.5"
           strokeDasharray="4 3"
           opacity="0.85"
@@ -90,9 +90,9 @@ export function ProfileRadar({ result }: { result: AssessmentResult }) {
         {/* the child */}
         <polygon
           points={shape}
-          fill="var(--pine)"
+          fill="var(--accent)"
           fillOpacity="0.16"
-          stroke="var(--pine)"
+          stroke="var(--accent)"
           strokeWidth="2"
           strokeLinejoin="round"
         />
@@ -145,7 +145,7 @@ export function ProfileRadar({ result }: { result: AssessmentResult }) {
             y1="3"
             x2="22"
             y2="3"
-            stroke="var(--pine)"
+            stroke="var(--accent)"
             strokeWidth="1.5"
             strokeDasharray="4 3"
           />
@@ -176,7 +176,7 @@ export function AgeComparison({ result }: { result: AssessmentResult }) {
       <div className="relative">
         {/* actual-age marker */}
         <div
-          className="pointer-events-none absolute inset-y-0 z-10 border-l-2 border-dashed border-[var(--pine)]"
+          className="pointer-events-none absolute inset-y-0 z-10 border-l-2 border-dashed border-[var(--accent)]"
           style={{ left: pct(actual) }}
           aria-hidden="true"
         />
@@ -216,7 +216,7 @@ export function AgeComparison({ result }: { result: AssessmentResult }) {
             y1="0"
             x2="3"
             y2="14"
-            stroke="var(--pine)"
+            stroke="var(--accent)"
             strokeWidth="2"
             strokeDasharray="3 2"
           />

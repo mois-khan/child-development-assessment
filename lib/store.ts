@@ -120,3 +120,113 @@ export function deleteAssessment(id: string): void {
   delete table[id];
   write(table);
 }
+
+export function assessmentsForChild(childId: string): StoredAssessment[] {
+  return listAssessments().filter((a) => a.child.id === childId);
+}
+
+export function latestAssessmentForChild(
+  childId: string,
+): StoredAssessment | null {
+  const all = assessmentsForChild(childId);
+  return all.find((a) => a.completedAt) ?? all[0] ?? null;
+}
+
+/* ── children ───────────────────────────────────────────────────────────────
+ * A lightweight local "family" of child profiles, so a parent can create one
+ * or several children and come back to any of them. Same localStorage-only
+ * caveat as assessments — see the note above the assessment table.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+const CHILD_KEY = "kaushalya.children.v1";
+
+/** A child once saved always has an id and a createdAt. */
+export type SavedChild = Child & { id: string; createdAt: string };
+
+type ChildTable = Record<string, SavedChild>;
+
+function readChildren(): ChildTable {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(CHILD_KEY) ?? "{}") as ChildTable;
+  } catch {
+    return {};
+  }
+}
+
+function writeChildren(table: ChildTable): void {
+  try {
+    window.localStorage.setItem(CHILD_KEY, JSON.stringify(table));
+  } catch {
+    // Private browsing, or storage full — the session still works.
+  }
+}
+
+export function createChild(
+  input: Omit<Child, "id" | "createdAt">,
+): SavedChild {
+  const child: SavedChild = {
+    ...input,
+    id: newId(),
+    createdAt: new Date().toISOString(),
+  };
+  const table = readChildren();
+  table[child.id] = child;
+  writeChildren(table);
+  return child;
+}
+
+export function listChildren(): SavedChild[] {
+  return Object.values(readChildren()).sort((a, b) =>
+    a.createdAt.localeCompare(b.createdAt),
+  );
+}
+
+export function getChild(id: string): SavedChild | null {
+  return readChildren()[id] ?? null;
+}
+
+export function updateChild(id: string, patch: Partial<Child>): void {
+  const table = readChildren();
+  const existing = table[id];
+  if (!existing) return;
+  table[id] = { ...existing, ...patch, id: existing.id };
+  writeChildren(table);
+}
+
+export function deleteChild(id: string): void {
+  const table = readChildren();
+  delete table[id];
+  writeChildren(table);
+}
+
+/* ── payment (mock) ────────────────────────────────────────────────────────
+ * No payment gateway is wired up yet. The only working path today is the
+ * coupon — this just records that a child unlocked a given assessment, so
+ * the pay screen does not ask twice.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+const UNLOCK_KEY = "kaushalya.unlocks.v1";
+
+function readUnlocks(): Record<string, boolean> {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(UNLOCK_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function isUnlocked(childId: string, assessmentSlug: string): boolean {
+  return !!readUnlocks()[`${childId}:${assessmentSlug}`];
+}
+
+export function markUnlocked(childId: string, assessmentSlug: string): void {
+  const table = readUnlocks();
+  table[`${childId}:${assessmentSlug}`] = true;
+  try {
+    window.localStorage.setItem(UNLOCK_KEY, JSON.stringify(table));
+  } catch {
+    // Private browsing, or storage full.
+  }
+}

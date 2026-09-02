@@ -13,16 +13,34 @@ import {
 
 const STEPS: [string, string][] = [
   [
-    "Tell us about your child",
-    "Name and date of birth. The questions are chosen from their exact age, so nothing you see will be irrelevant.",
+    "Add your child",
+    "Just their name, birthday and gender. We use that to pick the right questions for their age.",
   ],
   [
     "Answer what you see today",
-    "Every question comes with a way to check, so you can try it rather than guess. “Not yet” is a useful answer, not a bad one.",
+    "Every question comes with a simple way to check, so you can try it rather than guess. “Not yet” is a useful answer, not a bad one.",
   ],
   [
-    "Read the report together",
-    "Where your child is strong, where they need a hand, and what to do about it this week.",
+    "Get a fun, easy-to-read report",
+    "Where your child is strong, where they'd love a little more practice, and fun videos and activities to try together.",
+  ],
+];
+
+const CARDS: [string, string, "blue" | "green" | "pink"][] = [
+  [
+    "Six fun areas to explore",
+    "Visual, auditory, tactile, mobility, language and manual skills — checked with simple, playful questions.",
+    "blue",
+  ],
+  [
+    "Grows with your child",
+    "The right module is chosen automatically for their age, from newborn all the way to six years old.",
+    "green",
+  ],
+  [
+    "A report to keep",
+    "Clear progress bars, a friendly summary, and videos to watch together — saved on their profile for good.",
+    "pink",
   ],
 ];
 
@@ -32,8 +50,8 @@ export default function Home() {
       <TopBar
         bordered={false}
         right={
-          <Link href="/start" className="btn btn-primary btn-sm">
-            Start
+          <Link href="/children" className="btn btn-primary btn-sm">
+            Get started
           </Link>
         }
       />
@@ -43,46 +61,37 @@ export default function Home() {
           {/* ── hero ──────────────────────────────────────────────────── */}
           <section className="pt-12 sm:pt-20">
             <p className="eyebrow eyebrow-accent animate-rise">
-              Development check · Ages 0–6
+              Kaushalya Genius Kid Program · Ages 0–6
             </p>
 
             <h1
               className="display animate-rise mt-5"
               style={{ animationDelay: "60ms" }}
             >
-              See how your child is growing,{" "}
-              <em
-                className="not-italic"
-                style={{
-                  fontStyle: "italic",
-                  color: "var(--pine)",
-                }}
-              >
-                area by area
-              </em>
-              .
+              Every child is born a genius —{" "}
+              <span style={{ color: "var(--accent)" }}>let&rsquo;s find theirs.</span>
             </h1>
 
             <p
               className="lede animate-rise mt-6 max-w-[46ch]"
               style={{ animationDelay: "120ms" }}
             >
-              Answer around seventy short questions about what your child can do
-              today. You&rsquo;ll get a clear report on each part of their
-              development, and simple things to do at home.
+              A short, playful check-up for how your child is growing. Answer a
+              few simple questions, and get a clear, friendly report with fun
+              things to try together at home.
             </p>
 
             <div
               className="animate-rise mt-9 flex flex-wrap items-center gap-x-4 gap-y-3"
               style={{ animationDelay: "180ms" }}
             >
-              <Link href="/start" className="btn btn-primary">
-                Start the check
+              <Link href="/children" className="btn btn-primary">
+                Start with your child
               </Link>
               <ul className="flex list-none flex-wrap items-center gap-x-4 gap-y-1 p-0 text-[0.85rem] text-ink-3">
-                {["About 10 minutes", "No sign-up", "Free"].map((t) => (
+                {["About 10 minutes", "Fun for kids", "Just ₹99"].map((t) => (
                   <li key={t} className="flex items-center gap-1.5">
-                    <Tick size={14} animate={false} color="var(--pine)" />
+                    <Tick size={14} animate={false} color="var(--accent)" />
                     {t}
                   </li>
                 ))}
@@ -90,9 +99,23 @@ export default function Home() {
             </div>
           </section>
 
+          {/* ── playful feature cards ────────────────────────────────── */}
+          <section className="mt-16">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {CARDS.map(([title, body, color]) => (
+                <div key={title} className={`card-pastel card-pastel-${color}`}>
+                  <h3 className="text-[1.02rem]">{title}</h3>
+                  <p className="mt-2 text-[0.87rem] leading-relaxed text-ink-2">
+                    {body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
           {/* ── the six areas ─────────────────────────────────────────── */}
           <section className="mt-20">
-            <SectionLabel>What we look at</SectionLabel>
+            <SectionLabel>The six areas we look at</SectionLabel>
             <ul className="mt-6 grid list-none grid-cols-1 gap-x-8 gap-y-6 p-0 sm:grid-cols-2">
               {DOMAINS.map((d) => (
                 <li key={d.code} className="border-t border-line pt-4">
@@ -118,8 +141,7 @@ export default function Home() {
                 <li key={title} className="grid grid-cols-[1.9rem_1fr] gap-4">
                   <span
                     aria-hidden="true"
-                    className="mt-0.5 text-[0.95rem] font-medium tabular-nums text-ink-3"
-                    style={{ fontFamily: "var(--font-display)" }}
+                    className="mt-0.5 text-[0.95rem] font-bold tabular-nums text-accent"
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -136,14 +158,14 @@ export default function Home() {
 
           {/* ── close ─────────────────────────────────────────────────── */}
           <section className="mt-20">
-            <div className="card card-raised p-7 text-center">
+            <div className="card-pastel card-pastel-blue text-center">
               <h2 className="text-[1.3rem]">Ready when you are.</h2>
               <p className="mx-auto mt-2 max-w-[40ch] text-[0.92rem] leading-relaxed text-ink-2">
-                Find a calm ten minutes with your child nearby &mdash; some
-                questions ask you to try something with them.
+                Find a calm ten minutes with your child nearby — some questions
+                ask you to try something fun together.
               </p>
-              <Link href="/start" className="btn btn-primary mt-6">
-                Start the check
+              <Link href="/children" className="btn btn-primary mt-6">
+                Start with your child
               </Link>
             </div>
           </section>

@@ -1,56 +1,19 @@
 import type { CSSProperties, ReactNode } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { STATUSES } from "@/lib/scoring";
 import type { DomainCode, StatusCode } from "@/lib/types";
 import { DOMAIN_BY_CODE } from "@/content/domains";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NavLink } from "@/components/nav-link";
 
 /* ── brand ──────────────────────────────────────────────────────────────── */
 
 export function Wordmark() {
   return (
-    <span className="inline-flex items-center gap-2.5">
-      <Sprout />
-      <span className="leading-[1.15]">
-        <span
-          className="block text-[1.02rem] font-medium tracking-[-0.02em] text-ink"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Kaushalya Kids
-        </span>
-        <span className="block text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-ink-3">
-          Genius Program
-        </span>
-      </span>
+    <span className="inline-flex items-center">
+      <Image src="/kgk-logo.svg" alt="Kaushalya Genius Kid Program" width={116} height={72} priority className="h-11 w-auto" />
     </span>
-  );
-}
-
-function Sprout() {
-  return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-      className="shrink-0"
-    >
-      <path
-        d="M12 21.5V11"
-        stroke="var(--pine)"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-      <path
-        d="M12 12.4c0-3.1-2.3-5.6-5.2-5.6-.4 3.1 1.9 5.6 5.2 5.6Z"
-        fill="var(--pine)"
-        opacity=".55"
-      />
-      <path
-        d="M12 13.6c0-3.8 2.7-6.8 6.3-6.8.5 3.8-2.2 6.8-6.3 6.8Z"
-        fill="var(--pine)"
-      />
-    </svg>
   );
 }
 
@@ -125,7 +88,7 @@ export function DomainDot({ code }: { code: DomainCode }) {
 /** A drawn-in tick. Used wherever an action has just been completed. */
 export function Tick({
   size = 16,
-  color = "var(--pine)",
+  color = "var(--accent)",
   animate = true,
 }: {
   size?: number;
@@ -162,12 +125,12 @@ export function DoneBanner({ children }: { children: ReactNode }) {
     <div
       className="animate-rise flex items-center gap-2.5 rounded-[12px] border px-4 py-3"
       style={{
-        borderColor: "var(--pine-line)",
-        background: "var(--pine-soft)",
+        borderColor: "var(--accent-line)",
+        background: "var(--accent-soft)",
       }}
       role="status"
     >
-      <span className="animate-pop flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--pine)]">
+      <span className="animate-pop flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]">
         <Tick size={13} color="var(--on-status)" />
       </span>
       <p className="text-[0.88rem] font-medium leading-snug text-ink">
@@ -188,14 +151,19 @@ export function Shell({
 }) {
   return (
     <div
-      className={`mx-auto w-full px-5 sm:px-8 ${
-        width === "reading" ? "max-w-[42rem]" : "max-w-[64rem]"
+      className={`mx-auto w-full px-5 sm:px-10 ${
+        width === "reading" ? "max-w-[54rem]" : "max-w-[78rem]"
       }`}
     >
       {children}
     </div>
   );
 }
+
+const NAV_LINKS: [string, string][] = [
+  ["/", "Home"],
+  ["/children", "My Children"],
+];
 
 export function TopBar({
   right,
@@ -210,8 +178,17 @@ export function TopBar({
         bordered ? "border-b border-line" : ""
       }`}
     >
-      <div className="mx-auto flex min-h-[4.25rem] w-full max-w-[64rem] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3 sm:px-8">
-        <Wordmark />
+      <div className="mx-auto flex min-h-[4.25rem] w-full max-w-[78rem] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 sm:px-10">
+        <div className="flex items-center gap-7">
+          <Link href="/" aria-label="Home">
+            <Wordmark />
+          </Link>
+          <nav className="hidden items-center gap-5 sm:flex">
+            {NAV_LINKS.map(([href, label]) => (
+              <NavLink key={href} href={href} label={label} />
+            ))}
+          </nav>
+        </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {right}
           <ThemeToggle />
@@ -241,5 +218,100 @@ export function SectionLabel({ children }: { children: ReactNode }) {
       <span className="eyebrow">{children}</span>
       <span aria-hidden="true" className="h-px flex-1 bg-line" />
     </div>
+  );
+}
+
+/* ── child / avatar ─────────────────────────────────────────────────────── */
+
+export function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+export function Avatar({
+  name,
+  size = 40,
+}: {
+  name: string;
+  size?: number;
+}) {
+  return (
+    <span
+      className="avatar-circle"
+      style={{
+        width: size,
+        height: size,
+        fontSize: size * 0.38,
+      }}
+      aria-hidden="true"
+    >
+      {initials(name)}
+    </span>
+  );
+}
+
+/** Small persistent card so a child feels present throughout the check. */
+export function ChildCard({
+  name,
+  ageLabel,
+  dobLabel,
+  photoUrl,
+  size = "md",
+}: {
+  name: string;
+  ageLabel: string;
+  dobLabel?: string;
+  photoUrl?: string;
+  size?: "sm" | "md";
+}) {
+  const avatarSize = size === "sm" ? 38 : 48;
+  return (
+    <div className="card flex items-center gap-3 !rounded-[var(--radius)] px-3.5 py-2.5">
+      {photoUrl ? (
+        <img
+          src={photoUrl}
+          alt={name}
+          className="shrink-0 rounded-full object-cover"
+          style={{ width: avatarSize, height: avatarSize }}
+        />
+      ) : (
+        <Avatar name={name} size={avatarSize} />
+      )}
+      <div className="min-w-0 leading-tight">
+        <p className="truncate text-[0.94rem] font-bold text-ink">{name}</p>
+        <p className="text-[0.76rem] text-ink-3">
+          {ageLabel}
+          {dobLabel && <span className="opacity-70"> · Born {dobLabel}</span>}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Wayfinding chip: which module (phase) and section the parent is in now. */
+export function ModuleChip({
+  moduleLabel,
+  sectionLabel,
+}: {
+  moduleLabel: string;
+  sectionLabel?: string;
+}) {
+  return (
+    <span className="module-chip">
+      <span
+        aria-hidden="true"
+        className="inline-block size-1.5 rounded-full bg-[var(--accent)]"
+      />
+      {moduleLabel}
+      {sectionLabel && (
+        <>
+          <span aria-hidden="true" className="opacity-40">
+            ·
+          </span>
+          {sectionLabel}
+        </>
+      )}
+    </span>
   );
 }

@@ -2,25 +2,30 @@
 
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AGE_BANDS, DOMAINS, DOMAIN_BY_CODE } from "@/content/domains";
-import { itemsFor } from "@/content/items";
-import { summariseAge } from "@/lib/age";
-import { MAX_EXTENSION_ROUNDS, extensionsFor, initialWindow } from "@/lib/scoring";
+import { DOMAINS, DOMAIN_BY_CODE, moduleForAge } from "@/content/domains";
+import { itemsForModule } from "@/content/items";
+import { formatAge, summariseAge } from "@/lib/age";
 import {
   completeAssessment,
-  extendBands,
   getAssessment,
   saveResponse,
   type StoredAssessment,
 } from "@/lib/store";
 import type { DomainCode, Item, ResponseValue } from "@/lib/types";
-import { DoneBanner, Shell, Tick, TopBar, domainColor } from "@/components/ui";
+import {
+  ChildCard,
+  DoneBanner,
+  ModuleChip,
+  Shell,
+  Tick,
+  TopBar,
+  domainColor,
+} from "@/components/ui";
 
 interface Section {
   key: string;
   domain: DomainCode;
   items: Item[];
-  extension: boolean;
 }
 
 const ANSWERS: [ResponseValue, string][] = [
@@ -42,8 +47,8 @@ export default function AssessmentPage({
   );
   const [responses, setResponses] = useState<Record<string, ResponseValue>>({});
   const [step, setStep] = useState(0);
-  const [rounds, setRounds] = useState(0);
   const [showGaps, setShowGaps] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
 
   useEffect(() => {
     const found = getAssessment(id);
@@ -51,36 +56,18 @@ export default function AssessmentPage({
     if (found) setResponses(found.responses);
   }, [id]);
 
-  const baseSections: Section[] = useMemo(() => {
+  // Exactly six sections, one per section/domain, driven entirely by the
+  // child's module (their age) — fixed and known upfront, never adaptive.
+  // See content/domains.ts (MODULE_BANDS) and content/items.ts (itemsForModule).
+  const sections: Section[] = useMemo(() => {
     if (!record) return [];
-    const bandIds = initialWindow(monthsFor(record)).map((b) => b.id);
+    const moduleId = moduleForAge(monthsFor(record)).id;
     return DOMAINS.map((d) => ({
-      key: `base-${d.code}`,
+      key: d.code,
       domain: d.code,
-      items: orderItems(bandIds, d.code),
-      extension: false,
+      items: itemsForModule(moduleId, d.code),
     }));
   }, [record]);
-
-  // Anything the adaptive rounds have added beyond the starting window.
-  const extraSections: Section[] = useMemo(() => {
-    if (!record || rounds === 0) return [];
-    const baseBands = new Set(initialWindow(monthsFor(record)).map((b) => b.id));
-    return DOMAINS.map((d) => ({
-      key: `ext-${d.code}`,
-      domain: d.code,
-      items: orderItems(
-        (record.bandsByDomain[d.code] ?? []).filter((b) => !baseBands.has(b)),
-        d.code,
-      ),
-      extension: true,
-    })).filter((s) => s.items.length > 0);
-  }, [record, rounds]);
-
-  const sections = useMemo(
-    () => [...baseSections, ...extraSections],
-    [baseSections, extraSections],
-  );
 
   const allItems = useMemo(() => sections.flatMap((s) => s.items), [sections]);
   const answeredCount = allItems.filter(
@@ -96,7 +83,15 @@ export default function AssessmentPage({
   );
 
   if (record === undefined) return <Loading />;
-  if (record === null) return <NotFound onStart={() => router.push("/start")} />;
+  if (record === null)
+    return <NotFound onStart={() => router.push("/children")} />;
+
+  const childAge = summariseAge(
+    record.child.dob,
+    record.assessedOn,
+    record.child.gestationalWeeks,
+  );
+  const currentModule = moduleForAge(childAge.assessedMonths);
 
   const onReview = step >= sections.length;
   const section = sections[step];
@@ -109,19 +104,6 @@ export default function AssessmentPage({
   const sectionsLeft = sections.length - step - 1;
 
   function goNext() {
-    // At the end of every round, check whether any domain still needs a band
-    // reaching further down (the basal rule) or one further up. Keep going
-    // until nothing new comes back, so the developmental age is anchored to a
-    // band the child actually mastered rather than to where we began asking.
-    if (isLast && rounds < MAX_EXTENSION_ROUNDS) {
-      const ext = extensionsFor(record!.bandsByDomain, responses);
-      setRounds((r) => r + 1);
-      if (Object.values(ext).some((b) => b.length > 0)) {
-        extendBands(id, ext);
-        const updated = getAssessment(id);
-        if (updated) setRecord(updated);
-      }
-    }
     setStep((s) => s + 1);
     window.scrollTo({ top: 0, behavior: "instant" });
   }
@@ -129,6 +111,18 @@ export default function AssessmentPage({
   function goBack() {
     setStep((s) => Math.max(0, s - 1));
     window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  function finish() {
+    completeAssessment(id);
+    setCelebrating(true);
+    window.setTimeout(() => {
+      router.push(`/report/${id}`);
+    }, 1500);
+  }
+
+  if (celebrating) {
+    return <Celebration name={record.child.name} />;
   }
 
   return (
@@ -141,8 +135,8 @@ export default function AssessmentPage({
         }
       />
 
-      <div className="no-print sticky top-[4.25rem] z-20">
-        <div className="progress-track">
+      <div className="no-print sticky top-[4.25rem] z-20 bg-[var(--ground)]/92 backdrop-blur-md">
+        <div className="progress-track" style={{ borderRadius: 0 }}>
           <div
             className="progress-fill"
             style={{
@@ -150,9 +144,23 @@ export default function AssessmentPage({
             }}
           />
         </div>
+        {!onReview && section && (
+          <div className="mx-auto flex w-full max-w-[78rem] flex-wrap items-center justify-between gap-3 px-5 py-2.5 sm:px-10">
+            <ModuleChip
+              moduleLabel={`Module ${currentModule.id} of 7 · ${currentModule.name}`}
+              sectionLabel={DOMAIN_BY_CODE[section.domain].name}
+            />
+            <ChildCard
+              name={record.child.name}
+              ageLabel={`${formatAge(childAge.chronologicalMonths)} old`}
+              photoUrl={record.child.photoUrl}
+              size="sm"
+            />
+          </div>
+        )}
       </div>
 
-      <main className="pb-28">
+      <main className="pb-32">
         <Shell>
           {onReview ? (
             <Review
@@ -162,10 +170,7 @@ export default function AssessmentPage({
               showGaps={showGaps}
               onShowGaps={() => setShowGaps(true)}
               onBack={goBack}
-              onFinish={() => {
-                completeAssessment(id);
-                router.push(`/report/${id}`);
-              }}
+              onFinish={finish}
               onJumpTo={(itemId) => {
                 const idx = sections.findIndex((s) =>
                   s.items.some((i) => i.id === itemId),
@@ -203,39 +208,12 @@ export default function AssessmentPage({
               {sectionDone && (
                 <div className="mt-6">
                   <DoneBanner>
-                    {section.extension
-                      ? "That’s the last of them — let’s build the report."
-                      : sectionsLeft === 0
-                        ? `${DOMAIN_BY_CODE[section.domain].name} done. That’s every section.`
-                        : `${DOMAIN_BY_CODE[section.domain].name} done. ${sectionsLeft} section${sectionsLeft === 1 ? "" : "s"} to go.`}
+                    {sectionsLeft === 0
+                      ? `${DOMAIN_BY_CODE[section.domain].name} done. That’s every section.`
+                      : `${DOMAIN_BY_CODE[section.domain].name} done. ${sectionsLeft} section${sectionsLeft === 1 ? "" : "s"} to go.`}
                   </DoneBanner>
                 </div>
               )}
-
-              <div className="mt-7 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={goBack}
-                  disabled={step === 0}
-                >
-                  Back
-                </button>
-                <div className="flex items-center gap-3">
-                  {!sectionDone && (
-                    <span className="text-[0.83rem] tabular-nums text-ink-3">
-                      {sectionRemaining} left
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    className={`btn ${sectionDone ? "btn-primary" : "btn-ghost"}`}
-                    onClick={goNext}
-                  >
-                    {isLast ? "Review answers" : "Next section"}
-                  </button>
-                </div>
-              </div>
 
               <p className="mt-8 text-center text-[0.78rem] text-ink-3">
                 Your answers save as you go. You can close this and come back.
@@ -244,6 +222,38 @@ export default function AssessmentPage({
           )}
         </Shell>
       </main>
+
+      {/* Always visible without scrolling — the whole point of a fixed bar. */}
+      {!onReview && (
+        <div className="action-bar">
+          <Shell>
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={goBack}
+                disabled={step === 0}
+              >
+                Back
+              </button>
+              <div className="flex items-center gap-3">
+                {!sectionDone && (
+                  <span className="hidden text-[0.83rem] tabular-nums text-ink-3 sm:inline">
+                    {sectionRemaining} left
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className={`btn ${sectionDone ? "btn-primary" : "btn-ghost"}`}
+                  onClick={goNext}
+                >
+                  {isLast ? "Review answers" : "Next section"}
+                </button>
+              </div>
+            </div>
+          </Shell>
+        </div>
+      )}
     </>
   );
 }
@@ -286,22 +296,13 @@ function SectionIntro({
         />
         <span className="eyebrow">
           Part {index + 1} of {total}
-          {section.extension && " · A few more"}
         </span>
       </div>
 
       <h1 className="mt-4">{domain.name}</h1>
 
       <p className="lede mt-2.5 max-w-[48ch]">
-        {section.extension
-          ? `From the answers so far, a few more questions here will show us more clearly where ${childName} is.`
-          : domain.blurb.replace("your child", childName)}
-      </p>
-
-      <p className="mt-4 max-w-[52ch] text-[0.85rem] leading-relaxed text-ink-3">
-        Answer for what {childName} does <em>now</em>, not what they managed
-        once. &ldquo;Not yet&rdquo; is a useful answer &mdash; it is how we find
-        the right starting point.
+        {domain.blurb.replace("your child", childName)}
       </p>
     </div>
   );
@@ -377,20 +378,20 @@ function Review({
   return (
     <div className="animate-rise pt-14">
       {complete && (
-        <span className="animate-pop mb-6 flex size-12 items-center justify-center rounded-full bg-[var(--pine-soft)]">
+        <span className="animate-pop mb-6 flex size-12 items-center justify-center rounded-full bg-[var(--accent-soft)]">
           <Tick size={24} />
         </span>
       )}
 
       <h1>
         {complete
-          ? "All done."
+          ? "All done!"
           : `Almost there — ${unanswered.length} question${unanswered.length === 1 ? "" : "s"} left`}
       </h1>
 
       <p className="prose-read mt-4 max-w-[50ch]">
         {complete
-          ? `You answered all ${total} questions about ${name}. We'll turn that into a report now.`
+          ? `You answered all ${total} questions about ${name}. Let's turn that into a report!`
           : "You can finish without these — we leave them out of the scoring rather than counting them as a no. Answering them makes the report more accurate."}
       </p>
 
@@ -407,7 +408,7 @@ function Review({
                   <button
                     type="button"
                     onClick={() => onJumpTo(item.id)}
-                    className="card w-full p-3.5 text-left transition-colors hover:border-[var(--pine)]"
+                    className="card w-full p-3.5 text-left transition-colors hover:border-[var(--accent)]"
                   >
                     <span className="eyebrow block">
                       {DOMAIN_BY_CODE[item.domain].name}
@@ -440,6 +441,71 @@ function Review({
   );
 }
 
+/** Full-screen celebration shown right after submitting, before the report loads. */
+function Celebration({ name }: { name: string }) {
+  const confetti = useMemo(
+    () =>
+      Array.from({ length: 26 }, (_, i) => ({
+        left: Math.round((i * 137.5) % 100),
+        delay: (i % 7) * 0.09,
+        duration: 1.6 + (i % 5) * 0.22,
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        size: 6 + (i % 4) * 3,
+      })),
+    [],
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
+      style={{ background: "var(--ground)" }}
+      role="status"
+      aria-live="polite"
+    >
+      {confetti.map((c, i) => (
+        <span
+          key={i}
+          className="confetti-piece"
+          aria-hidden="true"
+          style={{
+            left: `${c.left}%`,
+            width: c.size,
+            height: c.size * 0.6,
+            background: c.color,
+            animationDelay: `${c.delay}s`,
+            animationDuration: `${c.duration}s`,
+          }}
+        />
+      ))}
+
+      <span
+        className="celebrate-ring flex size-24 items-center justify-center rounded-full"
+        style={{ background: "var(--st-on-track-soft)" }}
+      >
+        <Tick size={48} color="var(--st-on-track)" />
+      </span>
+
+      <h1 className="animate-rise mt-7 text-center" style={{ animationDelay: "150ms" }}>
+        Amazing work, {name}!
+      </h1>
+      <p
+        className="animate-rise lede mt-2 text-center"
+        style={{ animationDelay: "250ms" }}
+      >
+        Building the report now…
+      </p>
+    </div>
+  );
+}
+
+const CONFETTI_COLORS = [
+  "var(--accent)",
+  "var(--st-on-track)",
+  "var(--pastel-pink-2)",
+  "var(--pastel-amber-2)",
+  "var(--pastel-green-2)",
+];
+
 function Loading() {
   return (
     <>
@@ -467,7 +533,7 @@ function NotFound({ onStart }: { onStart: () => void }) {
             className="btn btn-primary mt-7"
             onClick={onStart}
           >
-            Start a new one
+            Go to your children
           </button>
         </div>
       </Shell>
@@ -486,9 +552,3 @@ function monthsFor(record: StoredAssessment): number {
   ).assessedMonths;
 }
 
-/** Questions run easiest to hardest, with no band labels shown to the parent. */
-function orderItems(bandIds: string[], domain: DomainCode): Item[] {
-  return AGE_BANDS.filter((b) => bandIds.includes(b.id))
-    .sort((a, b) => a.order - b.order)
-    .flatMap((b) => itemsFor(b.id, domain));
-}

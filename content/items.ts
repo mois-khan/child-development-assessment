@@ -1,5 +1,5 @@
 import type { DomainCode, Item, ItemSource } from "@/lib/types";
-import { AGE_BANDS } from "./domains";
+import { AGE_BANDS, MODULE_BANDS } from "./domains";
 
 export const BANK_VERSION = "2026.09.01-poc";
 
@@ -590,6 +590,16 @@ export const ITEMS_BY_BAND_DOMAIN = new Map<string, Item[]>(
 
 export function itemsFor(band: string, domain: DomainCode): Item[] {
   return ITEMS_BY_BAND_DOMAIN.get(`${band}:${domain}`) ?? [];
+}
+
+/**
+ * The fixed question set for one section (domain) of one module — every
+ * band that module covers, in age order, with no duplicates. This is what
+ * the assessment actually asks: deterministic per child age, never adaptive.
+ */
+export function itemsForModule(moduleId: number, domain: DomainCode): Item[] {
+  const bands = MODULE_BANDS[moduleId] ?? [];
+  return bands.flatMap((b) => itemsFor(b.id, domain));
 }
 
 export const ITEM_BY_ID = new Map(ITEMS.map((i) => [i.id, i]));

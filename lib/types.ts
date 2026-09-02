@@ -28,6 +28,22 @@ export interface Domain {
   /** Hue used for this domain's chart series and card accent. */
   hue: number;
   order: number;
+  /** True while this section's real content is still a stand-in — see content/domains.ts. */
+  placeholder?: boolean;
+}
+
+/**
+ * One of the programme's seven phases of brain development (Phase I-VII).
+ * Presentation-layer only — see content/domains.ts for how it relates to the
+ * scoring engine's thirteen age bands.
+ */
+export interface Module {
+  id: number;
+  /** Roman numeral, as the programme names its phases (I-VII). */
+  phase: string;
+  name: string;
+  minMonths: number;
+  maxMonths: number;
 }
 
 export interface AgeBand {
@@ -70,11 +86,17 @@ export interface Activity {
 export type Gender = "girl" | "boy" | "other";
 
 export interface Child {
+  /** Set by lib/store.ts createChild — optional here so the scoring engine
+   * (which only needs dob/gender) can be tested with plain literals. */
+  id?: string;
   name: string;
   dob: string; // ISO yyyy-mm-dd
   gender: Gender;
   /** Weeks of gestation at birth. Undefined = born at term. */
   gestationalWeeks?: number;
+  createdAt?: string;
+  /** Optional profile photo, stored as a data: URL. */
+  photoUrl?: string;
 }
 
 export type StatusCode = "on_track" | "emerging" | "needs_focus" | "consult";

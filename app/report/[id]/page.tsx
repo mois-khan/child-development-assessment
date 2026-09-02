@@ -2,15 +2,16 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { DOMAIN_BY_CODE } from "@/content/domains";
 import { activitiesFor } from "@/content/activities";
 import { formatAge, summariseAge } from "@/lib/age";
 import { DISCLAIMER, domainNote, headline, nextSteps, summary } from "@/lib/narrative";
 import { STATUSES, bandForAge, scoreAssessment } from "@/lib/scoring";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
-import type { Activity, AssessmentResult, DomainScore, Item } from "@/lib/types";
-import { AgeComparison, DomainMeter, ProfileRadar } from "@/components/charts";
+import type { Activity, AssessmentResult, DomainScore } from "@/lib/types";
 import {
+  Avatar,
   Disclaimer,
   DomainDot,
   Shell,
@@ -26,6 +27,7 @@ export default function ReportPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
   const [record, setRecord] = useState<StoredAssessment | null | undefined>(
     undefined,
   );
@@ -43,6 +45,15 @@ export default function ReportPage({
       bandsByDomain: record.bandsByDomain,
     });
   }, [record]);
+
+  // Lets a parent land here with ?download=1 (e.g. from the child profile
+  // page) and get the print dialogue straight away, without another click.
+  useEffect(() => {
+    if (result && searchParams.get("download") === "1") {
+      const t = window.setTimeout(() => window.print(), 350);
+      return () => window.clearTimeout(t);
+    }
+  }, [result, searchParams]);
 
   if (record === undefined) {
     return (
@@ -63,15 +74,13 @@ export default function ReportPage({
         <TopBar />
         <Shell>
           <div className="pt-20">
-            <h1>
-              We couldn&rsquo;t find that report
-            </h1>
+            <h1>We couldn&rsquo;t find that report</h1>
             <p className="mt-2 text-[0.95rem] text-ink-2">
               Reports are saved in this browser only, so a link from another
               device won&rsquo;t open here.
             </p>
-            <Link href="/start" className="btn btn-primary mt-6">
-              Start a new check
+            <Link href="/children" className="btn btn-primary mt-6">
+              Go to your children
             </Link>
           </div>
         </Shell>
@@ -85,8 +94,8 @@ export default function ReportPage({
     (a, b) => DOMAIN_BY_CODE[a.domain].order - DOMAIN_BY_CODE[b.domain].order,
   );
 
-  // If nothing needs focus, still suggest play for the two lowest domains —
-  // framed as next steps rather than problems.
+  // If nothing needs focus, still suggest play (and a video) for the two
+  // lowest sections — framed as next steps rather than problems.
   const metric = (d: DomainScore) => (d.dq === null ? d.percent * 100 : d.dq);
   const activityDomains =
     result.focusAreas.length > 0
@@ -100,17 +109,9 @@ export default function ReportPage({
     <>
       <TopBar
         right={
-          <div className="flex items-center gap-2">
-            <button className="btn btn-ghost btn-sm" onClick={() => window.print()}>
-              Save as PDF
-            </button>
-            <Link
-              href="/start"
-              className="btn btn-primary btn-sm"
-            >
-              New check
-            </Link>
-          </div>
+          <Link href={`/children/${child.id}`} className="btn btn-ghost btn-sm">
+            {child.name}&rsquo;s profile
+          </Link>
         }
       />
 
@@ -121,46 +122,34 @@ export default function ReportPage({
             <Wordmark />
           </div>
 
-          {/* ── header ────────────────────────────────────────────────── */}
-          <header className="border-b border-line pb-7 pt-10">
-            <p className="eyebrow eyebrow-accent">
-              Development report
-            </p>
-            <h1 className="display mt-3">
-              {child.name}
+          {/* ── page 1 · cover ────────────────────────────────────────── */}
+          <section className="card card-pastel-blue animate-rise mt-8 flex flex-col items-center px-6 py-14 text-center sm:py-20">
+            <p className="eyebrow eyebrow-accent">Kaushalya Genius Kid Program</p>
+            <Avatar name={child.name} size={72} />
+            <h1 className="display mt-5 !text-[2.1rem] sm:!text-[2.6rem]">
+              {child.name}&rsquo;s Report
             </h1>
-            <dl className="mt-4 flex flex-wrap gap-x-7 gap-y-2 text-[0.85rem]">
-              <div>
-                <dt className="inline text-ink-3">Age </dt>
-                <dd className="inline font-semibold text-ink-2">
-                  {formatAge(age.chronologicalMonths)}
-                </dd>
-              </div>
-              {result.corrected && (
-                <div>
-                  <dt className="inline text-ink-3">Corrected age </dt>
-                  <dd className="inline font-semibold text-ink-2">
-                    {formatAge(result.assessedMonths)}
-                  </dd>
-                </div>
-              )}
-              <div>
-                <dt className="inline text-ink-3">Assessed </dt>
-                <dd className="inline font-semibold text-ink-2">
-                  {formatDate(record.assessedOn)}
-                </dd>
-              </div>
-              <div>
-                <dt className="inline text-ink-3">Questions answered </dt>
-                <dd className="inline font-semibold text-ink-2 tabular-nums">
-                  {result.answeredCount} of {result.totalCount}
-                </dd>
-              </div>
+            <dl className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[0.88rem]">
+              <Field label="Age" value={formatAge(age.chronologicalMonths)} />
+              <Field
+                label="Gender"
+                value={child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"}
+              />
+              <Field label="Assessed on" value={formatDate(record.assessedOn)} />
+              <Field label="Assessment" value="Genius Milestones Check" />
             </dl>
-          </header>
 
-          {/* ── summary ───────────────────────────────────────────────── */}
-          <section className="pt-9">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="btn btn-primary mt-9"
+            >
+              <DownloadIcon /> Download report
+            </button>
+          </section>
+
+          {/* ── page 2 · progress overview ───────────────────────────── */}
+          <section className="mt-11 print-break">
             <div className="flex flex-wrap items-center gap-3">
               <StatusChip status={result.overallStatus} solid />
               {!result.suppressDq && result.overallDq !== null && (
@@ -174,8 +163,6 @@ export default function ReportPage({
               )}
             </div>
 
-            {/* An uneven profile can show a healthy average beside a cautious
-                status. Say why, rather than leaving it looking contradictory. */}
             {result.overallRaisedBy && (
               <p className="mt-2.5 max-w-[58ch] text-[0.84rem] leading-relaxed text-ink-2">
                 The average looks healthy because most areas are strong. We have
@@ -191,61 +178,26 @@ export default function ReportPage({
               </p>
             )}
 
-            <h2 className="mt-5 max-w-[26ch] text-[1.55rem] sm:text-[1.85rem]">
+            <h2 className="mt-5 max-w-[28ch] text-[1.55rem] sm:text-[1.85rem]">
               {headline(result, child)}
             </h2>
 
-            <div className="prose-read mt-4 max-w-[62ch] space-y-3.5">
-              {summary(result, child).map((p) => (
-                <p key={p.slice(0, 40)}>{p}</p>
-              ))}
+            <div className="card mt-7 p-6">
+              <h3 className="eyebrow mb-5">Progress, area by area</h3>
+              <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+                {ordered.map((score) => (
+                  <BigMeter key={score.domain} score={score} />
+                ))}
+              </div>
             </div>
           </section>
 
-          {/* ── charts ────────────────────────────────────────────────── */}
-          <section className="mt-9 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="card p-5">
-              <h3 className="mb-1 eyebrow">
-                The shape of {child.name}&rsquo;s development
-              </h3>
-              <ProfileRadar result={result} />
-            </div>
-            <div className="card p-5">
-              <h3 className="mb-4 eyebrow">
-                {result.suppressDq
-                  ? "Where each area sits"
-                  : "Developmental age, area by area"}
-              </h3>
-              <AgeComparison result={result} />
-            </div>
-          </section>
-
-          {/* ── strengths and focus ───────────────────────────────────── */}
-          {(result.strengths.length > 0 || result.focusAreas.length > 0) && (
-            <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Highlight
-                title="Strengths"
-                domains={result.strengths}
-                empty={`${child.name}'s profile is even across the six areas, with nothing standing out above the rest.`}
-                accent="var(--st-on-track)"
-              />
-              <Highlight
-                title="Where to focus"
-                domains={result.focusAreas}
-                empty="Nothing needs focused attention right now."
-                accent="var(--st-emerging)"
-              />
-            </section>
-          )}
-
-          {/* ── domain cards ──────────────────────────────────────────── */}
+          {/* ── page 3+ · area by area ────────────────────────────────── */}
           <section className="mt-11 print-break">
-            <h2>
-              Area by area
-            </h2>
+            <h2>Area by area</h2>
             <p className="mt-1 max-w-[58ch] text-[0.88rem] leading-relaxed text-ink-2">
-              What {child.name} is already doing, what is just coming in, and
-              what has not arrived yet.
+              What {child.name} is already doing, and simple videos to try where
+              a little more practice would help.
             </p>
             <div className="mt-5 space-y-4">
               {ordered.map((score) => (
@@ -253,49 +205,29 @@ export default function ReportPage({
                   key={score.domain}
                   score={score}
                   note={domainNote(score, child)}
+                  suggestVideo={result.focusAreas.includes(score.domain)}
+                  activities={pickActivities(score)}
                 />
               ))}
             </div>
           </section>
 
-          {/* ── activities ────────────────────────────────────────────── */}
+          {/* ── summary & recommendations ─────────────────────────────── */}
           <section className="mt-11 print-break">
-            <h2>
-              What to do at home
-            </h2>
-            <p className="mt-1 max-w-[58ch] text-[0.88rem] leading-relaxed text-ink-2">
-              {result.focusAreas.length > 0
-                ? `Chosen for the two areas that would benefit most, and pitched at the level ${child.name} is actually working at rather than their age on paper.`
-                : `Good next things to play together, pitched just ahead of where ${child.name} is now.`}
-            </p>
-            <div className="mt-5 space-y-6">
-              {activityDomains.map((code) => {
-                const score = result.domainScores.find(
-                  (d) => d.domain === code,
-                )!;
-                return (
-                  <ActivityGroup
-                    key={code}
-                    score={score}
-                    activities={pickActivities(score)}
-                  />
-                );
-              })}
+            <h2>Summary & recommendations</h2>
+            <div className="prose-read mt-4 max-w-[62ch] space-y-3.5">
+              {summary(result, child).map((p) => (
+                <p key={p.slice(0, 40)}>{p}</p>
+              ))}
             </div>
-          </section>
 
-          {/* ── next steps ────────────────────────────────────────────── */}
-          <section className="mt-11">
-            <h2>
-              Next steps
-            </h2>
-            <ul className="mt-4 list-none space-y-3 p-0">
+            <ul className="mt-6 list-none space-y-3 p-0">
               {nextSteps(result, child).map((s) => (
                 <li key={s.slice(0, 30)} className="flex gap-3">
                   <span
                     aria-hidden="true"
                     className="mt-2 size-1.5 shrink-0 rounded-full"
-                    style={{ background: "var(--pine)" }}
+                    style={{ background: "var(--accent)" }}
                   />
                   <span className="text-[0.92rem] leading-relaxed text-ink-2">
                     {s}
@@ -303,6 +235,28 @@ export default function ReportPage({
                 </li>
               ))}
             </ul>
+
+            <div className="card card-pastel-green mt-8 !p-6">
+              <h3 className="text-[1.05rem]">Recommended next: Milestones Acceleration</h3>
+              <p className="mt-2 max-w-[58ch] text-[0.88rem] leading-relaxed text-ink-2">
+                Kaushalya&rsquo;s 0–6 years programme (Stage 3) is built around exactly the six areas
+                in this report, delivered in short daily activities matched to {child.name}&rsquo;s
+                own pace.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <a
+                  href="https://www.kaushalyageniuskid.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary"
+                >
+                  Explore the programme
+                </a>
+                <a href="mailto:support@kaushalyageniuskid.com" className="btn btn-ghost">
+                  Talk to our team
+                </a>
+              </div>
+            </div>
           </section>
 
           <section className="mt-10">
@@ -321,50 +275,61 @@ export default function ReportPage({
 
 /* ── pieces ─────────────────────────────────────────────────────────────── */
 
-function Highlight({
-  title,
-  domains,
-  empty,
-  accent,
-}: {
-  title: string;
-  domains: DomainScore["domain"][];
-  empty: string;
-  accent: string;
-}) {
+function Field({ label, value }: { label: string; value: string }) {
   return (
-    <div className="card p-5">
-      <h3
-        className="eyebrow"
-        style={{ color: accent }}
-      >
-        {title}
-      </h3>
-      {domains.length === 0 ? (
-        <p className="mt-2 text-[0.88rem] leading-relaxed text-ink-3">{empty}</p>
-      ) : (
-        <ul className="mt-3 list-none space-y-2 p-0">
-          {domains.map((code) => (
-            <li key={code} className="flex items-center gap-2">
-              <DomainDot code={code} />
-              <span className="text-[0.95rem] font-semibold text-ink">
-                {DOMAIN_BY_CODE[code].name}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div>
+      <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink-3">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-[0.98rem] font-semibold text-ink">{value}</dd>
     </div>
   );
 }
 
-function DomainCard({ score, note }: { score: DomainScore; note: string }) {
+function BigMeter({ score }: { score: DomainScore }) {
+  const domain = DOMAIN_BY_CODE[score.domain];
+  const value = score.dq === null ? score.percent * 100 : score.dq;
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="flex items-center gap-2 text-[0.9rem] font-semibold text-ink">
+          <DomainDot code={score.domain} />
+          {domain.name}
+        </span>
+        <span className="tabular-nums text-[0.8rem] text-ink-3">
+          {Math.round(value)}
+        </span>
+      </div>
+      <div className="meter-track mt-2">
+        <div
+          className="meter-fill"
+          style={{
+            width: `${Math.min(100, value)}%`,
+            background: domainColor(score.domain),
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function DomainCard({
+  score,
+  note,
+  suggestVideo,
+  activities,
+}: {
+  score: DomainScore;
+  note: string;
+  suggestVideo: boolean;
+  activities: Activity[];
+}) {
   const domain = DOMAIN_BY_CODE[score.domain];
   return (
     <article className="card overflow-hidden">
       <div
         aria-hidden="true"
-        className="h-1 w-full"
+        className="h-1.5 w-full"
         style={{ background: domainColor(score.domain) }}
       />
       <div className="p-5">
@@ -372,38 +337,55 @@ function DomainCard({ score, note }: { score: DomainScore; note: string }) {
           <div>
             <h3 className="text-[1.1rem]">
               {domain.name}
+              {domain.placeholder && (
+                <span className="chip ml-2 align-middle !text-[0.62rem]">Content pending</span>
+              )}
             </h3>
-            <p className="mt-0.5 text-[0.82rem] text-ink-3">{domain.blurb}</p>
           </div>
           <StatusChip status={score.status} />
         </div>
 
         <div className="mt-4 max-w-md">
-          <DomainMeter score={score} />
+          <div className="meter-track">
+            <div
+              className="meter-fill"
+              style={{
+                width: `${Math.min(100, score.dq === null ? score.percent * 100 : score.dq)}%`,
+                background: "var(--accent)",
+              }}
+            />
+          </div>
         </div>
 
         <p className="prose-read mt-4 max-w-[62ch] !text-[0.97rem]">{note}</p>
-        <p className="mt-2 text-[0.8rem] text-ink-3">
-          {STATUSES[score.status].meaning}
-        </p>
 
-        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <SkillList
-            label="Already doing"
-            items={score.achieved}
-            color="var(--st-on-track)"
-          />
-          <SkillList
-            label="Just coming in"
-            items={score.emerging}
-            color="var(--st-emerging)"
-          />
-          <SkillList
-            label="Not yet"
-            items={score.notYet}
-            color="var(--ink-3)"
-          />
+        <div
+          className={`mt-5 grid grid-cols-1 gap-5 ${suggestVideo ? "sm:grid-cols-[1fr_13rem]" : ""}`}
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <SkillList label="Doing" items={score.achieved.length} color="var(--st-on-track)" />
+            <SkillList label="Coming in" items={score.emerging.length} color="var(--st-emerging)" />
+            <SkillList label="Not yet" items={score.notYet.length} color="var(--ink-3)" />
+          </div>
+
+          {suggestVideo && (
+            <VideoSuggestion title={`${domain.short} practice with ${activities[0]?.title ?? "a fun activity"}`} />
+          )}
         </div>
+
+        {activities.length > 0 && (
+          <div className="mt-5 border-t border-line-soft pt-4">
+            <h4 className="eyebrow">Try at home</h4>
+            <ul className="mt-3 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2">
+              {activities.slice(0, 2).map((a) => (
+                <li key={a.id} className="rounded-[var(--radius-sm)] bg-surface-2 p-3.5">
+                  <h5 className="text-[0.88rem] font-semibold text-ink">{a.title}</h5>
+                  <p className="mt-1 text-[0.8rem] leading-relaxed text-ink-2">{a.description}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </article>
   );
@@ -415,7 +397,7 @@ function SkillList({
   color,
 }: {
   label: string;
-  items: Item[];
+  items: number;
   color: string;
 }) {
   return (
@@ -424,83 +406,46 @@ function SkillList({
         className="text-[0.68rem] font-semibold uppercase tracking-[0.1em]"
         style={{ color }}
       >
-        {label}{" "}
-        <span className="tabular-nums opacity-70">({items.length})</span>
+        {label}
       </h4>
-      {items.length === 0 ? (
-        <p className="mt-1.5 text-[0.8rem] text-ink-3">&mdash;</p>
-      ) : (
-        <ul className="mt-1.5 list-none space-y-1.5 p-0">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className="text-[0.8rem] leading-snug text-ink-2"
-            >
-              {item.text}
-            </li>
-          ))}
-        </ul>
-      )}
+      <p className="mt-1 text-[1.15rem] font-bold tabular-nums text-ink">{items}</p>
     </div>
   );
 }
 
-function ActivityGroup({
-  score,
-  activities,
-}: {
-  score: DomainScore;
-  activities: Activity[];
-}) {
-  const domain = DOMAIN_BY_CODE[score.domain];
-  const target = [...score.notYet, ...score.emerging].slice(0, 3);
-
+/** Thumbnail + play button placeholder — real videos to be added later. */
+function VideoSuggestion({ title }: { title: string }) {
   return (
-    <div>
-      <div className="flex items-center gap-2">
-        <DomainDot code={score.domain} />
-        <h3 className="text-[1.05rem]">{domain.name}</h3>
+    <div className="no-print">
+      <div className="video-thumb">
+        <span className="video-play">
+          <PlayIcon />
+        </span>
       </div>
-
-      {target.length > 0 && (
-        <p className="mt-1.5 max-w-[60ch] text-[0.83rem] leading-relaxed text-ink-3">
-          Working towards:{" "}
-          {target.map((t, i) => (
-            <span key={t.id}>
-              {i > 0 && "; "}
-              <span className="text-ink-2">{lowerFirst(t.text)}</span>
-            </span>
-          ))}
-        </p>
-      )}
-
-      <ul className="mt-3 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2">
-        {activities.map((a) => (
-          <li key={a.id} className="card p-4">
-            <h4 className="text-[0.92rem] font-semibold text-ink">{a.title}</h4>
-            <p className="mt-1.5 text-[0.84rem] leading-relaxed text-ink-2">
-              {a.description}
-            </p>
-            <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-line-soft pt-2.5 text-[0.74rem] text-ink-3">
-              <div>
-                <dt className="inline">You need: </dt>
-                <dd className="inline text-ink-2">{a.materials}</dd>
-              </div>
-              <div>
-                <dt className="inline">Time: </dt>
-                <dd className="inline text-ink-2">
-                  {a.minutes === 0 ? "As you go" : `${a.minutes} min`}
-                </dd>
-              </div>
-              <div>
-                <dt className="inline">How often: </dt>
-                <dd className="inline text-ink-2">{a.frequency}</dd>
-              </div>
-            </dl>
-          </li>
-        ))}
-      </ul>
+      <p className="mt-1.5 text-[0.76rem] leading-snug text-ink-3">{title}</p>
     </div>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M6.5 4.5v11l9-5.5-9-5.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M10 3v9.5m0 0 3.5-3.5M10 12.5 6.5 9M4 15.5h12"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -522,8 +467,4 @@ function formatDate(iso: string): string {
     month: "long",
     year: "numeric",
   });
-}
-
-function lowerFirst(s: string): string {
-  return s.charAt(0).toLowerCase() + s.slice(1);
 }
