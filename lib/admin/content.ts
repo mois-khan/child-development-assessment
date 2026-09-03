@@ -9,17 +9,16 @@
  *
  * Until then, this keeps admin edits in a localStorage overlay: every base
  * item can be edited or soft-deleted, and new items can be added, all
- * without touching the shipped file. The merged result (base + overlay) is
- * what adminListItems() returns, so the admin portal already behaves like a
- * real editable item bank — the only difference from the real thing is that
- * edits live in this browser rather than a shared database, and there's no
- * enforced draft/publish boundary (nothing else reads this overlay, so
- * there's nothing to accidentally publish early). Both of those become real
- * the moment isSupabaseConfigured() is true — see the TODOs below for where
- * that logic slots in.
+ * without touching the shipped file. adminListItems() (admin UI) and
+ * liveItemsForModule() (the real assessment, via app/assessment/[id]/page.tsx)
+ * read the same merged result — so an edit is live for any parent using this
+ * browser immediately, no draft/publish step. That immediacy is right for a
+ * single-admin dev browser; once Supabase is connected, item_bank_versions
+ * (0002_admin.sql) brings back a real draft → publish boundary so edits
+ * don't reach parents mid-assessment.
  */
-import { AGE_BANDS, DOMAINS } from "@/content/domains";
-import { ITEMS } from "@/content/items";
+import { AGE_BANDS, DOMAINS, bandIdsForModule } from "@/content/domains";
+import { ITEMS, itemsForModule as baseItemsForModule } from "@/content/items";
 import type { DomainCode, Item, ItemSource } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -61,13 +60,11 @@ function newDraftId(domain: DomainCode, band: string): string {
   return `${band}-${domain}-draft-${Date.now().toString(36)}`;
 }
 
-export function adminListItems(filter?: { domain?: DomainCode; band?: string }): AdminItem[] {
-  if (isSupabaseConfigured()) {
-    // TODO: once credentials exist, read from the `items` table filtered to
-    // bank_version = 'draft', joined with item_bank_versions for status.
-    throw new Error("Supabase-backed item bank is not wired up yet.");
-  }
-
+/** The merge itself, with no Supabase check — shared by the admin list (which
+ * throws when Supabase is configured, since that path isn't wired up) and
+ * liveItemsForModule() below (which must never throw — it's on the parent's
+ * actual assessment path). */
+function mergedItems(filter?: { domain?: DomainCode; band?: string }): AdminItem[] {
   const overlay = readOverlay();
   const baseIds = new Set(ITEMS.map((i) => i.id));
 
@@ -86,6 +83,30 @@ export function adminListItems(filter?: { domain?: DomainCode; band?: string }):
     .filter((i) => (filter?.domain ? i.domain === filter.domain : true))
     .filter((i) => (filter?.band ? i.band === filter.band : true))
     .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export function adminListItems(filter?: { domain?: DomainCode; band?: string }): AdminItem[] {
+  if (isSupabaseConfigured()) {
+    // TODO: once credentials exist, read from the `items` table filtered to
+    // bank_version = 'draft', joined with item_bank_versions for status.
+    throw new Error("Supabase-backed item bank is not wired up yet.");
+  }
+  return mergedItems(filter);
+}
+
+/**
+ * What a parent taking the assessment actually sees for one section of one
+ * module: the shipped item bank, with any admin edits/additions/deletions
+ * from lib/admin/content.ts applied on top. Falls back to the plain shipped
+ * bank when Supabase is configured, since admin content doesn't live there
+ * yet — see the TODO on adminListItems above.
+ */
+export function liveItemsForModule(moduleId: number, domain: DomainCode): Item[] {
+  if (isSupabaseConfigured()) {
+    return baseItemsForModule(moduleId, domain);
+  }
+  const bands = bandIdsForModule(moduleId);
+  return bands.flatMap((band) => mergedItems({ domain, band }));
 }
 
 export function adminSaveItem(input: ItemInput): void {

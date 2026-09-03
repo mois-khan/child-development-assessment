@@ -384,20 +384,15 @@ export function EmptyChildArt({ className = "" }: { className?: string }) {
 
 /* ── decorative blooms behind hero sections ──────────────────────────────── */
 
+/** A single, quiet brand-tinted glow — not a three-colour gradient-mesh
+ * background. One restrained signal reads as designed; three pastel blobs
+ * read as a template. */
 export function Blooms() {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       <span
         className="bloom"
-        style={{ width: 460, height: 460, top: -180, left: -120, "--bloom-color": "#C7CCFF" } as CSSProperties}
-      />
-      <span
-        className="bloom"
-        style={{ width: 380, height: 380, top: -80, right: -100, opacity: 0.42, "--bloom-color": "#FDE68A" } as CSSProperties}
-      />
-      <span
-        className="bloom"
-        style={{ width: 300, height: 300, bottom: -140, left: "42%", opacity: 0.34, "--bloom-color": "#BBF7D0" } as CSSProperties}
+        style={{ width: 420, height: 420, top: -200, left: -140, opacity: 0.28, "--bloom-color": "#C7CCFF" } as CSSProperties}
       />
     </div>
   );

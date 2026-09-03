@@ -3,7 +3,7 @@
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE, moduleForAge } from "@/content/domains";
-import { itemsForModule } from "@/content/items";
+import { liveItemsForModule } from "@/lib/admin/content";
 import { summariseAge } from "@/lib/age";
 import {
   completeAssessment,
@@ -109,7 +109,7 @@ export default function AssessmentPage({
   const sections: Section[] = useMemo(() => {
     if (!record) return [];
     const moduleId = moduleForAge(monthsFor(record)).id;
-    return DOMAINS.map((d) => ({ domain: d.code, items: itemsForModule(moduleId, d.code) }));
+    return DOMAINS.map((d) => ({ domain: d.code, items: liveItemsForModule(moduleId, d.code) }));
   }, [record]);
 
   /* Resume exactly where the parent stopped — the single biggest reason a

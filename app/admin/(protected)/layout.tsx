@@ -21,8 +21,8 @@ const NAV: { href: string; label: string; icon: ReactNode; soon?: boolean }[] = 
   { href: "/admin", label: "Dashboard", icon: <IconChart size={18} /> },
   { href: "/admin/submissions", label: "Submissions", icon: <IconUsers size={18} /> },
   { href: "/admin/item-bank", label: "Item bank", icon: <IconBolt size={18} /> },
-  { href: "/admin/activities", label: "Activities & videos", icon: <IconClock size={18} />, soon: true },
-  { href: "/admin/courses", label: "Courses", icon: <IconShield size={18} />, soon: true },
+  { href: "/admin/activities", label: "Activities & videos", icon: <IconClock size={18} /> },
+  { href: "/admin/courses", label: "Courses", icon: <IconShield size={18} /> },
 ];
 
 export default function AdminProtectedLayout({ children }: { children: ReactNode }) {
@@ -44,7 +44,11 @@ export default function AdminProtectedLayout({ children }: { children: ReactNode
         </Link>
         <nav className="flex flex-col gap-1">
           {NAV.map((item) => {
-            const active = item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href);
+            const active =
+              item.href === "/admin"
+                ? pathname === "/admin"
+                : pathname?.startsWith(item.href) ||
+                  (item.href === "/admin/activities" && pathname?.startsWith("/admin/videos"));
             if (item.soon) {
               return (
                 <span

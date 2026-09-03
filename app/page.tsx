@@ -169,27 +169,6 @@ export default function Home() {
                       style={{ aspectRatio: "1/1" }}
                     />
                   </div>
-
-                  {/* floating stat card */}
-                  <Card
-                    variant="clay"
-                    className="clay-lg absolute -left-2 bottom-8 flex items-center gap-3 px-4 py-3 sm:left-6"
-                  >
-                    <span className="grid size-10 place-items-center rounded-2xl bg-[var(--st-on-track-soft)] text-[var(--st-on-track)]">
-                      <IconCheck size={20} />
-                    </span>
-                    <div className="leading-tight">
-                      <p className="text-[0.95rem] font-extrabold text-ink">On track</p>
-                      <p className="text-[0.74rem] font-semibold text-ink-3">Language · 24 mo</p>
-                    </div>
-                  </Card>
-
-                  {/* mascot */}
-                  <Mascot
-                    size={92}
-                    mood="cheer"
-                    className="animate-bob absolute -top-3 right-6 drop-shadow-lg"
-                  />
                 </div>
               </div>
             </div>
@@ -324,7 +303,7 @@ export default function Home() {
         <Section className="bg-[var(--surface)]">
           <Shell width="wide">
             <div className="grid items-center gap-12 lg:grid-cols-2">
-              <div className="relative">
+              <div>
                 <div className="clay clay-lg overflow-hidden" style={{ borderRadius: "var(--radius-xl)" }}>
                   <Image
                     src="/images/playful-child.jpg"
@@ -334,24 +313,18 @@ export default function Home() {
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <Card
-                  variant="clay"
-                  className="clay-lg absolute -bottom-6 -right-2 w-[62%] max-w-[280px] p-4 sm:right-6"
-                >
-                  <p className="eyebrow">Language competence</p>
-                  <div className="mt-2.5 flex items-center gap-3">
-                    <div className="meter-track">
+                <div className="mt-4 flex items-center gap-3 px-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="eyebrow">Language competence</p>
+                    <div className="mt-2 meter-track">
                       <div
                         className="meter-fill"
-                        style={{ width: "78%", background: "linear-gradient(90deg,#34d399,#10b981)" }}
+                        style={{ width: "78%", background: "var(--sec-language)" }}
                       />
                     </div>
-                    <span className="tnum text-[0.85rem] font-extrabold text-ink">78</span>
                   </div>
-                  <p className="mt-2 text-[0.76rem] font-semibold text-ink-3">
-                    Two-word sentences arriving
-                  </p>
-                </Card>
+                  <span className="tnum text-[1.05rem] font-extrabold text-ink">78</span>
+                </div>
               </div>
 
               <div>
@@ -396,16 +369,11 @@ export default function Home() {
               <span
                 aria-hidden="true"
                 className="bloom"
-                style={{ width: 320, height: 320, top: -120, left: "12%", "--bloom-color": "#8285f5", opacity: 0.55 } as React.CSSProperties}
-              />
-              <span
-                aria-hidden="true"
-                className="bloom"
-                style={{ width: 260, height: 260, bottom: -120, right: "10%", "--bloom-color": "#fbbf24", opacity: 0.32 } as React.CSSProperties}
+                style={{ width: 320, height: 320, top: -140, left: "10%", "--bloom-color": "#8285f5", opacity: 0.4 } as React.CSSProperties}
               />
 
               <div className="relative">
-                <Mascot size={78} mood="wave" className="animate-bob mx-auto" />
+                <Mascot size={78} mood="wave" className="mx-auto" />
                 <h2 className="mt-5 text-white">Ready when you are.</h2>
                 <p className="mx-auto mt-3 max-w-[46ch] text-[1rem] leading-relaxed text-white/80">
                   Find a calm ten minutes with your child nearby — some questions ask you to

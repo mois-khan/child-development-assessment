@@ -4,12 +4,14 @@ import { Fragment, use, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { DOMAIN_BY_CODE, moduleForAge } from "@/content/domains";
-import { activitiesFor } from "@/content/activities";
+import { liveActivitiesFor, type AdminActivity } from "@/lib/admin/activities";
+import { liveGetVideo, type AdminVideo } from "@/lib/admin/videos";
+import { resolveRecommendedCourse, type AdminCourse } from "@/lib/admin/recommendations";
 import { formatAge, summariseAge } from "@/lib/age";
 import { DISCLAIMER, domainNote, headline, nextSteps, summary } from "@/lib/narrative";
 import { STATUSES, bandForAge, scoreAssessment } from "@/lib/scoring";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
-import type { Activity, AssessmentResult, DomainCode, DomainScore } from "@/lib/types";
+import type { AssessmentResult, DomainCode, DomainScore, Module } from "@/lib/types";
 import {
   Avatar,
   Badge,
@@ -121,6 +123,11 @@ export default function ReportPage({
     result.focusAreas.length > 0
       ? result.focusAreas
       : [...result.domainScores].sort((a, b) => metric(a) - metric(b)).slice(0, 2).map((d) => d.domain);
+
+  // Admin-authored recommendation rules (lib/admin/recommendations.ts) win
+  // when one matches; otherwise the report falls back to the fixed default
+  // below, same as it always has.
+  const recommendation = resolveRecommendedCourse(result);
 
   return (
     <>
@@ -338,15 +345,22 @@ export default function ReportPage({
             </p>
 
             <div className="mt-6 space-y-5">
-              {ordered.map((score) => (
-                <DomainCard
-                  key={score.domain}
-                  score={score}
-                  note={domainNote(score, child)}
-                  suggestVideo={focus.includes(score.domain)}
-                  activities={pickActivities(score)}
-                />
-              ))}
+              {ordered.map((score) => {
+                const activities = pickActivities(score);
+                const video = activities
+                  .map((a) => (a.videoId ? liveGetVideo(a.videoId) : null))
+                  .find((v): v is AdminVideo => v !== null);
+                return (
+                  <DomainCard
+                    key={score.domain}
+                    score={score}
+                    note={domainNote(score, child)}
+                    suggestVideo={focus.includes(score.domain)}
+                    activities={activities}
+                    video={video ?? null}
+                  />
+                );
+              })}
             </div>
           </Section>
 
@@ -374,69 +388,14 @@ export default function ReportPage({
                 </ul>
               </Card>
 
-              {/* the course recommendation */}
-              <Card
-                variant="clay"
-                className="recommend-card flex flex-col overflow-hidden"
-                style={{ background: "linear-gradient(160deg, var(--sun-100), var(--surface))" }}
-              >
-                <div className="p-6">
-                  <Mascot size={68} mood="wave" className="animate-bob no-print" />
-                  <p className="eyebrow mt-4">Recommended next</p>
-                  <h3 className="mt-2 text-[1.2rem]">
-                    Milestones Acceleration · Phase {mod.phase}
-                  </h3>
-                  <p className="mt-2.5 text-[0.9rem] leading-relaxed text-ink-2">
-                    The Kaushalya 0–6 programme for {mod.name}: day-wise activity plans and short
-                    videos across exactly the six areas in this report, ten minutes of screen time
-                    and thirty minutes of play a day.
-                  </p>
-
-                  <ul className="mt-4 list-none space-y-2 p-0">
-                    {["Monthly course for this phase", "Day-wise activity plans", "Milestone checklists"].map(
-                      (line) => (
-                        <li key={line} className="flex items-center gap-2 text-[0.86rem] font-semibold text-ink-2">
-                          <IconCheck size={15} className="text-[var(--st-on-track)]" />
-                          {line}
-                        </li>
-                      ),
-                    )}
-                  </ul>
-                </div>
-
-                <div className="no-print mt-auto space-y-2.5 p-6 pt-0">
-                  <ButtonLink
-                    href="https://www.kaushalyageniuskid.com"
-                    external
-                    variant="sun"
-                    block
-                    iconRight={<IconArrowRight size={17} />}
-                  >
-                    Explore the programme
-                  </ButtonLink>
-                  <ButtonLink
-                    href="mailto:support@kaushalyageniuskid.com"
-                    variant="secondary"
-                    block
-                    external
-                  >
-                    Talk to our team
-                  </ButtonLink>
-                </div>
-
-                {/* Buttons don't work on paper — a printed report gets the
-                    plain addresses instead, written out in full. */}
-                <dl className="hidden print:block print:space-y-2 print:border-t print:border-line-soft print:p-6 print:pt-4 print:text-[9.5pt]">
-                  <div>
-                    <dt className="inline font-bold">Explore the programme: </dt>
-                    <dd className="inline">www.kaushalyageniuskid.com</dd>
-                  </div>
-                  <div>
-                    <dt className="inline font-bold">Talk to our team: </dt>
-                    <dd className="inline">support@kaushalyageniuskid.com</dd>
-                  </div>
-                </dl>
-              </Card>
+              {/* the course recommendation — an admin rule match (see
+                  lib/admin/recommendations.ts) if one exists, else the fixed
+                  default this report has always shown. */}
+              {recommendation ? (
+                <RecommendedCourseCard course={recommendation.course} />
+              ) : (
+                <DefaultRecommendationCard mod={mod} />
+              )}
             </div>
           </Section>
 
@@ -502,11 +461,13 @@ function DomainCard({
   note,
   suggestVideo,
   activities,
+  video,
 }: {
   score: DomainScore;
   note: string;
   suggestVideo: boolean;
-  activities: Activity[];
+  activities: AdminActivity[];
+  video: AdminVideo | null;
 }) {
   const domain = DOMAIN_BY_CODE[score.domain];
   const color = domainColor(score.domain);
@@ -608,28 +569,164 @@ function DomainCard({
               <span className="video-highlight-badge">
                 <IconPlay size={10} /> Suggested watch
               </span>
-              <div className="video-thumb mt-3">
-                <Image
-                  src={VIDEO_STILL[score.domain]}
-                  alt=""
-                  width={480}
-                  height={300}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-                <span className="absolute inset-0" style={{ background: "rgba(23,24,43,0.28)" }} />
-                <span className="video-play relative">
-                  <IconPlay size={22} />
-                </span>
-              </div>
+              {video ? (
+                <a
+                  href={video.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="video-thumb mt-3 block"
+                  aria-label={`Watch: ${video.title}`}
+                >
+                  {video.thumbnailUrl ? (
+                    // Admin-supplied thumbnail URL, not a local /public asset —
+                    // next/image can't optimise an arbitrary remote host here.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={video.thumbnailUrl}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="absolute inset-0" style={{ background: "var(--surface-3)" }} />
+                  )}
+                  <span className="absolute inset-0" style={{ background: "rgba(23,24,43,0.28)" }} />
+                  <span className="video-play relative">
+                    <IconPlay size={22} />
+                  </span>
+                </a>
+              ) : (
+                <div className="video-thumb mt-3">
+                  <Image
+                    src={VIDEO_STILL[score.domain]}
+                    alt=""
+                    width={480}
+                    height={300}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <span className="absolute inset-0" style={{ background: "rgba(23,24,43,0.28)" }} />
+                  <span className="video-play relative">
+                    <IconPlay size={22} />
+                  </span>
+                </div>
+              )}
               <p className="mt-2.5 text-[0.82rem] font-semibold leading-snug text-ink-2">
-                {domain.short} practice for {formatMonths(score.developmentalMonths)}
+                {video ? video.title : `${domain.short} practice for ${formatMonths(score.developmentalMonths)}`}
               </p>
-              <Badge className="mt-2">Video coming soon</Badge>
+              {!video && <Badge className="mt-2">Video coming soon</Badge>}
             </div>
           )}
         </div>
       </div>
     </Card>
+  );
+}
+
+/* ══ recommendation ═══════════════════════════════════════════════════════
+ * Two versions of the same card shell: the fixed default this report always
+ * showed, and one filled from an admin-authored course + rule match (see
+ * lib/admin/recommendations.ts). Kept as separate components rather than one
+ * branchy one, since the default's copy is written for it specifically and
+ * a course's fields (price, checkout link) don't all have a default analogue. */
+
+function RecommendationShell({
+  eyebrow,
+  title,
+  description,
+  bullets,
+  primaryHref,
+  primaryLabel,
+  secondaryHref,
+  secondaryLabel,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  bullets: string[];
+  primaryHref?: string;
+  primaryLabel: string;
+  secondaryHref: string;
+  secondaryLabel: string;
+}) {
+  return (
+    <Card
+      variant="clay"
+      className="recommend-card flex flex-col overflow-hidden"
+      style={{ background: "linear-gradient(160deg, var(--sun-100), var(--surface))" }}
+    >
+      <div className="p-6">
+        <Mascot size={68} mood="wave" className="no-print" />
+        <p className="eyebrow mt-4">{eyebrow}</p>
+        <h3 className="mt-2 text-[1.2rem]">{title}</h3>
+        <p className="mt-2.5 text-[0.9rem] leading-relaxed text-ink-2">{description}</p>
+
+        {bullets.length > 0 && (
+          <ul className="mt-4 list-none space-y-2 p-0">
+            {bullets.map((line) => (
+              <li key={line} className="flex items-center gap-2 text-[0.86rem] font-semibold text-ink-2">
+                <IconCheck size={15} className="text-[var(--st-on-track)]" />
+                {line}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="no-print mt-auto space-y-2.5 p-6 pt-0">
+        {primaryHref && (
+          <ButtonLink href={primaryHref} external variant="sun" block iconRight={<IconArrowRight size={17} />}>
+            {primaryLabel}
+          </ButtonLink>
+        )}
+        <ButtonLink href={secondaryHref} variant="secondary" block external>
+          {secondaryLabel}
+        </ButtonLink>
+      </div>
+
+      {/* Buttons don't work on paper — a printed report gets the plain
+          addresses instead, written out in full. */}
+      <dl className="hidden print:block print:space-y-2 print:border-t print:border-line-soft print:p-6 print:pt-4 print:text-[9.5pt]">
+        {primaryHref && (
+          <div>
+            <dt className="inline font-bold">{primaryLabel}: </dt>
+            <dd className="inline">{primaryHref.replace(/^https?:\/\//, "")}</dd>
+          </div>
+        )}
+        <div>
+          <dt className="inline font-bold">{secondaryLabel}: </dt>
+          <dd className="inline">{secondaryHref.replace(/^mailto:/, "")}</dd>
+        </div>
+      </dl>
+    </Card>
+  );
+}
+
+function DefaultRecommendationCard({ mod }: { mod: Module }) {
+  return (
+    <RecommendationShell
+      eyebrow="Recommended next"
+      title={`Milestones Acceleration · Phase ${mod.phase}`}
+      description={`The Kaushalya 0–6 programme for ${mod.name}: day-wise activity plans and short videos across exactly the six areas in this report, ten minutes of screen time and thirty minutes of play a day.`}
+      bullets={["Monthly course for this phase", "Day-wise activity plans", "Milestone checklists"]}
+      primaryHref="https://www.kaushalyageniuskid.com"
+      primaryLabel="Explore the programme"
+      secondaryHref="mailto:support@kaushalyageniuskid.com"
+      secondaryLabel="Talk to our team"
+    />
+  );
+}
+
+function RecommendedCourseCard({ course }: { course: AdminCourse }) {
+  return (
+    <RecommendationShell
+      eyebrow="Recommended next"
+      title={course.title}
+      description={course.description}
+      bullets={course.price != null ? [`${course.currency} ${course.price}`] : []}
+      primaryHref={course.checkoutUrl}
+      primaryLabel="Explore the programme"
+      secondaryHref="mailto:support@kaushalyageniuskid.com"
+      secondaryLabel="Talk to our team"
+    />
   );
 }
 
@@ -660,9 +757,9 @@ function stagePosition(value: number): { index: number; frac: number } {
   return { index: 0, frac: 0 };
 }
 
-function pickActivities(score: DomainScore): Activity[] {
+function pickActivities(score: DomainScore): AdminActivity[] {
   const band = bandForAge(Math.round(score.developmentalMonths));
-  return activitiesFor(score.domain, band.id).slice(0, 4);
+  return liveActivitiesFor(score.domain, band.id).slice(0, 4);
 }
 
 function formatDate(iso: string): string {

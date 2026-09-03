@@ -95,9 +95,9 @@ export default function AdminItemBankPage() {
         <p className="mt-1.5 max-w-[62ch] text-[0.88rem] text-ink-3">
           The item bank, grouped by area and age band. Editing here doesn't touch{" "}
           <code className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.8rem]">content/items.ts</code>{" "}
-          — it overlays your changes on top of it, saved to this browser, so you can try the editing
-          workflow now. Not yet wired into the parent-facing assessment itself, or persisted anywhere
-          but this browser — both land once Supabase is connected.
+          — it overlays your changes on top of it. A parent taking the check in this browser sees
+          these edits immediately. It's saved here only, not shared across devices, until Supabase
+          is connected.
         </p>
       </div>
 

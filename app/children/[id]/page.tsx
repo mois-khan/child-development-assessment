@@ -192,7 +192,7 @@ export default function ChildProfilePage({
 
             {!latest || !result ? (
               <Card variant="clay" className="mt-5 p-8 text-center sm:p-12">
-                <Mascot size={88} mood="wave" className="animate-bob mx-auto" />
+                <Mascot size={88} mood="wave" className="mx-auto" />
                 <h3 className="mt-5 text-[1.25rem]">No report yet</h3>
                 <p className="mx-auto mt-2 max-w-[40ch] text-[0.95rem] leading-relaxed text-ink-2">
                   Run {child.name}&rsquo;s first milestone check — about ten minutes, and their
