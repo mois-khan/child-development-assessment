@@ -739,15 +739,26 @@ function RecommendedCourseCard({ course }: { course: AdminCourse }) {
 
 /* ══ helpers ═══════════════════════════════════════════════════════════════ */
 
-/** Presentation-only stage bands for the progress matrix — a coarser, five-way
- * read of the same score the status chips already use (see STATUSES in
- * lib/scoring.ts), for a chart that reads at a glance. Does not touch scoring. */
+/**
+ * The columns of the progress matrix — the chart's own TIME FRAME columns,
+ * read as a quotient.
+ *
+ * These are not chosen thresholds. Every stage on the chart puts its slow
+ * column at twice its average and its superior column at half, so reaching a
+ * stage at the slow age is a quotient of 50, at the average age 100, and at
+ * the superior age 200. The boundaries below are those three numbers, and the
+ * labels are the chart's four verdicts.
+ *
+ * Deliberately NOT the old five-way "developmental delay" scale. This is a
+ * screening result a parent reads alone, at home, about their own child, and
+ * naming a delay is a clinician's job — see the wording rules at the top of
+ * lib/narrative.ts.
+ */
 const STAGES = [
-  { label: "Significant developmental delay", max: 50 },
-  { label: "Developmental delay", max: 70 },
-  { label: "Mild developmental gaps", max: 85 },
-  { label: "Typically developing", max: 115 },
-  { label: "Advanced development", max: Infinity },
+  { label: "Worth a closer look", max: 50 },
+  { label: "Needs focus", max: 100 },
+  { label: "On track", max: 200 },
+  { label: "Ahead of the chart", max: Infinity },
 ] as const;
 
 function stagePosition(value: number): { index: number; frac: number } {

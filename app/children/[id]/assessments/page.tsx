@@ -115,7 +115,7 @@ export default function AssessmentListPage({
                     </p>
                     <div className="mt-5 flex flex-wrap gap-2.5">
                       <Badge tone="neutral">
-                        <IconSparkle size={14} /> {total} questions
+                        <IconSparkle size={14} /> from {total} questions
                       </Badge>
                       <Badge tone="neutral">
                         <IconClock size={14} /> ~10 min
@@ -141,7 +141,7 @@ export default function AssessmentListPage({
                             className="block text-[0.78rem] font-semibold"
                             style={{ color: domainColor(s.code) }}
                           >
-                            {s.count} questions
+                            {s.count} question{s.count === 1 ? "" : "s"}
                           </span>
                         </span>
                       </li>

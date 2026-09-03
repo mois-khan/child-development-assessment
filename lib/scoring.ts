@@ -98,9 +98,14 @@ export const STATUSES: Record<StatusCode, Status> = {
   },
   slow: {
     code: "slow",
-    label: "Slow",
+    /* The chart's own word for this column is "Slow". That is the right word
+       on a clinician's wall chart and the wrong one on a report a parent reads
+       alone, at home, about their own child — so the code keeps the chart's
+       term and the label does not. See the wording rules at the top of
+       lib/narrative.ts. */
+    label: "Needs focus",
     meaning:
-      "Behind the chart's average, but within its range. Worth daily focused activity, and worth mentioning at the next visit to your doctor.",
+      "Behind the age the chart expects for this stage, but within its range — the chart calls this band “slow”. Worth daily focused activity, and worth mentioning at the next visit to your doctor.",
   },
   consult: {
     code: "consult",

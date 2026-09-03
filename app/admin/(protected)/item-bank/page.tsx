@@ -50,7 +50,7 @@ export default function AdminItemBankPage() {
   }, [domain, configured, refreshKey]);
 
   // A band picked explicitly, so the default view is one short list rather
-  // than every age band's questions in one endless scroll.
+  // than every stage's questions in one endless scroll.
   useEffect(() => {
     if (configured || stagesWithCounts.length === 0) return;
     setBand((current) => {
@@ -93,7 +93,7 @@ export default function AdminItemBankPage() {
           <Badge tone="warn">Dev mode — edits save to this browser only</Badge>
         </div>
         <p className="mt-1.5 max-w-[62ch] text-[0.88rem] text-ink-3">
-          The item bank, grouped by area and age band. Editing here doesn't touch{" "}
+          The item bank, grouped by competence and brain stage. Editing here doesn't touch{" "}
           <code className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.8rem]">content/items.ts</code>{" "}
           — it overlays your changes on top of it. A parent taking the check in this browser sees
           these edits immediately. It's saved here only, not shared across devices, until Supabase
@@ -181,7 +181,7 @@ export default function AdminItemBankPage() {
           />
         </Card>
       ) : (
-        // "All age bands" — one collapsible section per band instead of one
+        // "All brain stages" — one collapsible section per stage instead of one
         // long scroll, so opening this view doesn't dump the whole domain
         // (up to ~100 items for the oldest module) onto the page at once.
         <div className="space-y-3">
