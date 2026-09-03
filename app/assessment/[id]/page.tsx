@@ -361,7 +361,7 @@ export default function AssessmentPage({
         <span
           key={reward.key}
           className="animate-float-up pointer-events-none fixed left-1/2 top-[44%] z-50 -translate-x-1/2 text-[1.7rem] font-extrabold"
-          style={{ fontFamily: "var(--font-display)", color: "var(--sun-500)" }}
+          style={{ fontFamily: "var(--font-sans)", color: "var(--sun-500)" }}
           onAnimationEnd={() => setReward(null)}
         >
           +{reward.amount} XP

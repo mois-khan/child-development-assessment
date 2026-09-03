@@ -63,9 +63,9 @@ export function Button({
       style={style}
       {...rest}
     >
-      {iconLeft}
+      {iconLeft && <span className="btn-icon-left">{iconLeft}</span>}
       {children}
-      {iconRight}
+      {iconRight && <span className="btn-icon-right">{iconRight}</span>}
     </button>
   );
 }
@@ -96,9 +96,9 @@ export function ButtonLink({
   );
   const inner = (
     <>
-      {iconLeft}
+      {iconLeft && <span className="btn-icon-left">{iconLeft}</span>}
       {children}
-      {iconRight}
+      {iconRight && <span className="btn-icon-right">{iconRight}</span>}
     </>
   );
 
@@ -261,12 +261,16 @@ export function Meter({
   color,
   className = "",
   label,
+  animate = false,
 }: {
   value: number;
   max?: number;
   color?: string;
   className?: string;
   label?: string;
+  /** Grow in from 0 on mount. Only for bars that render once and never
+   *  change again (a report snapshot) — never on a live-updating bar. */
+  animate?: boolean;
 }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
@@ -276,7 +280,7 @@ export function Meter({
       aria-label={label ?? `${Math.round(pct)} percent`}
     >
       <div
-        className="meter-fill"
+        className={cx("meter-fill", animate && "grow-in")}
         style={{
           width: `${pct}%`,
           ...(color
@@ -478,7 +482,10 @@ export function SectionTile({
         borderRadius: size * 0.32,
         color,
         background: `color-mix(in srgb, ${color} 14%, var(--surface))`,
-        boxShadow: `0 4px 10px -6px color-mix(in srgb, ${color} 55%, transparent)`,
+        boxShadow: [
+          `0 1px 2px rgba(69, 77, 93, 0.08)`,
+          `0 8px 18px -8px color-mix(in srgb, ${color} 60%, transparent)`,
+        ].join(", "),
       }}
       aria-hidden="true"
     >
@@ -552,7 +559,7 @@ export function Stat({
           {icon}
         </span>
       )}
-      <p className="tnum text-[1.75rem] font-extrabold leading-none" style={{ fontFamily: "var(--font-display)", color }}>
+      <p className="tnum text-[1.75rem] font-extrabold leading-none" style={{ fontFamily: "var(--font-sans)", color }}>
         {value}
       </p>
       <p className="mt-1.5 text-[0.82rem] font-semibold text-ink-3">{label}</p>

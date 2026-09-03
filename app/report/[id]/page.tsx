@@ -158,23 +158,24 @@ export default function ReportPage({
             style={{
               borderRadius: "var(--radius-xl)",
               background: "linear-gradient(160deg, var(--brand-500) 0%, var(--brand-700) 58%, var(--brand-900) 100%)",
-              boxShadow: "var(--clay-lg)",
+              boxShadow:
+                "0 2px 5px rgba(69, 77, 93, 0.14), 0 40px 70px -28px color-mix(in srgb, var(--brand-600) 60%, transparent)",
             }}
           >
             <span
               aria-hidden="true"
               className="bloom"
-              style={{ width: 420, height: 420, top: -200, left: "-4%", "--bloom-color": "#a5a9fb", opacity: 0.5 } as React.CSSProperties}
+              style={{ width: 420, height: 420, top: -200, left: "-4%", "--bloom-color": "var(--brand-300)", opacity: 0.5 } as React.CSSProperties}
             />
             <span
               aria-hidden="true"
               className="bloom"
-              style={{ width: 300, height: 300, bottom: -160, right: "4%", "--bloom-color": "#fbbf24", opacity: 0.22 } as React.CSSProperties}
+              style={{ width: 300, height: 300, bottom: -160, right: "4%", "--bloom-color": "var(--sun-400)", opacity: 0.22 } as React.CSSProperties}
             />
             <span
               aria-hidden="true"
               className="bloom print:hidden"
-              style={{ width: 220, height: 220, top: -70, right: "2%", "--bloom-color": "#c7ccff", opacity: 0.4 } as React.CSSProperties}
+              style={{ width: 220, height: 220, top: -70, right: "2%", "--bloom-color": "var(--brand-200)", opacity: 0.4 } as React.CSSProperties}
             />
 
             <div className="relative flex flex-col gap-8 sm:gap-10">
@@ -320,7 +321,7 @@ export default function ReportPage({
                             ))}
                           </div>
                           <div
-                            className="progress-matrix-fill"
+                            className="progress-matrix-fill grow-in"
                             style={{ width: `${pct}%`, background: color, opacity: 0.28 }}
                           />
                           <div
@@ -514,7 +515,7 @@ function DomainCard({
         </div>
 
         <div className="mt-5 flex items-center gap-4 border-b border-line-soft pb-5">
-          <Meter value={Math.min(100, value)} color={color} className="flex-1" />
+          <Meter value={Math.min(100, value)} color={color} className="flex-1" animate />
           <span className="tnum text-[0.95rem] font-extrabold text-ink">{Math.round(value)}</span>
         </div>
 

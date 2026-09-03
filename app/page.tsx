@@ -142,7 +142,7 @@ export default function Home() {
               <div className="animate-rise relative" style={{ animationDelay: "140ms" }}>
                 <div className="relative mx-auto aspect-[4/3.4] w-full max-w-[560px]">
                   <div
-                    className="clay clay-lg absolute left-0 top-4 w-[62%] overflow-hidden"
+                    className="clay clay-lg photo-frame absolute left-0 top-4 w-[62%] overflow-hidden"
                     style={{ borderRadius: "var(--radius-xl)" }}
                   >
                     <Image
@@ -157,7 +157,7 @@ export default function Home() {
                   </div>
 
                   <div
-                    className="clay clay-lg absolute bottom-2 right-0 w-[52%] overflow-hidden"
+                    className="clay clay-lg photo-frame absolute bottom-2 right-0 w-[52%] overflow-hidden"
                     style={{ borderRadius: "var(--radius-xl)" }}
                   >
                     <Image
@@ -200,7 +200,7 @@ export default function Home() {
                   key={d.code}
                   variant="tint"
                   tint={domainColor(d.code)}
-                  className="animate-rise p-6"
+                  className="lift animate-rise p-6"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <SectionTile code={d.code} size={54} />
@@ -271,10 +271,10 @@ export default function Home() {
                 <Card
                   key={s.title}
                   variant="clay"
-                  className="animate-rise overflow-hidden"
+                  className="lift animate-rise overflow-hidden"
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
-                  <div className="relative h-52 w-full overflow-hidden">
+                  <div className="photo-frame relative h-52 w-full overflow-hidden">
                     <Image
                       src={s.image}
                       alt={s.alt}
@@ -304,7 +304,10 @@ export default function Home() {
           <Shell width="wide">
             <div className="grid items-center gap-12 lg:grid-cols-2">
               <div>
-                <div className="clay clay-lg overflow-hidden" style={{ borderRadius: "var(--radius-xl)" }}>
+                <div
+                  className="clay clay-lg photo-frame relative overflow-hidden"
+                  style={{ borderRadius: "var(--radius-xl)" }}
+                >
                   <Image
                     src="/images/playful-child.jpg"
                     alt="A smiling child playing happily indoors"
@@ -318,7 +321,7 @@ export default function Home() {
                     <p className="eyebrow">Language competence</p>
                     <div className="mt-2 meter-track">
                       <div
-                        className="meter-fill"
+                        className="meter-fill grow-in"
                         style={{ width: "78%", background: "var(--sec-language)" }}
                       />
                     </div>
@@ -363,13 +366,14 @@ export default function Home() {
               style={{
                 borderRadius: "var(--radius-xl)",
                 background: "linear-gradient(150deg, var(--brand-600), var(--brand-800))",
-                boxShadow: "var(--clay-lg)",
+                boxShadow:
+                  "0 2px 5px rgba(69, 77, 93, 0.14), 0 40px 70px -28px color-mix(in srgb, var(--brand-600) 65%, transparent)",
               }}
             >
               <span
                 aria-hidden="true"
                 className="bloom"
-                style={{ width: 320, height: 320, top: -140, left: "10%", "--bloom-color": "#8285f5", opacity: 0.4 } as React.CSSProperties}
+                style={{ width: 320, height: 320, top: -140, left: "10%", "--bloom-color": "var(--brand-400)", opacity: 0.4 } as React.CSSProperties}
               />
 
               <div className="relative">

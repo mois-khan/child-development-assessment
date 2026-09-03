@@ -121,13 +121,14 @@ export default function ChildProfilePage({
             style={{
               borderRadius: "var(--radius-xl)",
               background: "linear-gradient(150deg, var(--brand-600), var(--brand-800))",
-              boxShadow: "var(--clay-lg)",
+              boxShadow:
+                "0 2px 5px rgba(69, 77, 93, 0.14), 0 40px 70px -28px color-mix(in srgb, var(--brand-600) 60%, transparent)",
             }}
           >
             <span
               aria-hidden="true"
               className="bloom"
-              style={{ width: 300, height: 300, top: -140, right: "6%", "--bloom-color": "#fbbf24", opacity: 0.3 } as React.CSSProperties}
+              style={{ width: 300, height: 300, top: -140, right: "6%", "--bloom-color": "var(--sun-400)", opacity: 0.3 } as React.CSSProperties}
             />
             <div className="relative flex flex-wrap items-center justify-between gap-6">
               <div className="flex items-center gap-5">
@@ -255,6 +256,7 @@ export default function ChildProfilePage({
                             color={domainColor(s.domain)}
                             className="mt-1.5 !h-2.5"
                             label={`${d.name}: ${Math.round(value)} out of an expected 100`}
+                            animate
                           />
                         </div>
                       </div>
