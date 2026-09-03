@@ -1,571 +1,651 @@
-import type { DomainCode, Item, ItemSource } from "@/lib/types";
-import { AGE_BANDS, MODULE_BANDS } from "./domains";
+import type { DomainCode, Item, ItemKind, ItemSource } from "@/lib/types";
+import { BRAIN_STAGES } from "./stages";
 
-export const BANK_VERSION = "2026.09.01-poc";
+export const BANK_VERSION = "2026.09.04-ace";
 
 /**
- * The milestone item bank.
+ * The assessment item bank.
  *
- * SOURCES AND LICENSING — this matters, please read before adding content.
+ * SOURCE — this matters, please read before adding content.
  *
- *  C  CDC "Learn the Signs. Act Early." milestone checklists (2021 revision),
- *     ages 2mo-5yr. A work of the US federal government, public domain.
- *     https://www.cdc.gov/act-early/milestones/index.html
- *  N  NIDCD / NIH "Your Baby's Hearing and Communicative Development
- *     Checklist". US federal government, public domain.
- *     https://www.nidcd.nih.gov/health/your-babys-hearing-and-communicative-development-checklist
- *  W  WHO Multicentre Growth Reference Study, windows of achievement for six
- *     gross motor milestones (2006). Freely reproducible with attribution.
- *  A  Authored for this project from standard developmental expectations,
- *     covering the vision strand (which the CDC does not break out), the
- *     61-72 month band (past where the CDC checklists stop), and gaps.
+ * Every question here is transcribed from the programme's own printed
+ * assessment booklet (Ru Education Pvt Ltd), which families already fill in by
+ * hand. The booklet is laid out exactly as this file is: one page per
+ * competence, questions listed VII down to I. Where a question below differs
+ * from the booklet, the booklet is right and this file is a bug.
  *
- * ASQ-3 and Denver II are commercial licensed instruments. Their items are NOT
- * used here and must not be pasted in. The Trivandrum Development Screening
- * Chart (TDSC 0-6) is the closest validated Indian equivalent and is worth
- * licensing if Kaushalya wants an India-normed instrument — this bank is
- * structured so its items could replace these directly.
+ * Marked `AUTHORED` are the few places the booklet records a measurement but
+ * no pass/fail question, and the stage needs one — Language V asks "how many
+ * words does your child say?" where the chart's cell is "10 to 25 words", so a
+ * yes/no for that threshold is added alongside the count.
  *
- * Wording note: items are phrased so that "yes" is always the developmentally
- * expected answer, and never use "fail", "delay", or "should".
+ * THE "how" TEXT IS AUTHORED, ALL OF IT. The paper booklet is filled in with a
+ * clinician in the room, so it does not need to explain how to test anything.
+ * A parent at home does. Every `how` line below was written for this app and
+ * NONE of it has been reviewed by Kaushalya's child development team yet —
+ * that review is a blocker before any real family uses this.
+ *
+ * Wording note: except where `invert` is set, questions are phrased so that
+ * "yes" is always the developmentally expected answer.
  */
 
-type Row = [text: string, how: string, source: "C" | "N" | "W" | "A"];
-
-const SOURCE_MAP: Record<Row[2], ItemSource> = {
-  C: "CDC",
-  N: "NIDCD",
-  W: "WHO",
-  A: "AUTHORED",
-};
+interface Row {
+  /** The question as the parent reads it. */
+  t: string;
+  /** How to actually test it. Authored — see the note above. */
+  h: string;
+  /** Defaults to "yesno", the only kind that scores. */
+  k?: ItemKind;
+  /** "Yes" is the concerning answer here, not the expected one. */
+  inv?: true;
+  /** Only ask once the child is this old, in months. */
+  min?: number;
+  /** For `choice` items. */
+  ch?: [string, string];
+  /** For `count` and `percent` items. */
+  u?: string;
+  /** Authored rather than transcribed from the booklet. */
+  a?: true;
+}
 
 const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
-  // ─── 0–2 months ────────────────────────────────────────────────────────────
-  b01: {
-    auditory: [
-      ["Reacts to loud sounds", "Clap once, out of sight, about a metre away. Look for a blink, a startle, or a pause in movement.", "C"],
-      ["Calms down or quietens when you speak to them", "When they are fussing, talk softly near them without picking them up.", "N"],
-      ["Recognises your voice and settles when crying", "Speak from just out of view while they are crying and watch for a change.", "N"],
-      ["Starts or stops sucking in response to a sound while feeding", "Make a soft sound during a feed and watch their sucking rhythm.", "N"],
-    ],
+  /* ── Stage I — Medulla and Cord ─────────────────────────────────────────── */
+  s1: {
     vision: [
-      ["Looks at your face", "Hold your face about 20–25 cm away while they are calm and alert.", "C"],
-      ["Watches you as you move", "Walk slowly across their view and see whether their eyes follow you.", "C"],
-      ["Looks at a toy for several seconds", "Hold a bright toy still, about 25 cm away.", "C"],
-      ["Follows a face or bright toy as you move it slowly side to side", "Move it in a slow arc about 25 cm from their face. Look for the eyes tracking past the middle.", "A"],
+      {
+        t: "Do your child's pupils dilate in a dark room?",
+        h: "Take them into a dark room for a minute, then look closely at the black centre of each eye — it should have grown wider.",
+      },
+    ],
+    auditory: [
+      {
+        t: "Does your child physically startle at any sudden or sharp sound?",
+        h: "Clap once, out of sight and about a metre away, and watch for a blink, a jerk, or a pause in movement.",
+      },
+      {
+        t: "Does your child react appropriately to sudden sounds?",
+        h: "After the startle, watch whether they settle again — rather than staying distressed, or not reacting at all.",
+      },
+    ],
+    tactile: [
+      {
+        t: "Using your thumbnail, scratch the sole of your child's foot from the heel to the toe. Does his big toe move downward?",
+        h: "Draw your thumbnail firmly up the sole from heel to toe, and watch what the big toe does.",
+      },
     ],
     mobility: [
-      ["Holds head up when on tummy", "Place them on their tummy on a firm surface for a minute while they are awake.", "C"],
-      ["Moves both arms and both legs equally", "Watch during a nappy change — look for similar movement on both sides.", "C"],
-      ["Lifts head briefly when held against your shoulder", "Hold them upright against your shoulder without supporting the head for a moment.", "A"],
-    ],
-    hand: [
-      ["Opens hands briefly", "Watch their hands while they are calm and awake, not crying.", "C"],
-      ["Brings a hand towards their mouth", "Watch during a quiet, alert period.", "A"],
-      ["Grasps your finger when you place it in their palm", "Press a finger gently into the palm and feel for a grip.", "A"],
+      {
+        t: "Does your child move his arms and legs freely?",
+        h: "Watch during a nappy change — look for easy, similar movement on both sides.",
+      },
+      {
+        t: "Are his arms and/or legs too tight or too floppy?",
+        h: "Gently bend and straighten an arm and a leg. Feel for stiffness that resists you, or for a limb with no tone at all.",
+        inv: true,
+      },
     ],
     language: [
-      ["Makes sounds other than crying", "Listen during calm, alert times — gurgles, grunts or small vowel sounds.", "C"],
-      ["Coos and makes pleasure sounds", "Talk to them face to face and pause to let them answer.", "N"],
-      ["Has a different cry for different needs", "Notice whether hungry, tired and uncomfortable cries sound different to you.", "N"],
+      {
+        t: "Does he have a lusty cry?",
+        h: "When they cry from hunger or discomfort, listen for a strong, full sound rather than a weak or thin one.",
+      },
     ],
-    social: [
-      ["Calms down when spoken to or picked up", "Try talking first, before picking them up, and see if that alone settles them.", "C"],
-      ["Seems happy to see you when you walk up to them", "Approach while they are calm and awake and watch their face and body.", "C"],
-      ["Smiles when you talk to them", "Smile and talk face to face, then wait several seconds for a reply.", "C"],
-      ["Makes eye contact during feeding or cuddling", "Look for them holding your gaze for a moment.", "A"],
+    hand: [
+      {
+        t: "When you put an object or finger in the palm of your child's hand, does he grasp it?",
+        h: "Press a finger gently into the palm and feel for a grip closing around it.",
+      },
     ],
   },
 
-  // ─── 3–4 months ────────────────────────────────────────────────────────────
-  b02: {
-    auditory: [
-      ["Turns head towards the sound of your voice", "Speak from one side, out of view, about a metre away.", "C"],
-      ["Follows sounds with their eyes", "Shake a rattle out of sight, then watch whether their eyes search for it.", "N"],
-      ["Responds to changes in the tone of your voice", "Say the same phrase warmly, then firmly, and watch their expression.", "N"],
-      ["Notices toys that make sounds", "Offer a rattle or squeaky toy and watch for attention to the sound.", "N"],
-    ],
+  /* ── Stage II — Pons ────────────────────────────────────────────────────── */
+  s2: {
     vision: [
-      ["Looks at their own hands with interest", "Watch during a calm, awake period on their back.", "C"],
-      ["Follows a moving toy from one side to the other without losing it", "Move a toy slowly through a half circle in front of them.", "A"],
-      ["Eyes work together, without one turning in or out most of the time", "Watch their eyes as they look at your face. An occasional drift is normal at this age; a constant turn is worth mentioning to your doctor.", "A"],
-      ["Looks at a person across the room", "Have someone stand a few metres away and talk.", "A"],
+      {
+        t: "Does your child follow you with his eyes as you walk across the room?",
+        h: "Walk slowly from one side of the room to the other while they are calm and awake, and watch whether their eyes come with you.",
+      },
+      {
+        t: "Is your child aware of lights?",
+        h: "In a dim room, switch on a lamp off to one side and watch for their eyes or head turning towards it.",
+      },
+      {
+        t: "Do your child's pupils constrict immediately when you shine a light into his eyes?",
+        h: "In a dim room, shine a torch briefly towards one eye from the side, and watch the black centre shrink at once.",
+      },
+    ],
+    auditory: [
+      {
+        t: "Does your child follow or respond to loud and threatening sounds?",
+        h: "Notice what happens with a door slam, a cooker whistle or a horn — look for turning towards it, freezing, or crying.",
+      },
+    ],
+    tactile: [
+      {
+        t: "Does your child have an immediate response to pain in all the areas of his body?",
+        h: "Notice their reaction to ordinary knocks in different places — arms, legs, back, feet.",
+      },
+      {
+        t: "Does your child have an appropriate response to hot and cold?",
+        h: "Watch how they react to a cool cloth, and to a warm bath.",
+      },
+      {
+        t: "Is his response appropriate all over his body?",
+        h: "Check that no part of the body reacts noticeably less than the rest.",
+      },
     ],
     mobility: [
-      ["Holds head steady without support when you hold them", "Hold them upright without supporting the head and watch for steadiness.", "C"],
-      ["Pushes up onto elbows or forearms when on tummy", "Give them a few minutes of tummy time on a firm surface.", "C"],
-      ["Rolls partly onto their side", "Watch during floor play on their back.", "A"],
-    ],
-    hand: [
-      ["Holds a toy when you put it in their hand", "Place a light rattle in the palm and see if they hold on.", "C"],
-      ["Uses their arm to swing at toys", "Hold a toy within reach above their chest.", "C"],
-      ["Brings hands to mouth", "Watch during a calm, awake period.", "C"],
-      ["Brings both hands together in front of their chest", "Watch during floor play on their back.", "A"],
+      {
+        t: "Does your child crawl across the room on his tummy?",
+        h: "Put a favourite toy a few feet away on the floor and let them go for it on their tummy.",
+      },
+      {
+        t: "Does your child crawl in a smooth cross pattern?",
+        h: "Watch which limbs move together — a cross pattern is right arm with left leg, then left arm with right leg.",
+      },
     ],
     language: [
-      ["Makes sounds like “oooo” and “aahh” (cooing)", "Talk face to face and pause to let them take a turn.", "C"],
-      ["Makes sounds back when you talk to them", "Say something, then wait five seconds without filling the silence.", "C"],
-      ["Babbles when excited or unhappy", "Listen during play and during a grumpy moment.", "N"],
-      ["Makes gurgling sounds when playing alone or with you", "Listen while they are content on their own.", "N"],
+      {
+        t: "Does your child have a vital cry when he is in pain?",
+        h: "Notice whether the cry after a knock sounds different and more urgent than the everyday cry.",
+      },
+      {
+        t: "Is his cry appropriately loud?",
+        h: "Listen from the next room — you should hear it clearly through a closed door.",
+      },
     ],
-    social: [
-      ["Smiles on their own to get your attention", "Look for a smile they start, not one that answers yours.", "C"],
-      ["Chuckles when you try to make them laugh", "Try a gentle tickle or a silly sound.", "C"],
-      ["Looks at you, moves, or makes sounds to get or keep your attention", "Turn away mid-play and see whether they try to draw you back.", "C"],
-      ["Opens their mouth when they see the breast or bottle, if hungry", "Watch at the start of a feed when they are hungry.", "C"],
+    hand: [
+      {
+        t: "Does your child have the ability to let go of an object easily?",
+        h: "Once they are holding something, watch whether they can open the hand and drop it on purpose.",
+      },
+      {
+        t: "Does he do so equally well with both hands?",
+        h: "Try the same thing again with the other hand.",
+      },
     ],
   },
 
-  // ─── 5–6 months ────────────────────────────────────────────────────────────
-  b03: {
-    auditory: [
-      ["Turns to look towards a new sound", "Make a soft sound to one side, out of view.", "N"],
-      ["Pays attention to music", "Play a song and watch for stilling, turning, or moving to it.", "N"],
-      ["Listens when spoken to and looks at the speaker", "Have someone else talk nearby and watch whether they turn.", "N"],
-      ["Notices when a sound stops", "Play music, then stop it suddenly, and watch their reaction.", "A"],
-    ],
+  /* ── Stage III — Mid-Brain ──────────────────────────────────────────────── */
+  s3: {
     vision: [
-      ["Reaches accurately for a toy they can see", "Hold a toy within arm's reach and slightly to one side.", "A"],
-      ["Looks at themselves in a mirror with interest", "Hold them in front of a mirror for a minute.", "C"],
-      ["Follows a dropped object with their eyes", "Drop a soft toy from their eye level and watch whether they look down.", "A"],
-      ["Notices small objects, like crumbs on a tray", "Put a few small bits of food on the highchair tray.", "A"],
+      {
+        t: "Does your child recognise many familiar objects?",
+        h: "Hold up things they know — a bottle, a favourite toy, a spoon — one at a time, and watch for a change in their face or for reaching.",
+      },
+      {
+        t: "Does your child recognise your face without any sound or touch clues?",
+        h: "Come into view silently, without speaking or touching them, and watch for recognition.",
+      },
+      {
+        t: "If you change your facial expression greatly, does your child notice?",
+        h: "Face them closely, then switch from a big smile to a surprised face, and watch whether they react.",
+      },
+    ],
+    auditory: [
+      {
+        t: "Does your child respond with a smile to your loving tone of voice?",
+        h: "Speak warmly and softly, face to face, then pause several seconds to let them answer.",
+      },
+      {
+        t: "Does your child get upset when you speak in an angry tone of voice?",
+        h: "Say something ordinary in a sharp tone, keeping your face neutral, and watch for a change.",
+      },
+      {
+        t: "Does your child react appropriately to everyday noises in the house?",
+        h: "Watch their response to the doorbell, a mixer, running water — interested rather than alarmed or blank.",
+      },
+    ],
+    tactile: [
+      {
+        t: "Does your child appreciate coolness and warmth appropriately?",
+        h: "Touch a cool spoon and then a warm one to their arm, and watch for two different reactions.",
+      },
+      {
+        t: "Does your child enjoy being stroked?",
+        h: "Stroke their arm slowly and watch whether they settle, rather than pulling away.",
+      },
+      {
+        t: "Is his response appropriate all over his body?",
+        h: "Try the same stroke on arms, legs, back and tummy, and compare.",
+      },
+      {
+        t: "Does your child respond to soft touch?",
+        h: "Brush a fingertip very lightly on the back of the hand, and watch for any notice at all.",
+      },
     ],
     mobility: [
-      ["Rolls from tummy to back", "Give them tummy time on a firm, safe surface and watch.", "C"],
-      ["Pushes up with straight arms when on tummy", "Watch during tummy time.", "C"],
-      ["Leans on their hands to support themselves when sitting", "Sit them on the floor and stay close to catch them.", "C"],
-      ["Takes some weight on their legs when held standing", "Hold them under the arms with feet on your lap.", "W"],
-    ],
-    hand: [
-      ["Reaches to grab a toy they want", "Put a favourite toy just within reach.", "C"],
-      ["Puts things in their mouth to explore them", "Offer a safe teething toy and watch.", "C"],
-      ["Holds a toy in each hand", "Offer a second toy while they already hold one.", "A"],
-      ["Passes a toy from one hand to the other", "Offer a toy to one hand and watch what happens next.", "A"],
+      {
+        t: "Does your child creep across the room on his hands and knees?",
+        h: "Place a toy across the room and watch them travel to it up off the floor, on hands and knees.",
+      },
+      {
+        t: "Does your child creep in a smooth cross pattern?",
+        h: "Watch for right hand with left knee, then left hand with right knee, without a hitch.",
+      },
     ],
     language: [
-      ["Takes turns making sounds with you", "Make a sound, wait, and see if they answer before you go again.", "C"],
-      ["Blows raspberries", "Do it yourself first and watch whether they copy.", "C"],
-      ["Makes squealing noises", "Listen during excited play.", "C"],
-      ["Babbles using sounds like p, b and m", "Listen for “ba”, “ma” or “pa” sounds during play.", "N"],
+      {
+        t: "Does your child make a variety of sounds which let you know whether he is happy, unhappy, hungry or asleep?",
+        h: "Over a day, notice whether you can tell what they want from the sound alone, without looking.",
+      },
+      {
+        t: "Does he make the full range of sounds of a well seven-month-old?",
+        h: "Listen for babbling with consonants — 'ba', 'da', 'ma' — repeated in strings, not just vowel sounds.",
+      },
     ],
-    social: [
-      ["Knows familiar people", "Watch how they respond to you compared with someone they rarely see.", "C"],
-      ["Laughs", "Try a game they enjoy, like peek-a-boo.", "C"],
-      ["Closes their lips to show they don't want more food", "Offer another spoonful when they seem finished.", "C"],
-      ["Shows they are enjoying playing with you", "Watch their face and body during a favourite game.", "A"],
+    hand: [
+      {
+        t: "Does your child spontaneously reach out and pick up objects?",
+        h: "Put a toy within arm's reach and wait, without offering it — watch for them going for it themselves.",
+      },
+      {
+        t: "Does he do so equally well with both hands?",
+        h: "Place the toy on the other side and watch whether that hand works as well.",
+      },
     ],
   },
 
-  // ─── 7–9 months ────────────────────────────────────────────────────────────
-  b04: {
-    auditory: [
-      ["Looks when you call their name", "Call their name once, from behind, in a normal voice.", "C"],
-      ["Turns and looks in the direction of sounds", "Make a sound to one side, out of view.", "N"],
-      ["Understands words for common things like “cup”, “shoe” or “milk”", "Say the word without pointing and watch whether they look at the object.", "N"],
-      ["Enjoys playing peek-a-boo and pat-a-cake", "Play both and watch for anticipation.", "N"],
-    ],
+  /* ── Stage IV — Initial Cortex ──────────────────────────────────────────── */
+  s4: {
     vision: [
-      ["Looks for an object when it drops out of sight", "Drop a toy over the edge of the highchair tray.", "C"],
-      ["Spots small objects and tries to pick them up", "Put a few small bits of food on the tray.", "A"],
-      ["Recognises a familiar person across the room", "Have a familiar person enter and stand a few metres away, quietly.", "A"],
+      {
+        t: "Are your child's eyes consistently straight throughout the day?",
+        h: "Watch both eyes at different times — morning, after a nap, in the evening — and check they point the same way together.",
+      },
+      {
+        t: "Even if your child is tired, sick or upset, do his eyes remain perfectly straight?",
+        h: "Check again at the end of a long day, or during an illness, when any drift is easiest to see.",
+      },
+    ],
+    auditory: [
+      {
+        t: "Does your child consistently respond to two or more words?",
+        h: "From another part of the room, say two words they know — their name, and 'milk' — and see whether each one gets a reliable response.",
+      },
+    ],
+    tactile: [
+      {
+        t: "Can your child feel a penny on a flat surface?",
+        h: "Place a coin on a table, guide their hand over it with their eyes closed, and see whether they find it.",
+      },
+      {
+        t: "Can he do so with both hands?",
+        h: "Try the same thing again with the other hand.",
+      },
     ],
     mobility: [
-      ["Sits without support", "Sit them on the floor and let go, staying close.", "C"],
-      ["Gets to a sitting position by themselves", "Watch during floor play, starting from lying or crawling.", "C"],
-      ["Rolls both ways", "Watch during floor play over several minutes.", "A"],
-      ["Pushes up onto hands and knees, or crawls", "Put a toy just out of reach during floor play.", "W"],
-    ],
-    hand: [
-      ["Moves things from one hand to the other", "Offer a toy to one hand and watch.", "C"],
-      ["Bangs two things together", "Give them two blocks or two spoons.", "C"],
-      ["Uses fingers to rake food towards themselves", "Put small bits of food on the tray.", "C"],
-      ["Picks up a small object between thumb and the side of a finger", "Offer a single small piece of food.", "A"],
+      {
+        t: "Can your child walk across a room completely independently?",
+        h: "Stand back and let them cross the room with nothing to hold and nobody within reach.",
+      },
+      {
+        t: "Does your child walk across the room with his arms up in the air for balance?",
+        h: "Watch where the arms sit while they walk — at this stage they are up, at or above shoulder height.",
+      },
+      {
+        t: "Does your child stand up without support?",
+        h: "From sitting on the floor, watch them get to their feet without holding furniture or a hand.",
+      },
     ],
     language: [
-      ["Makes a lot of different sounds like “mamamama” and “bababababa”", "Listen during play.", "C"],
-      ["Babbles using long and short groups of sounds", "Listen for strings like “tata, upup, bibibi”.", "N"],
-      ["Babbles to get and keep your attention", "Turn away mid-play and listen.", "N"],
-      ["Copies different speech sounds you make", "Make a simple sound and wait to see whether they try it.", "N"],
+      {
+        t: "Does your child say two or more words spontaneously and meaningfully?",
+        h: "Wait for them to use a word on their own, for the right thing, without you saying it first.",
+      },
+      {
+        t: "Which words does your child say?",
+        h: "List the words you have heard them use meaningfully.",
+        k: "text",
+      },
     ],
-    social: [
-      ["Is shy, clingy, or wary around strangers", "Watch how they respond to someone new approaching.", "C"],
-      ["Shows several facial expressions — happy, sad, angry, surprised", "Watch across a whole day.", "C"],
-      ["Reacts when you leave, by looking, reaching, or crying", "Step out of the room briefly while someone else stays.", "C"],
-      ["Lifts their arms up to be picked up", "Stand in front of them and hold out your hands without speaking.", "C"],
+    hand: [
+      {
+        t: "Does your child pick up objects between his thumb and forefinger, for example picking up crumbs?",
+        h: "Scatter a few crumbs or peas on the tray and watch which fingers they use.",
+      },
+      {
+        t: "Does he hold a pen or pencil between his thumb and two fingers?",
+        h: "Offer a pencil and paper and watch the grip, rather than what they draw.",
+      },
+      {
+        t: "Does he do so equally well with both hands?",
+        h: "Offer the pencil to the other hand and watch the grip again.",
+      },
     ],
   },
 
-  // ─── 10–12 months ──────────────────────────────────────────────────────────
-  b05: {
-    auditory: [
-      ["Understands “no” — pauses briefly or stops when you say it", "Say it once, calmly, as they reach for something they shouldn't.", "C"],
-      ["Responds to simple requests like “come here”", "Say it without gestures and see whether they respond.", "N"],
-      ["Turns straight away to a voice from across the room", "Have someone call from a few metres away.", "A"],
-      ["Enjoys and responds to simple songs and rhymes", "Sing a familiar song and watch for movement or anticipation.", "N"],
-    ],
+  /* ── Stage V — Early Cortex ─────────────────────────────────────────────── */
+  s5: {
     vision: [
-      ["Looks for things they see you hide, like a toy under a cloth", "Hide a toy under a cloth while they watch.", "C"],
-      ["Looks at something across the room that they want", "Watch what they do when a favourite toy is out of reach.", "A"],
-      ["Watches a rolling ball and follows where it goes", "Roll a ball slowly past them.", "A"],
+      {
+        t: "Does your child know pictures?",
+        h: "Show a picture book and ask them to point to something they know — a dog, a car, a cup.",
+      },
+      {
+        t: "Does your child recognise traffic signals — the difference between red, amber and green?",
+        h: "At a signal, or with three coloured cards, ask which one means stop and which means go.",
+      },
+    ],
+    auditory: [
+      {
+        t: "Does your child understand 10 to 25 words?",
+        h: "Name familiar things one at a time without pointing, and ask them to find or look at each one.",
+      },
+      {
+        t: "Which words does your child understand?",
+        h: "List the words they reliably respond to.",
+        k: "text",
+      },
+      {
+        t: "Does your child respond to directions?",
+        h: "Give one simple instruction with no gesture — 'bring me your shoe' — and see whether they act on it.",
+      },
+      {
+        t: "Please give an example of a direction he follows",
+        h: "Write down one instruction they reliably act on.",
+        k: "text",
+      },
+      {
+        t: "Does your child understand couplets of words, such as 'get up', 'sit down', 'blue shirt', 'orange juice'?",
+        h: "Say a two-word phrase with no pointing, and watch whether they do the whole thing rather than just one half.",
+      },
+    ],
+    tactile: [
+      {
+        t: "Does your child recognise familiar objects by the way they feel?",
+        h: "With their eyes closed, put a spoon or a familiar toy in their hand and ask what it is.",
+      },
+      {
+        t: "Can he do so with both hands?",
+        h: "Try the same thing again with the other hand.",
+      },
+      {
+        t: "Does your child differentiate between a toy elephant and a toy horse just by touch, with his eyes closed?",
+        h: "Eyes closed, hand them one and then the other, and ask which animal each one is.",
+      },
     ],
     mobility: [
-      ["Pulls up to stand", "Put a toy on a low, stable sofa or table.", "C"],
-      ["Walks holding on to furniture", "Set up a safe run of low furniture with a toy at the end.", "C"],
-      ["Stands alone for a few seconds", "Let go while they are steady and stay close.", "W"],
-      ["Sits down from standing without falling", "Watch during furniture play.", "A"],
-    ],
-    hand: [
-      ["Picks things up between thumb and pointer finger", "Put a few small bits of food on the tray and watch the grip.", "C"],
-      ["Puts something into a container, like a block in a cup", "Give them blocks and an open cup and show them once.", "C"],
-      ["Drinks from a cup without a lid, as you hold it", "Offer a small open cup at a mealtime.", "C"],
-      ["Lets go of an object on purpose", "Hold out your hand and ask for the toy.", "A"],
+      {
+        t: "Can your child walk across a room carrying an object?",
+        h: "Hand them a toy at one side of the room and ask them to bring it to you at the other.",
+      },
+      {
+        t: "Does your child walk with his arms down?",
+        h: "Watch the arms while they walk — hanging and swinging by the sides, not held up for balance.",
+      },
     ],
     language: [
-      ["Calls a parent “mama” or “dada” or another special name", "Listen for it used for the right person, not just as a sound.", "C"],
-      ["Waves bye-bye", "Wave as someone leaves and see whether they copy or start it.", "C"],
-      ["Has one or two words besides mama and dada", "Think of sounds they use consistently to mean one thing.", "N"],
-      ["Communicates with gestures, like waving or holding up their arms", "Watch across a normal morning.", "N"],
+      {
+        t: "Does your child say 10 to 25 words?",
+        h: "Over a few days, write down every different word you hear them use meaningfully, then count the list.",
+        a: true,
+      },
+      {
+        t: "How many words does your child say?",
+        h: "Count the list of different words you have heard them use.",
+        k: "count",
+        u: "words",
+      },
+      {
+        t: "Please give some examples",
+        h: "Write down a few of the words.",
+        k: "text",
+      },
+      {
+        t: "Does your child use two words together, like “good boy” or “sit down”?",
+        h: "Listen for two words joined on purpose, rather than two separate words said one after the other.",
+      },
+      {
+        t: "Please give an example",
+        h: "Write down one two-word phrase you have heard.",
+        k: "text",
+      },
     ],
-    social: [
-      ["Plays games with you, like pat-a-cake", "Start the game and see whether they join in.", "C"],
-      ["Shows you a toy, or holds it out to you", "Sit with them during play and watch.", "A"],
-      ["Looks at your face to check how you react", "Watch what they do when something surprising happens.", "A"],
+    hand: [
+      {
+        t: "Can your child pick up objects between his thumb and forefinger using both hands at the same time?",
+        h: "Put small objects on both sides and ask them to pick one up with each hand together.",
+      },
     ],
   },
 
-  // ─── 13–15 months ──────────────────────────────────────────────────────────
-  b06: {
-    auditory: [
-      ["Looks at a familiar object when you name it", "Say “where is your cup?” without pointing.", "C"],
-      ["Follows a direction given with both a gesture and words", "Hold out your hand and say “give me the toy”.", "C"],
-      ["Enjoys simple stories, songs and rhymes", "Read a short picture book and watch their attention.", "N"],
-      ["Points to one or two body parts when asked", "Ask “where is your nose?” without pointing yourself.", "N"],
-    ],
+  /* ── Stage VI — Primitive Cortex ────────────────────────────────────────── */
+  s6: {
     vision: [
-      ["Points to ask for something across the room", "Watch what they do when they want something out of reach.", "C"],
-      ["Looks at pictures in a book", "Sit together with a picture book.", "A"],
-      ["Finds a toy hidden under one of two cloths", "Hide it under one while they watch, then offer both.", "A"],
+      {
+        t: "Does your child know letters?",
+        h: "Write a few letters they see often and ask them to name each one.",
+      },
+      {
+        t: "Does your child know numbers?",
+        h: "Write a few numerals and ask them to name each one.",
+      },
+    ],
+    auditory: [
+      {
+        t: "Does your child understand at least 2,000 words?",
+        h: "Over a day, notice whether there is anything you say in ordinary conversation that they miss.",
+      },
+      {
+        t: "Does he follow two or three-step instructions?",
+        h: "Ask for a chain — 'pick up your cup, put it in the sink, then come here' — without repeating yourself.",
+      },
+      {
+        t: "Please give an example",
+        h: "Write down one multi-step instruction they follow.",
+        k: "text",
+      },
+    ],
+    tactile: [
+      {
+        t: "Does your child determine the characteristics of objects by touch alone — hard, soft, fuzzy, sticky?",
+        h: "Eyes closed, hand them a stone, some cotton wool and sticky tape, and ask what each one feels like.",
+      },
+      {
+        t: "Can he do so with both hands?",
+        h: "Try the same objects again with the other hand.",
+      },
     ],
     mobility: [
-      ["Takes a few steps on their own", "Stand a short distance away and hold out your hands.", "C"],
-      ["Stands up from the floor without holding on", "Watch during floor play.", "A"],
-      ["Bends down to pick up a toy and stands up again", "Put a toy on the floor while they are standing.", "A"],
-    ],
-    hand: [
-      ["Stacks at least two small objects, like blocks", "Build a small tower yourself first, then hand them the blocks.", "C"],
-      ["Uses fingers to feed themselves some food", "Offer finger food at a mealtime.", "C"],
-      ["Tries to use things the right way, like a phone, cup or book", "Leave safe everyday objects within reach and watch.", "C"],
-      ["Puts small objects into a narrow container", "Give them a bottle with a wide neck and some blocks.", "A"],
+      {
+        t: "Does your child walk in a cross pattern?",
+        h: "Watch the opposite arm swing forward with each leg as they walk.",
+      },
+      {
+        t: "Does he run in a cross pattern?",
+        h: "Watch for the same opposite arm-and-leg swing while they run.",
+      },
+      {
+        t: "Is his walking and running appropriate for his age?",
+        h: "Compare with other children of the same age at the park.",
+      },
     ],
     language: [
-      ["Tries to say one or two words besides mama or dada", "Listen for attempts like “ba” for ball — it needn't be clear.", "C"],
-      ["Picks up new words now and then", "Think about whether their word list has grown this month.", "N"],
-      ["Points to ask for something or to get help", "Watch what they do when they need something.", "C"],
-      ["Uses several different consonant sounds at the start of words", "Listen for a range of sounds, not just one.", "N"],
+      {
+        t: "Does your child say 2,000 words?",
+        h: "In practice this is a child who can say anything they want to say in everyday life without getting stuck for a word.",
+      },
+      {
+        t: "What percentage of what he says can you understand?",
+        h: "Think about a normal day and estimate how much of their speech is clear to you.",
+        k: "percent",
+        u: "%",
+      },
+      {
+        t: "Does he speak consistently in short sentences?",
+        h: "Listen for three or more words joined with proper structure, most times they speak — not just occasionally.",
+      },
+      {
+        t: "Please give an example",
+        h: "Write down one sentence you have heard them say.",
+        k: "text",
+      },
     ],
-    social: [
-      ["Copies other children while playing", "Watch them near another child.", "C"],
-      ["Shows you an object they like", "Sit with them during play and watch.", "C"],
-      ["Claps when excited", "Watch during a game they enjoy.", "C"],
-      ["Shows affection — hugs, cuddles or kisses", "Watch across a normal day.", "C"],
-      ["Hugs a doll or soft toy", "Leave one within reach during play.", "C"],
+    hand: [
+      {
+        t: "Can your child unscrew a lid from a bottle?",
+        h: "Hand them a closed bottle with a lid that turns easily, and let them work at it.",
+      },
+      {
+        t: "Can your child pour water from a mug into a glass, holding both objects in his hands?",
+        h: "Half-fill a mug, give them an empty glass, and watch them pour with one in each hand.",
+      },
+      {
+        t: "If yes, in which hand does he lift the heavier object?",
+        h: "Watch which hand takes the full mug and which takes the empty glass.",
+        k: "choice",
+        ch: ["Left", "Right"],
+      },
     ],
   },
 
-  // ─── 16–18 months ──────────────────────────────────────────────────────────
-  b07: {
-    auditory: [
-      ["Follows a one-step direction without any gestures", "Say “give it to me” with your hands by your sides.", "C"],
-      ["Points to pictures in a book when you name them", "Ask “where is the dog?” on a familiar page.", "N"],
-      ["Understands simple questions like “where is your shoe?”", "Ask without pointing and watch where they look.", "N"],
-      ["Comes when you call them from another room", "Call once, in a normal voice.", "A"],
-    ],
+  /* ── Stage VII — Sophisticated Cortex ───────────────────────────────────── */
+  s7: {
     vision: [
-      ["Points to show you something interesting", "Watch for pointing that shares rather than requests.", "C"],
-      ["Looks at a few pages in a book with you", "Read together and watch how long they stay with it.", "C"],
-      ["Notices when two objects are the same", "Put out two identical objects and one different one.", "A"],
+      {
+        t: "Does your child read?",
+        h: "Give them a page they have not seen before and ask them to read it out to you.",
+      },
+      {
+        t: "How many books can your child read?",
+        h: "Count the books they can read through on their own.",
+        k: "count",
+        u: "books",
+      },
+      {
+        t: "How many sentences can your child read?",
+        h: "Count roughly how many written sentences they can read.",
+        k: "count",
+        u: "sentences",
+      },
+      {
+        t: "How many phrases can your child read?",
+        h: "Count roughly how many written phrases they can read.",
+        k: "count",
+        u: "phrases",
+      },
+      {
+        t: "How many words can your child read?",
+        h: "Count roughly how many written words they can read.",
+        k: "count",
+        u: "words",
+      },
+      {
+        t: "Does your child read at his age level?",
+        h: "Compare with a school reader written for their year.",
+        min: 72,
+      },
+    ],
+    auditory: [
+      {
+        t: "Does your child understand all of the vocabulary in his everyday environment, as well as an average six-year-old?",
+        h: "Listen to a normal adult conversation around them and see whether they follow it without asking what words mean.",
+      },
+      {
+        t: "Does your child understand at his age level?",
+        h: "Compare with what other children in their school year are expected to follow.",
+        min: 72,
+      },
+    ],
+    tactile: [
+      {
+        t: "Can your child tell the “head” from the tail of a coin by touch alone?",
+        h: "Eyes closed, place a coin in their hand and ask which side is facing up.",
+      },
+      {
+        t: "Can he do so with both hands?",
+        h: "Try the same coin again in the other hand.",
+      },
     ],
     mobility: [
-      ["Walks without holding on to anyone or anything", "Watch them cross a room.", "C"],
-      ["Climbs on and off a sofa or chair without help", "Watch during play, staying close.", "C"],
-      ["Walks fast, or runs a few steps", "Watch in an open, safe space.", "A"],
-    ],
-    hand: [
-      ["Scribbles", "Give them a chunky crayon and paper and show them once.", "C"],
-      ["Drinks from a cup without a lid, and may spill sometimes", "Offer an open cup at a mealtime.", "C"],
-      ["Feeds themselves with their fingers", "Offer finger food.", "C"],
-      ["Tries to use a spoon", "Offer a spoon with a thick food like porridge.", "C"],
-    ],
-    language: [
-      ["Tries to say three or more words besides mama or dada", "Count the words they use consistently, even if unclear.", "C"],
-      ["Names a familiar object when asked what it is", "Point at a cup or ball and ask “what's this?”", "A"],
-      ["Shakes their head or says “no” to refuse", "Offer something you know they don't want.", "A"],
-    ],
-    social: [
-      ["Moves away from you but looks back to check you are close", "Watch at a park or in a large room.", "C"],
-      ["Puts their hands out for you to wash them", "Watch at the usual hand-washing moment.", "C"],
-      ["Helps you dress them by pushing an arm through a sleeve or lifting a foot", "Watch during dressing.", "C"],
-      ["Copies you doing chores, like sweeping", "Do a household task nearby and watch.", "C"],
-      ["Plays with toys in a simple way, like pushing a toy car", "Watch during independent play.", "C"],
-    ],
-  },
-
-  // ─── 19–24 months ──────────────────────────────────────────────────────────
-  b08: {
-    auditory: [
-      ["Points to at least two body parts when you ask", "Ask for two, one at a time, without pointing yourself.", "C"],
-      ["Points to things in a book when you ask, like “where is the bear?”", "Use a familiar book.", "C"],
-      ["Follows a simple instruction called from another room", "Ask them to bring you something, once.", "A"],
-      ["Sits and listens to a short story", "Read a short picture book and watch their attention.", "A"],
-    ],
-    vision: [
-      ["Plays with more than one toy at the same time, like putting toy food on a plate", "Watch during independent play.", "C"],
-      ["Matches objects of the same colour or shape", "Put out two red and two blue blocks and ask them to find the same.", "A"],
-      ["Looks closely at small pictures in a book", "Use a busy picture book and ask them to find something.", "A"],
-    ],
-    mobility: [
-      ["Runs", "Watch in an open, safe space.", "C"],
-      ["Kicks a ball", "Put a ball at their feet and show them once.", "C"],
-      ["Walks up a few stairs, with or without help", "Watch on a staircase, staying close.", "C"],
-      ["Squats down to play and stands up again without using hands", "Put a toy on the floor while they stand.", "A"],
-    ],
-    hand: [
-      ["Eats with a spoon", "Offer a spoon at a mealtime and watch how much reaches the mouth.", "C"],
-      ["Holds something in one hand while using the other, like taking a lid off", "Give them a container with a loose lid.", "C"],
-      ["Tries to use switches, knobs or buttons on a toy", "Offer a toy with buttons.", "C"],
-      ["Stacks four or more blocks into a tower", "Build one yourself first, then give them 6–8 blocks and two or three tries.", "A"],
+      {
+        t: "Can your child balance on one foot?",
+        h: "Ask them to stand on one leg and count — several seconds without putting the other foot down.",
+      },
+      {
+        t: "Which foot does he prefer?",
+        h: "Note which leg they stand on without being told.",
+        k: "choice",
+        ch: ["Left", "Right"],
+      },
+      {
+        t: "Can your child kick a ball?",
+        h: "Roll a ball gently towards them and ask them to kick it back.",
+      },
+      {
+        t: "Which foot does he prefer to kick with?",
+        h: "Note which foot they use without being told.",
+        k: "choice",
+        ch: ["Left", "Right"],
+      },
+      {
+        t: "Is his coordination appropriate for his age?",
+        h: "Compare with other children in their school year at running, climbing and ball games.",
+        min: 72,
+      },
     ],
     language: [
-      ["Says at least two words together, like “more milk”", "Listen across a normal day.", "C"],
-      ["Uses gestures beyond waving and pointing, like blowing a kiss or nodding", "Watch across a normal day.", "C"],
-      ["Uses one- or two-word questions like “where kitty?”", "Listen for a rising, questioning tone.", "N"],
-      ["Uses about twenty or more words", "Try listing them — most parents are surprised either way.", "A"],
-    ],
-    social: [
-      ["Notices when others are hurt or upset", "Watch their face when someone cries nearby.", "C"],
-      ["Looks at your face to see how to react in a new situation", "Watch in an unfamiliar place.", "C"],
-      ["Plays alongside other children", "Watch at a park or playgroup.", "A"],
-    ],
-  },
-
-  // ─── 25–30 months ──────────────────────────────────────────────────────────
-  b09: {
-    auditory: [
-      ["Follows two-step instructions like “put the toy down and close the door”", "Say it once, without gestures.", "C"],
-      ["Names things in a book when you point and ask “what is this?”", "Use a familiar picture book.", "C"],
-      ["Listens to a short story all the way to the end", "Read a short book and watch whether they stay with it.", "A"],
-      ["Hears you when you call from another room", "Call once, in a normal voice, with no other noise.", "N"],
-    ],
-    vision: [
-      ["Shows they know at least one colour", "Ask “which one is red?” with a red and a blue crayon out.", "C"],
-      ["Turns book pages one at a time", "Read together and let them turn.", "C"],
-      ["Fits simple shapes into a shape sorter or puzzle", "Offer a shape sorter and let them try without help.", "A"],
-    ],
-    mobility: [
-      ["Jumps off the ground with both feet", "Show them once and ask them to try.", "C"],
-      ["Walks up stairs putting both feet on each step", "Watch on a staircase, staying close.", "A"],
-      ["Throws a ball forwards", "Hand them a ball and ask them to throw it to you.", "A"],
-      ["Stands on one foot for a moment while holding on", "Show them, then let them try holding a chair.", "A"],
+      {
+        t: "Does your child speak as well as an average six-year-old?",
+        h: "Ask them to explain something that happened — listen for a full account, in order, that a stranger would follow.",
+      },
+      {
+        t: "Does your child speak at his age level?",
+        h: "Compare with other children in their school year.",
+        min: 72,
+      },
     ],
     hand: [
-      ["Uses hands to twist things, like doorknobs or unscrewing lids", "Give them a jar with a loose lid.", "C"],
-      ["Takes some clothes off by themselves, like loose trousers or an open jacket", "Watch at bath time.", "C"],
-      ["Solves a simple problem, like standing on a stool to reach something", "Put something they want slightly out of reach, safely.", "C"],
-      ["Uses things to pretend, like feeding a block to a doll as if it were food", "Watch during independent play.", "C"],
-    ],
-    language: [
-      ["Says about fifty words", "You needn't count exactly — is it dozens rather than a handful?", "C"],
-      ["Says two or more words together with an action word, like “doggie run”", "Listen across a normal day.", "C"],
-      ["Uses words like “I”, “me” or “we”", "Listen across a normal day.", "C"],
-      ["Speaks so that family members understand them", "Think about whether you need to translate for grandparents.", "N"],
-    ],
-    social: [
-      ["Plays next to other children and sometimes with them", "Watch at a park or playgroup.", "C"],
-      ["Shows you what they can do — “look at me!”", "Watch during play.", "C"],
-      ["Follows simple routines when told, like helping to pick up toys", "Ask at the usual tidy-up moment.", "C"],
-    ],
-  },
-
-  // ─── 31–36 months ──────────────────────────────────────────────────────────
-  b10: {
-    auditory: [
-      ["Answers simple “who”, “what” and “where” questions", "Ask about something happening right now.", "N"],
-      ["Listens to a story and answers a simple question about it", "Read a short book, then ask what happened.", "A"],
-      ["Hears the television at the same volume as everyone else", "Notice whether they ask for it louder than others need.", "N"],
-    ],
-    vision: [
-      ["Draws a circle when you show them how", "Draw one yourself, then give them the crayon.", "C"],
-      ["Completes a simple three or four piece puzzle", "Offer a chunky wooden puzzle.", "A"],
-      ["Notices small differences between two pictures", "Use a spot-the-difference picture book.", "A"],
-    ],
-    mobility: [
-      ["Runs and changes direction without falling", "Watch in an open, safe space.", "A"],
-      ["Pedals a tricycle", "Offer a tricycle sized for them.", "A"],
-      ["Walks up stairs one foot per step", "Watch on a staircase, staying close.", "A"],
-      ["Stands on one foot for a second or two without holding on", "Show them, then let them try.", "A"],
-    ],
-    hand: [
-      ["Strings items together, like large beads or macaroni", "Offer large beads and a stiff lace.", "C"],
-      ["Puts on some clothes by themselves, like loose trousers or a jacket", "Watch during dressing and don't help too early.", "C"],
-      ["Uses a fork", "Offer a fork with food that needs spearing.", "C"],
-      ["Snips paper with child-safe scissors", "Offer safety scissors and a strip of paper, supervised.", "A"],
-    ],
-    language: [
-      ["Talks with you using at least two back-and-forth exchanges", "Start a conversation and count the turns.", "C"],
-      ["Asks “who”, “what”, “where” or “why” questions", "Listen across a normal day.", "C"],
-      ["Says what is happening in a picture, like “running” or “eating”", "Point at a picture and ask what's happening.", "C"],
-      ["Says their first name when asked", "Ask “what's your name?”", "C"],
-      ["Talks well enough for others to understand, most of the time", "Think about whether someone outside the family follows them.", "C"],
-    ],
-    social: [
-      ["Calms down within ten minutes after you leave, such as at a childcare drop-off", "Ask the staff how long it takes.", "C"],
-      ["Notices other children and joins them to play", "Watch at a park or playgroup.", "C"],
-      ["Takes turns in a simple game, with a reminder", "Play a simple turn-taking game.", "A"],
-    ],
-  },
-
-  // ─── 37–48 months ──────────────────────────────────────────────────────────
-  b11: {
-    auditory: [
-      ["Pays attention to a short story and answers simple questions about it", "Read a story, then ask two questions about it.", "N"],
-      ["Follows a three-step instruction", "Say all three at once, then watch.", "A"],
-      ["Hears and understands most of what is said at home", "Notice how often you repeat yourself.", "N"],
-    ],
-    vision: [
-      ["Draws a person with three or more body parts", "Ask them to draw a person and count the parts.", "C"],
-      ["Names a few colours of items", "Point at things around the room and ask.", "C"],
-      ["Copies a simple shape like a cross or a square", "Draw one, then ask them to copy it.", "A"],
-    ],
-    mobility: [
-      ["Catches a large ball most of the time", "Throw a large soft ball gently from about two metres.", "C"],
-      ["Stands on one foot for about five seconds", "Show them, then count out loud while they try.", "A"],
-      ["Avoids danger, like not jumping from tall heights at a playground", "Watch at a playground.", "C"],
-      ["Climbs playground equipment confidently", "Watch at a playground.", "A"],
-    ],
-    hand: [
-      ["Holds a crayon or pencil between fingers and thumb, not in a fist", "Watch the grip while they draw.", "C"],
-      ["Unbuttons some buttons", "Watch during dressing.", "C"],
-      ["Serves themselves food or pours water, with you supervising", "Offer a small, light jug at a mealtime.", "C"],
-      ["Cuts along a line with child-safe scissors", "Draw a straight line and offer safety scissors, supervised.", "A"],
-    ],
-    language: [
-      ["Says sentences with four or more words", "Listen across a normal day.", "C"],
-      ["Talks about at least one thing that happened during their day", "Ask what they did today and wait.", "C"],
-      ["Answers simple questions like “what is a coat for?”", "Ask about two or three everyday objects.", "C"],
-      ["Says some words from a song, story or rhyme", "Start a familiar rhyme and pause.", "C"],
-      ["Speaks smoothly, without repeating syllables or words", "Listen during a longer stretch of talking.", "N"],
-    ],
-    social: [
-      ["Pretends to be something else during play — a teacher, a superhero, an animal", "Watch during free play.", "C"],
-      ["Asks to go and play with other children when none are around", "Listen across a normal week.", "C"],
-      ["Comforts others who are hurt or sad", "Watch when someone nearby is upset.", "C"],
-      ["Likes to be a helper", "Offer a small task and watch their response.", "C"],
-      ["Behaves differently depending on where they are, like a library or a playground", "Watch across different places.", "C"],
-    ],
-  },
-
-  // ─── 49–60 months ──────────────────────────────────────────────────────────
-  b12: {
-    auditory: [
-      ["Answers simple questions about a book or story after you read it", "Read a short story, then ask about it.", "C"],
-      ["Keeps a conversation going with more than three back-and-forth exchanges", "Start a chat and count the turns.", "C"],
-      ["Uses or recognises simple rhymes, like bat–cat or ball–tall", "Say a word and ask for one that rhymes.", "C"],
-      ["Follows instructions given to a whole group, not only to them", "Watch at school, or give an instruction to several children.", "A"],
-    ],
-    vision: [
-      ["Names some letters when you point to them", "Point at letters in a familiar book.", "C"],
-      ["Names some numbers between 1 and 5 when you point to them", "Write them out and point.", "C"],
-      ["Writes some letters in their name", "Ask them to write their name.", "C"],
-      ["Copies a triangle", "Draw one, then ask them to copy it.", "A"],
-    ],
-    mobility: [
-      ["Hops on one foot", "Show them, then ask them to try.", "C"],
-      ["Walks down stairs one foot per step without holding on", "Watch on a staircase, staying close.", "A"],
-      ["Skips or gallops", "Show them, then ask them to try.", "A"],
-      ["Balances on one foot for about ten seconds", "Count out loud while they try.", "A"],
-    ],
-    hand: [
-      ["Buttons some buttons", "Watch during dressing.", "C"],
-      ["Counts to ten", "Ask them to count out loud.", "C"],
-      ["Draws a person with at least six body parts", "Ask for a drawing and count the parts.", "A"],
-      ["Cuts out a simple shape with scissors", "Draw a large circle and offer safety scissors, supervised.", "A"],
-    ],
-    language: [
-      ["Tells a story they heard or made up, with at least two events", "Ask them to tell you a story.", "C"],
-      ["Uses sentences that give many details", "Listen when they describe something that happened.", "N"],
-      ["Tells stories that stay on topic", "Listen for whether the thread holds.", "N"],
-      ["Says most sounds correctly, except perhaps l, s, r, v, z, ch, sh and th", "Listen during a longer stretch of talking.", "N"],
-      ["Uses words about time, like yesterday, tomorrow, morning or night", "Ask what they did yesterday.", "C"],
-    ],
-    social: [
-      ["Follows rules or takes turns when playing games with other children", "Watch a board game or a playground game.", "C"],
-      ["Sings, dances or performs for you", "Watch across a normal week.", "C"],
-      ["Does simple chores at home, like matching socks or clearing the table", "Ask for help with one small job.", "C"],
-      ["Pays attention for five to ten minutes during an activity", "Time a story or a craft activity. Screen time doesn't count.", "C"],
-    ],
-  },
-
-  // ─── 61–72 months ──────────────────────────────────────────────────────────
-  // Past where the CDC checklists stop. Authored from standard school
-  // readiness expectations — this band in particular should be reviewed by
-  // Kaushalya's child development lead before use.
-  b13: {
-    auditory: [
-      ["Follows a three-step instruction given only once", "Give all three steps, then don't repeat them.", "A"],
-      ["Listens to a ten-minute story and retells the main events", "Read a longer story, then ask them to tell it back.", "A"],
-      ["Picks out the first sound in a spoken word, like the “b” in “ball”", "Say a word and ask what sound it starts with.", "A"],
-      ["Follows classroom-style instructions given to a group", "Ask their teacher, or watch in a group setting.", "A"],
-    ],
-    vision: [
-      ["Recognises and names most letters of the alphabet", "Point at letters out of order.", "A"],
-      ["Copies a diamond or another complex shape", "Draw one, then ask them to copy it.", "A"],
-      ["Sorts objects by two features at once, like big red buttons", "Mix buttons of two sizes and two colours and ask for one group.", "A"],
-      ["Recognises a few familiar written words, like their own name", "Write their name among two others and ask them to find it.", "A"],
-    ],
-    mobility: [
-      ["Skips smoothly on alternating feet", "Watch in an open space.", "A"],
-      ["Rides a bicycle, with or without training wheels", "Watch in a safe open space.", "A"],
-      ["Catches a small ball with their hands only, not against their chest", "Throw a tennis-sized ball gently from two metres.", "A"],
-      ["Balances on one foot with eyes closed for a few seconds", "Show them, then count while they try.", "A"],
-    ],
-    hand: [
-      ["Writes their own first name without help", "Ask them to write it, without a copy to look at.", "A"],
-      ["Ties a knot, or is trying shoelaces", "Offer a lace and watch.", "A"],
-      ["Draws a person with a head, body, arms, legs and a face", "Ask for a drawing of someone in the family.", "A"],
-      ["Counts ten or more objects accurately, touching each one", "Put out twelve small objects and ask how many.", "A"],
-      ["Cuts out a shape neatly with scissors", "Draw a simple shape and offer scissors, supervised.", "A"],
-    ],
-    language: [
-      ["Tells a story with a clear beginning, middle and end", "Ask them to tell you about a film or their day.", "A"],
-      ["Uses full sentences with correct grammar most of the time", "Listen during a longer conversation.", "A"],
-      ["Explains why something happened, using “because”", "Ask why about something that just happened.", "A"],
-      ["Asks what an unfamiliar word means", "Use a word they won't know and see whether they ask.", "A"],
-      ["Is understood by people outside the family all of the time", "Ask someone who doesn't know them well.", "A"],
-    ],
-    social: [
-      ["Plays cooperatively in a group and sorts out small disagreements", "Watch during group play.", "A"],
-      ["Separates from you without distress at school", "Ask their teacher about drop-off.", "A"],
-      ["Waits their turn and follows game rules without reminders", "Play a board game with two or more children.", "A"],
-      ["Describes how they are feeling in words", "Ask how they felt about something that happened.", "A"],
-      ["Shows care for a younger child or a pet", "Watch across a normal week.", "A"],
+      {
+        t: "Does your child write independently?",
+        h: "Ask them to write something of their own, without copying and without being told the spelling.",
+      },
+      {
+        t: "How many words can he write?",
+        h: "Count roughly how many words they can write unaided.",
+        k: "count",
+        u: "words",
+      },
+      {
+        t: "Can he write in sentences?",
+        h: "Ask them to write about something that happened today, and look for full sentences.",
+      },
+      {
+        t: "With which hand does he write?",
+        h: "Note which hand they pick the pencil up with.",
+        k: "choice",
+        ch: ["Left", "Right"],
+      },
+      {
+        t: "Is his writing equal to other kids his age?",
+        h: "Compare with the written work of other children in their school year.",
+        min: 72,
+      },
     ],
   },
 };
 
 function build(): Item[] {
   const items: Item[] = [];
-  for (const band of AGE_BANDS) {
-    const cell = RAW[band.id];
+  for (const stage of BRAIN_STAGES) {
+    const cell = RAW[stage.id];
     if (!cell) continue;
     for (const [domain, rows] of Object.entries(cell) as [DomainCode, Row[]][]) {
-      rows.forEach(([text, how, source], i) => {
+      rows.forEach((row, i) => {
+        const source: ItemSource = row.a ? "AUTHORED" : "ACE";
         items.push({
-          id: `${band.id}-${domain}-${String(i + 1).padStart(2, "0")}`,
+          id: `${stage.id}-${domain}-${String(i + 1).padStart(2, "0")}`,
           domain,
-          band: band.id,
-          text,
-          how,
-          source: SOURCE_MAP[source],
+          stage: stage.id,
+          text: row.t,
+          how: row.h,
+          kind: row.k ?? "yesno",
+          source,
+          ...(row.inv ? { invert: true as const } : {}),
+          ...(row.min !== undefined ? { minAgeMonths: row.min } : {}),
+          ...(row.ch ? { choices: row.ch } : {}),
+          ...(row.u ? { unit: row.u } : {}),
         });
       });
     }
@@ -575,31 +655,40 @@ function build(): Item[] {
 
 export const ITEMS: Item[] = build();
 
-export const ITEMS_BY_BAND_DOMAIN = new Map<string, Item[]>(
-  (() => {
-    const m = new Map<string, Item[]>();
-    for (const item of ITEMS) {
-      const key = `${item.band}:${item.domain}`;
-      const list = m.get(key);
-      if (list) list.push(item);
-      else m.set(key, [item]);
-    }
-    return m;
-  })(),
-);
-
-export function itemsFor(band: string, domain: DomainCode): Item[] {
-  return ITEMS_BY_BAND_DOMAIN.get(`${band}:${domain}`) ?? [];
+const ITEMS_BY_STAGE_DOMAIN = new Map<string, Item[]>();
+for (const item of ITEMS) {
+  const key = `${item.stage}:${item.domain}`;
+  const list = ITEMS_BY_STAGE_DOMAIN.get(key);
+  if (list) list.push(item);
+  else ITEMS_BY_STAGE_DOMAIN.set(key, [item]);
 }
 
 /**
- * The fixed question set for one section (domain) of one module — every
- * band that module covers, in age order, with no duplicates. This is what
- * the assessment actually asks: deterministic per child age, never adaptive.
+ * Every item for one cell of the chart, in booklet order.
+ *
+ * `assessedMonths` drops the booklet's "if over six…" questions for a child
+ * who is not yet six. Omit it and nothing is filtered, which is what the admin
+ * item bank wants.
  */
-export function itemsForModule(moduleId: number, domain: DomainCode): Item[] {
-  const bands = MODULE_BANDS[moduleId] ?? [];
-  return bands.flatMap((b) => itemsFor(b.id, domain));
+export function itemsFor(
+  stage: string,
+  domain: DomainCode,
+  assessedMonths?: number,
+): Item[] {
+  const all = ITEMS_BY_STAGE_DOMAIN.get(`${stage}:${domain}`) ?? [];
+  if (assessedMonths === undefined) return all;
+  return all.filter(
+    (i) => i.minAgeMonths === undefined || assessedMonths >= i.minAgeMonths,
+  );
+}
+
+/** Only the items that count towards passing a stage. */
+export function scoredItemsFor(
+  stage: string,
+  domain: DomainCode,
+  assessedMonths?: number,
+): Item[] {
+  return itemsFor(stage, domain, assessedMonths).filter((i) => i.kind === "yesno");
 }
 
 export const ITEM_BY_ID = new Map(ITEMS.map((i) => [i.id, i]));

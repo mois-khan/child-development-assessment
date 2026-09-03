@@ -89,12 +89,14 @@
   --line-soft: #f5f1ee;
 
   /* ── status ─────────────────────────────────────────────────────────── */
+  --st-superior: #7c5cf0;
   --st-on-track: #0f9d6e;
   --st-emerging: #d08700;
   --st-needs-focus: #ea6f1e;
   --st-consult: #e0455a;
   --on-status: #ffffff;
 
+  --st-superior-soft: #efeaff;
   --st-on-track-soft: #e2f7ef;
   --st-emerging-soft: #fdf3dc;
   --st-needs-focus-soft: #fdeee2;
@@ -156,12 +158,14 @@
   --accent-line: #5c2e44;
   --on-accent: #1c0f16;
 
+  --st-superior: #a693ff;
   --st-on-track: #4ecfa0;
   --st-emerging: #e2b95c;
   --st-needs-focus: #f09a63;
   --st-consult: #f0798b;
   --on-status: #1c0f16;
 
+  --st-superior-soft: #241f3d;
   --st-on-track-soft: #16332a;
   --st-emerging-soft: #332b17;
   --st-needs-focus-soft: #35251a;

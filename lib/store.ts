@@ -15,11 +15,23 @@ import type { Assessment, Child, DomainCode, ResponseValue } from "./types";
  * the device that produced it. Real share links need the database.
  */
 
-const KEY = "kaushalya.assessments.v1";
+/**
+ * v2 — the brain-stage engine.
+ *
+ * v1 records were scored against the thirteen-band item bank, whose stage ids
+ * and item ids no longer exist. They cannot be re-scored, so they are left
+ * under their old key rather than migrated or deleted: nothing a family
+ * already has is destroyed, and nothing incomparable is silently mixed in with
+ * the new results.
+ */
+const KEY = "kaushalya.assessments.v2";
 
 export interface StoredAssessment extends Assessment {
-  /** Bands presented per domain, including any adaptive extension. */
-  bandsByDomain: Record<DomainCode, string[]>;
+  /**
+   * Stages presented per competence, in the order the ladder walk asked them.
+   * Starts as one stage each and grows as the walk climbs or descends.
+   */
+  stagesByDomain: Record<DomainCode, string[]>;
 }
 
 type Table = Record<string, StoredAssessment>;
@@ -51,14 +63,15 @@ function newId(): string {
 export function createAssessment(
   child: Child,
   assessedOn: string,
-  bandsByDomain: Record<DomainCode, string[]>,
+  stagesByDomain: Record<DomainCode, string[]>,
 ): StoredAssessment {
   const record: StoredAssessment = {
     id: newId(),
     child,
     assessedOn,
     responses: {},
-    bandsByDomain,
+    details: {},
+    stagesByDomain,
     bankVersion: BANK_VERSION,
   };
   const table = read();
@@ -83,21 +96,33 @@ export function saveResponse(
   write(table);
 }
 
-/** Records the extra bands the adaptive extension added for a domain. */
-export function extendBands(
+/** Records a non-scoring observation — a count, a percentage, which hand. */
+export function saveDetail(id: string, itemId: string, value: string): void {
+  const table = read();
+  const record = table[id];
+  if (!record) return;
+  record.details = { ...(record.details ?? {}), [itemId]: value };
+  write(table);
+}
+
+/**
+ * Records the next stage the ladder walk opened up for one competence.
+ *
+ * Called once per step of the walk, so a reload mid-assessment resumes with
+ * exactly the stages the parent had already been asked — not a fresh walk that
+ * might take a different path.
+ */
+export function appendStage(
   id: string,
-  extra: Record<DomainCode, string[]>,
+  domain: DomainCode,
+  stage: string,
 ): void {
   const table = read();
   const record = table[id];
   if (!record) return;
-  for (const [domain, bands] of Object.entries(extra) as [
-    DomainCode,
-    string[],
-  ][]) {
-    const existing = record.bandsByDomain[domain] ?? [];
-    record.bandsByDomain[domain] = Array.from(new Set([...existing, ...bands]));
-  }
+  const existing = record.stagesByDomain[domain] ?? [];
+  if (existing.includes(stage)) return;
+  record.stagesByDomain[domain] = [...existing, stage];
   write(table);
 }
 

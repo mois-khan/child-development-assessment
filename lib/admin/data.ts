@@ -26,7 +26,8 @@ function toSubmission(a: StoredAssessment): AdminSubmission {
       child: a.child,
       assessedOn: a.assessedOn,
       responses: a.responses,
-      bandsByDomain: a.bandsByDomain,
+      details: a.details,
+      stagesByDomain: a.stagesByDomain,
     });
   } catch {
     // Incomplete/malformed response sets score fine in practice, but this

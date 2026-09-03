@@ -198,16 +198,16 @@ export function Badge({
 }
 
 const STATUS_TONE: Record<StatusCode, BadgeTone> = {
-  on_track: "success",
-  emerging: "warn",
-  needs_focus: "warn",
+  superior: "success",
+  average: "success",
+  slow: "warn",
   consult: "danger",
 };
 
 const STATUS_VAR: Record<StatusCode, string> = {
-  on_track: "--st-on-track",
-  emerging: "--st-emerging",
-  needs_focus: "--st-needs-focus",
+  superior: "--st-superior",
+  average: "--st-on-track",
+  slow: "--st-needs-focus",
   consult: "--st-consult",
 };
 
@@ -427,7 +427,7 @@ export function ChildCard({
 const SECTION_ICON: Record<DomainCode, (p: IconProps) => React.JSX.Element> = {
   vision: IconVisual,
   auditory: IconAuditory,
-  social: IconTactile,
+  tactile: IconTactile,
   mobility: IconMobility,
   language: IconLanguage,
   hand: IconManual,
@@ -436,7 +436,7 @@ const SECTION_ICON: Record<DomainCode, (p: IconProps) => React.JSX.Element> = {
 const SECTION_COLOR: Record<DomainCode, string> = {
   vision: "var(--sec-visual)",
   auditory: "var(--sec-auditory)",
-  social: "var(--sec-tactile)",
+  tactile: "var(--sec-tactile)",
   mobility: "var(--sec-mobility)",
   language: "var(--sec-language)",
   hand: "var(--sec-manual)",

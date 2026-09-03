@@ -2,8 +2,9 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DOMAINS, bandIdsForModule, moduleForAge } from "@/content/domains";
-import { itemsForModule } from "@/content/items";
+import { DOMAINS } from "@/content/domains";
+import { scoredItemsFor } from "@/content/items";
+import { stageForAge } from "@/lib/stage";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { createAssessment, getChild, markUnlocked, type SavedChild } from "@/lib/store";
 import {
@@ -50,11 +51,19 @@ export default function PayPage({
     () => (child ? summariseAge(child.dob, today, child.gestationalWeeks) : null),
     [child, today],
   );
-  const currentModule = age ? moduleForAge(age.assessedMonths) : null;
+  const startStage = age ? stageForAge(age.assessedMonths) : null;
+
+  /* The assessment adapts as it goes, so the real length is not knowable up
+     front — a child who passes everything climbs, one who does not descends.
+     What we can show honestly is where it starts, and that most checks land
+     within a stage or two of that. */
   const questionCount = useMemo(() => {
-    if (!currentModule) return 0;
-    return DOMAINS.reduce((n, d) => n + itemsForModule(currentModule.id, d.code).length, 0);
-  }, [currentModule]);
+    if (!startStage || !age) return 0;
+    return DOMAINS.reduce(
+      (n, d) => n + scoredItemsFor(startStage.id, d.code, age.assessedMonths).length,
+      0,
+    );
+  }, [startStage, age]);
 
   function applyCoupon(e: React.FormEvent) {
     e.preventDefault();
@@ -67,14 +76,15 @@ export default function PayPage({
   }
 
   function startAssessment() {
-    if (!child || !age || !currentModule) return;
+    if (!child || !age || !startStage) return;
     setStarting(true);
     markUnlocked(child.id, ASSESSMENT_SLUG);
-    const bandIds = bandIdsForModule(currentModule.id);
-    const bandsByDomain = Object.fromEntries(
-      DOMAINS.map((d) => [d.code, bandIds]),
+    // Every competence opens on the same stage — the one the child's age
+    // points at. Where each goes from there is decided question by question.
+    const stagesByDomain = Object.fromEntries(
+      DOMAINS.map((d) => [d.code, [startStage.id]]),
     ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
-    const record = createAssessment(child, today, bandsByDomain);
+    const record = createAssessment(child, today, stagesByDomain);
     router.push(`/assessment/${record.id}`);
   }
 
@@ -88,7 +98,7 @@ export default function PayPage({
       </>
     );
   }
-  if (child === null || !age || !currentModule) {
+  if (child === null || !age || !startStage) {
     return (
       <>
         <TopBar />
@@ -131,9 +141,9 @@ export default function PayPage({
                   <h2 className="text-[1.3rem]">Genius Milestone Check</h2>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Badge tone="accent">
-                      <IconSparkle size={14} /> Module {currentModule.id} · {currentModule.name}
+                      <IconSparkle size={14} /> Stage {startStage.roman} · {startStage.name}
                     </Badge>
-                    <Badge tone="neutral">{questionCount} questions</Badge>
+                    <Badge tone="neutral">from {questionCount} questions</Badge>
                     <Badge tone="neutral">
                       <IconClock size={14} /> ~10 min
                     </Badge>
