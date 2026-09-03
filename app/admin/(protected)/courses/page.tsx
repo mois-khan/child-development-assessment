@@ -252,7 +252,7 @@ function RecommendationRules({ courses }: { courses: AdminCourse[] }) {
   const { rules, refresh } = useAdminRules();
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [previewDomain, setPreviewDomain] = useState<DomainCode | "">("");
-  const [previewStatus, setPreviewStatus] = useState<StatusCode>("needs_focus");
+  const [previewStatus, setPreviewStatus] = useState<StatusCode>("slow");
 
   const preview = useMemo(
     () => previewMatch(previewDomain || null, previewStatus),
@@ -412,7 +412,7 @@ function RuleForm({
 }) {
   const [courseId, setCourseId] = useState(existing?.courseId ?? courses[0]?.id ?? "");
   const [domain, setDomain] = useState<DomainCode | "">(existing?.domain ?? "");
-  const [status, setStatus] = useState<StatusCode | "">(existing?.status ?? "needs_focus");
+  const [status, setStatus] = useState<StatusCode | "">(existing?.status ?? "slow");
   const [priority, setPriority] = useState(String(existing?.priority ?? 0));
   const [isActive, setIsActive] = useState(existing?.isActive ?? true);
 

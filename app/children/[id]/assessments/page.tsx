@@ -1,8 +1,9 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { DOMAINS, moduleForAge } from "@/content/domains";
-import { itemsForModule } from "@/content/items";
+import { DOMAINS } from "@/content/domains";
+import { stageForAge } from "@/lib/stage";
+import { scoredItemsFor } from "@/content/items";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { getChild, type SavedChild } from "@/lib/store";
 import {
@@ -63,11 +64,11 @@ export default function AssessmentListPage({
   }
 
   const age = summariseAge(child.dob, todayISO(), child.gestationalWeeks);
-  const mod = moduleForAge(age.assessedMonths);
+  const stage = stageForAge(age.assessedMonths);
   const perSection = DOMAINS.map((d) => ({
     code: d.code,
     name: d.name,
-    count: itemsForModule(mod.id, d.code).length,
+    count: scoredItemsFor(stage.id, d.code, age.assessedMonths).length,
   }));
   const total = perSection.reduce((n, s) => n + s.count, 0);
 
@@ -83,7 +84,7 @@ export default function AssessmentListPage({
                 <p className="eyebrow eyebrow-accent">Step 1 of 2</p>
                 <h1 className="mt-3">Choose a check</h1>
                 <p className="lede mt-3 max-w-[44ch]">
-                  Built for {child.name}&rsquo;s exact stage — Module {mod.id}, {mod.name}.
+                  Built for {child.name}&rsquo;s exact stage — Stage {stage.roman}, {stage.name}.
                 </p>
               </div>
               <ChildCard
@@ -109,8 +110,8 @@ export default function AssessmentListPage({
                     <h2 className="mt-4">Genius Milestone Check</h2>
                     <p className="mt-2.5 max-w-[46ch] text-[0.96rem] leading-relaxed text-ink-2">
                       Six short sections, one for each area of brain development, at exactly the
-                      level Module {mod.id} expects. One question at a time — most parents finish
-                      in about ten minutes.
+                      level stage {stage.roman} expects, then adapting up or down from there. One
+                      question at a time — most parents finish in about ten minutes.
                     </p>
                     <div className="mt-5 flex flex-wrap gap-2.5">
                       <Badge tone="neutral">

@@ -11,7 +11,7 @@ import {
   type AdminActivity,
   type ItemStatus as ActivityStatus,
 } from "@/lib/admin/activities";
-import { STAGES } from "@/content/domains";
+import { ACTIVITY_BANDS } from "@/content/activities";
 import { useAdminVideos } from "@/lib/admin/videos";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { DomainCode } from "@/lib/types";
@@ -45,7 +45,10 @@ export default function AdminActivitiesPage() {
   const stagesWithCounts = useMemo(() => {
     if (configured) return [];
     const all = adminListActivities({ domain });
-    return STAGES.map((s) => ({ stage: s, count: all.filter((a) => a.stage === s.id).length }));
+    return ACTIVITY_BANDS.map((s) => ({
+      stage: s,
+      count: all.filter((a) => a.stage === s.id).length,
+    }));
   }, [domain, configured, refreshKey]);
 
   // Default to one stage's worth of activities, not the whole domain at once.

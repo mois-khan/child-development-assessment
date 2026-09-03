@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { DOMAINS, MODULES, MODULE_STAGES } from "@/content/domains";
+import { DOMAINS, STAGE_JOURNEY } from "@/content/domains";
+import { BRAIN_STAGES } from "@/content/stages";
 import { ITEMS } from "@/content/items";
 import { DISCLAIMER } from "@/lib/narrative";
 import {
@@ -227,20 +228,20 @@ export default function Home() {
             <Card variant="clay" className="mt-11 p-5 sm:p-8">
               <div className="overflow-x-auto">
                 <BrainJourney
-                  stages={MODULE_STAGES}
+                  stages={STAGE_JOURNEY}
                   current={4}
                   className="h-auto w-full min-w-[720px]"
                 />
               </div>
               <p className="mt-3 text-center text-[0.86rem] font-semibold text-ink-3">
-                Example: a 9-month-old sits on stage 4, Initial Cortex
+                Example: a 9-month-old starts at stage III, Mid-Brain
               </p>
             </Card>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-2.5">
-              {MODULES.map((m) => (
-                <Badge key={m.id} tone="neutral">
-                  {m.phase} · {m.name}
+              {BRAIN_STAGES.map((s) => (
+                <Badge key={s.id} tone="neutral">
+                  {s.roman} · {s.name}
                 </Badge>
               ))}
             </div>

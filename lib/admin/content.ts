@@ -137,7 +137,7 @@ export function adminSaveItem(input: ItemInput): void {
     throw new Error("Supabase-backed item bank is not wired up yet.");
   }
   const overlay = readOverlay();
-  const id = input.id ?? newDraftId(input.domain, input.band);
+  const id = input.id ?? newDraftId(input.domain, input.stage);
   overlay[id] = {
     id,
     domain: input.domain,

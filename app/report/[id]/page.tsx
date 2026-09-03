@@ -3,15 +3,22 @@
 import { Fragment, use, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { DOMAIN_BY_CODE, moduleForAge } from "@/content/domains";
+import { DOMAIN_BY_CODE } from "@/content/domains";
+import { STAGE_BY_ID } from "@/content/stages";
 import { liveActivitiesFor, type AdminActivity } from "@/lib/admin/activities";
 import { liveGetVideo, type AdminVideo } from "@/lib/admin/videos";
 import { resolveRecommendedCourse, type AdminCourse } from "@/lib/admin/recommendations";
 import { formatAge, summariseAge } from "@/lib/age";
 import { DISCLAIMER, domainNote, headline, nextSteps, summary } from "@/lib/narrative";
-import { STATUSES, bandForAge, scoreAssessment } from "@/lib/scoring";
+import { STATUSES, scoreAssessment } from "@/lib/scoring";
+import { stageForAge } from "@/lib/stage";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
-import type { AssessmentResult, DomainCode, DomainScore, Module } from "@/lib/types";
+import type {
+  AssessmentResult,
+  BrainStage,
+  DomainCode,
+  DomainScore,
+} from "@/lib/types";
 import {
   Avatar,
   Badge,
@@ -42,7 +49,7 @@ import {
 const VIDEO_STILL: Record<DomainCode, string> = {
   vision: "/images/play-blocks.jpg",
   auditory: "/images/baby-laughing.jpg",
-  social: "/images/child-smile.jpg",
+  tactile: "/images/child-smile.jpg",
   mobility: "/images/outdoor-play.jpg",
   language: "/images/parent-reading.jpg",
   hand: "/images/playful-child.jpg",
@@ -67,7 +74,8 @@ export default function ReportPage({
       child: record.child,
       assessedOn: record.assessedOn,
       responses: record.responses,
-      bandsByDomain: record.bandsByDomain,
+      details: record.details,
+      stagesByDomain: record.stagesByDomain,
     });
   }, [record]);
 
@@ -113,7 +121,7 @@ export default function ReportPage({
 
   const child = record.child;
   const age = summariseAge(child.dob, record.assessedOn, child.gestationalWeeks);
-  const mod = moduleForAge(age.assessedMonths);
+  const startStage = stageForAge(age.assessedMonths);
   const ordered = [...result.domainScores].sort(
     (a, b) => DOMAIN_BY_CODE[a.domain].order - DOMAIN_BY_CODE[b.domain].order,
   );
@@ -215,7 +223,10 @@ export default function ReportPage({
                     child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—",
                   ],
                   ["Assessment date", formatDate(record.assessedOn)],
-                  ["Stage", `Module ${mod.id} · ${mod.name}`],
+                  [
+                    "Started at",
+                    `Stage ${startStage.roman} · ${startStage.name}`,
+                  ],
                 ].map(([label, value]) => (
                   <div key={label} className="cover-meta-item">
                     <dt>{label}</dt>
@@ -395,7 +406,7 @@ export default function ReportPage({
               {recommendation ? (
                 <RecommendedCourseCard course={recommendation.course} />
               ) : (
-                <DefaultRecommendationCard mod={mod} />
+                <DefaultRecommendationCard stage={startStage} />
               )}
             </div>
           </Section>
@@ -481,13 +492,6 @@ function DomainCard({
       n: score.achieved.length,
       tone: "var(--st-on-track)",
       icon: <IconCheck size={12} />,
-    },
-    {
-      key: "emerging",
-      label: "Arriving",
-      n: score.emerging.length,
-      tone: "var(--st-emerging)",
-      icon: <IconSparkle size={12} />,
     },
     {
       key: "notYet",
@@ -611,7 +615,9 @@ function DomainCard({
                 </div>
               )}
               <p className="mt-2.5 text-[0.82rem] font-semibold leading-snug text-ink-2">
-                {video ? video.title : `${domain.short} practice for ${formatMonths(score.developmentalMonths)}`}
+                {video
+                  ? video.title
+                  : `${domain.short} practice for ${formatMonths(score.neurologicalMonths)}`}
               </p>
               {!video && <Badge className="mt-2">Video coming soon</Badge>}
             </div>
@@ -701,12 +707,12 @@ function RecommendationShell({
   );
 }
 
-function DefaultRecommendationCard({ mod }: { mod: Module }) {
+function DefaultRecommendationCard({ stage }: { stage: BrainStage }) {
   return (
     <RecommendationShell
       eyebrow="Recommended next"
-      title={`Milestones Acceleration · Phase ${mod.phase}`}
-      description={`The Kaushalya 0–6 programme for ${mod.name}: day-wise activity plans and short videos across exactly the six areas in this report, ten minutes of screen time and thirty minutes of play a day.`}
+      title={`Milestones Acceleration · Stage ${stage.roman}`}
+      description={`The Kaushalya 0–6 programme for ${stage.name}: day-wise activity plans and short videos across exactly the six areas in this report, ten minutes of screen time and thirty minutes of play a day.`}
       bullets={["Monthly course for this phase", "Day-wise activity plans", "Milestone checklists"]}
       primaryHref="https://www.kaushalyageniuskid.com"
       primaryLabel="Explore the programme"
@@ -758,9 +764,13 @@ function stagePosition(value: number): { index: number; frac: number } {
   return { index: 0, frac: 0 };
 }
 
+/**
+ * Activities are picked from the stage the child actually reached, not the one
+ * their age points at. A child working at stage III needs stage III play, and
+ * handing them their age's activities is how a report becomes discouraging.
+ */
 function pickActivities(score: DomainScore): AdminActivity[] {
-  const band = bandForAge(Math.round(score.developmentalMonths));
-  return liveActivitiesFor(score.domain, band.id).slice(0, 4);
+  return liveActivitiesFor(score.domain, score.achievedStage || "s1").slice(0, 4);
 }
 
 function formatDate(iso: string): string {

@@ -144,9 +144,9 @@ export function BrainJourney({
   stages,
   className = "",
 }: {
-  /** 1-7, the child's current module. */
+  /** 1-7, the order of the child's current brain stage. */
   current?: number;
-  stages: { name: string; ageLabel: string }[];
+  stages: { name: string; ageLabel: string; roman?: string }[];
   className?: string;
 }) {
   const W = 900;

@@ -1,7 +1,8 @@
 "use client";
 
 import { use, useEffect, useMemo, useState } from "react";
-import { DOMAIN_BY_CODE, MODULE_STAGES, moduleForAge } from "@/content/domains";
+import { DOMAIN_BY_CODE, STAGE_JOURNEY } from "@/content/domains";
+import { stageForAge } from "@/lib/stage";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { STATUSES, scoreAssessment } from "@/lib/scoring";
 import {
@@ -63,7 +64,8 @@ export default function ChildProfilePage({
       child: latest.child,
       assessedOn: latest.assessedOn,
       responses: latest.responses,
-      bandsByDomain: latest.bandsByDomain,
+      details: latest.details,
+      stagesByDomain: latest.stagesByDomain,
     });
   }, [latest]);
 
@@ -100,7 +102,7 @@ export default function ChildProfilePage({
   }
 
   const age = summariseAge(child.dob, todayISO(), child.gestationalWeeks);
-  const mod = moduleForAge(age.assessedMonths);
+  const stage = stageForAge(age.assessedMonths);
   const completed = assessments.filter((a) => a.completedAt).length;
 
   return (
@@ -142,7 +144,7 @@ export default function ChildProfilePage({
                   </p>
                   <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-[0.82rem] font-bold text-white backdrop-blur">
                     <IconSparkle size={15} />
-                    Module {mod.id} of 7 · {mod.name}
+                    Stage {stage.roman} of VII · {stage.name}
                   </span>
                 </div>
               </div>
@@ -150,7 +152,7 @@ export default function ChildProfilePage({
               <div className="flex gap-3">
                 {[
                   { value: completed, label: "Reports" },
-                  { value: `${mod.id}/7`, label: "Stage" },
+                  { value: stage.roman, label: "Stage" },
                 ].map((s) => (
                   <div
                     key={s.label}
@@ -274,8 +276,8 @@ export default function ChildProfilePage({
             <h2>Their stage</h2>
             <Card variant="clay" className="mt-5 overflow-x-auto p-6 sm:p-8">
               <BrainJourney
-                stages={MODULE_STAGES}
-                current={mod.id}
+                stages={STAGE_JOURNEY}
+                current={stage.order}
                 className="h-auto w-full min-w-[680px]"
               />
             </Card>

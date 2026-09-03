@@ -243,6 +243,16 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
  * reachable through the report's "what's next" suggestions rather than through
  * a stage.
  */
+/** The six activity bands, for the admin editor's grouping. */
+export const ACTIVITY_BANDS: { id: string; label: string }[] = [
+  { id: "a1", label: "0–6 months" },
+  { id: "a2", label: "7–12 months" },
+  { id: "a3", label: "13–24 months" },
+  { id: "a4", label: "25–36 months" },
+  { id: "a5", label: "37–48 months" },
+  { id: "a6", label: "49–72 months" },
+];
+
 export const ACTIVITY_BAND: Record<string, string> = {
   s1: "a1", // I   Medulla and Cord
   s2: "a1", // II  Pons
