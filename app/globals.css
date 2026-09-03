@@ -619,14 +619,19 @@ h4,
 
 /* ── chips & badges ──────────────────────────────────────────────────────── */
 
+/* 800 (Extra Bold) at 12px, in sentence case with near-zero tracking, reads
+   heavy and slightly muddy — that weight belongs to uppercase, wide-tracked
+   labels (see .eyebrow) or large numerals, not a running sentence in a pill.
+   700 keeps the same "this is a label" signal at a size Inter renders
+   cleanly, with a touch more spacing to keep letters from crowding. */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   font-family: var(--font-sans);
   font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
+  font-weight: 700;
+  letter-spacing: 0.015em;
   padding: 0.38rem 0.8rem;
   border-radius: var(--radius-pill);
   background: var(--chip-bg, var(--surface-2));
