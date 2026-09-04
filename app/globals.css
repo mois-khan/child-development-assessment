@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   KAUSHALYA GENIUS KID PROGRAM — DESIGN SYSTEM v2
+   KAUSHALYA GENIUS KID PROGRAM — DESIGN SYSTEM v3
    ───────────────────────────────────────────────────────────────────────────
    Style      Claymorphism. Soft 3D, chunky, toy-like surfaces with double
               shadows (outer drop + inner light), generous radii (18-32px) and
@@ -9,14 +9,21 @@
               *premium* and *made for children* at the same time — flat design
               reads clinical here, glass reads corporate.
 
-   Colour     Indigo-blue brand (per brief) carrying the chrome, with a six-hue
-              section palette and a sunshine accent lifted from the KGK sun
-              logo. Backgrounds are warm off-white, never grey — grey plus
-              children reads as a hospital.
+   Colour     The real KGKP brand: deep wine maroon for chrome, headings and
+              primary actions, coral as the warm secondary, and a hand-drawn
+              gold for underline/reward accents — extracted from the live
+              kaushalyageniuskid.com marketing site (see kgkpdesign.md) and
+              standardised as the single primary everywhere, replacing the
+              site's own Graphy-blue/maroon split. The six developmental
+              sections borrow the site's pastel supporting palette (lavender,
+              sky, tomato, apricot, teal, olive) instead of a generic rainbow.
+              Backgrounds are warm off-white, never grey — grey plus children
+              reads as a hospital.
 
-   Type       Sora for display (geometric, confident, agency-grade) over Plus
-              Jakarta Sans for interface and long-form (premium, neutral,
-              excellent at small sizes). One display voice, one interface voice.
+   Type       Inter carries the interface, body copy and every heading (per
+              the source site's own inconsistency — normalised here to one
+              voice); "Poetsen One", the site's rounded display face, is kept
+              rare, for `.display` hero moments only.
 
    Motion     150-320ms, spring-ish easing, transform/opacity only. Every
               animation reports a cause: an answer landing, a section closing,
@@ -24,17 +31,17 @@
    ═════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── brand: indigo-blue ─────────────────────────────────────────────── */
-  --brand-50: #eef1ff;
-  --brand-100: #e0e4ff;
-  --brand-200: #c7ccff;
-  --brand-300: #a5a9fb;
-  --brand-400: #8285f5;
-  --brand-500: #6366f1;
-  --brand-600: #4f46e5;
-  --brand-700: #4338ca;
-  --brand-800: #372fa8;
-  --brand-900: #2c2782;
+  /* ── brand: wine maroon (#4D1435 from the live site) ──────────────────── */
+  --brand-50: #fbf0f4;
+  --brand-100: #f6dce6;
+  --brand-200: #ebb9ce;
+  --brand-300: #d98aae;
+  --brand-400: #b85e86;
+  --brand-500: #8c3a63;
+  --brand-600: #4d1435;
+  --brand-700: #3a0f28;
+  --brand-800: #2a0b1d;
+  --brand-900: #1b0712;
 
   --accent: var(--brand-600);
   --accent-hover: var(--brand-700);
@@ -42,46 +49,54 @@
   --accent-line: var(--brand-200);
   --on-accent: #ffffff;
 
-  /* ── sunshine, from the KGK sun logo ────────────────────────────────── */
-  --sun-100: #fef3c7;
-  --sun-300: #fcd34d;
-  --sun-400: #fbbf24;
-  --sun-500: #f59e0b;
-  --sun-700: #b45309;
+  /* ── secondary: coral, the site's second signature colour ─────────────── */
+  --coral-100: #fdebe7;
+  --coral-300: #f5b3a4;
+  --coral-500: #ef816c;
+  --coral-700: #c1543f;
 
-  /* ── six section hues ───────────────────────────────────────────────── */
-  --sec-visual: #8b5cf6;
-  --sec-visual-soft: #f3eeff;
-  --sec-auditory: #0ea5e9;
+  /* ── gold, from the hand-drawn underline swatch ────────────────────────── */
+  --sun-100: #fcefd3;
+  --sun-300: #f8ce7c;
+  --sun-400: #f4a93b;
+  --sun-500: #e8971f;
+  --sun-700: #93590f;
+
+  /* ── six section hues, drawn from the site's pastel supporting palette ── */
+  --sec-visual: #7c5ce0;
+  --sec-visual-soft: #f1edff;
+  --sec-auditory: #2e97c4;
   --sec-auditory-soft: #e5f5fe;
-  --sec-tactile: #f43f5e;
-  --sec-tactile-soft: #ffe9ee;
-  --sec-mobility: #f97316;
-  --sec-mobility-soft: #fff0e4;
-  --sec-language: #10b981;
-  --sec-language-soft: #e3f8f0;
-  --sec-manual: #4f46e5;
-  --sec-manual-soft: #eaebff;
+  --sec-tactile: #e5573f;
+  --sec-tactile-soft: #fdeae6;
+  --sec-mobility: #d97a4e;
+  --sec-mobility-soft: #fbe5d8;
+  --sec-language: #2e8577;
+  --sec-language-soft: #edf7f5;
+  --sec-manual: #8b8f1e;
+  --sec-manual-soft: #f5f6de;
 
   /* ── neutrals: warm off-white, never clinical grey ──────────────────── */
-  --ground: #f7f7fc;
-  --ground-2: #eff0fa;
+  --ground: #fbf7f5;
+  --ground-2: #f5ede9;
   --surface: #ffffff;
-  --surface-2: #f6f7fd;
-  --surface-3: #eceefa;
-  --ink: #17182b;
-  --ink-2: #4a4d68;
-  --ink-3: #71748f;
-  --line: #e6e8f5;
-  --line-soft: #f0f1fa;
+  --surface-2: #f8f9fa;
+  --surface-3: #f0ede9;
+  --ink: #23111b;
+  --ink-2: #50596c;
+  --ink-3: #8d8fa3;
+  --line: #eeeeee;
+  --line-soft: #f5f1ee;
 
   /* ── status ─────────────────────────────────────────────────────────── */
+  --st-superior: #7c5cf0;
   --st-on-track: #0f9d6e;
   --st-emerging: #d08700;
   --st-needs-focus: #ea6f1e;
   --st-consult: #e0455a;
   --on-status: #ffffff;
 
+  --st-superior-soft: #efeaff;
   --st-on-track-soft: #e2f7ef;
   --st-emerging-soft: #fdf3dc;
   --st-needs-focus-soft: #fdeee2;
@@ -92,11 +107,13 @@
   /* ── elevation: one ambient layer + one directional layer ────────────
      No inset gloss/bevel — that double-highlight trick is what makes a
      surface read as a toy rather than a designed product. Depth comes from
-     two honest drop shadows only, the way it would on a real desk. */
-  --clay-sm: 0 1px 2px rgba(23, 24, 43, 0.05), 0 1px 3px -1px rgba(23, 24, 43, 0.06);
-  --clay: 0 1px 2px rgba(23, 24, 43, 0.04), 0 8px 20px -10px rgba(23, 24, 43, 0.16);
-  --clay-lg: 0 2px 4px rgba(23, 24, 43, 0.04), 0 20px 40px -20px rgba(23, 24, 43, 0.22);
-  --clay-brand: 0 2px 4px rgba(79, 70, 229, 0.14), 0 14px 26px -14px rgba(79, 70, 229, 0.4);
+     two honest drop shadows only, the way it would on a real desk. Colour
+     base is the site's own warm neutral shadow rgb (69,77,93) rather than a
+     cool blue-black, which is what keeps clay surfaces feeling warm. */
+  --clay-sm: 0 1px 3px rgba(69, 77, 93, 0.18), 0 1px 4px -1px rgba(69, 77, 93, 0.14);
+  --clay: 0 1px 3px rgba(69, 77, 93, 0.14), 0 10px 24px -12px rgba(69, 77, 93, 0.32);
+  --clay-lg: 0 2px 5px rgba(69, 77, 93, 0.14), 0 24px 48px -22px rgba(69, 77, 93, 0.38);
+  --clay-brand: 0 2px 5px rgba(77, 20, 53, 0.18), 0 16px 30px -14px rgba(77, 20, 53, 0.45);
 
   /* legacy aliases, still referenced in a few places */
   --shadow-xs: var(--clay-sm);
@@ -104,12 +121,13 @@
   --shadow-md: var(--clay);
   --shadow-lg: var(--clay-lg);
 
-  /* ── radii: chunky, toy-like ────────────────────────────────────────── */
+  /* ── radii: chunky, toy-like — --radius-lg mirrors the site's own
+     --themeCornerRadius (25px) pill token ──────────────────────────────── */
   --radius-xs: 10px;
-  --radius-sm: 14px;
-  --radius: 20px;
-  --radius-lg: 28px;
-  --radius-xl: 36px;
+  --radius-sm: 12px;
+  --radius: 18px;
+  --radius-lg: 25px;
+  --radius-xl: 40px;
   --radius-pill: 999px;
 
   /* ── motion ─────────────────────────────────────────────────────────── */
@@ -123,40 +141,42 @@
 /* Light is always the default, regardless of OS preference — dark mode only
    applies once the user explicitly picks it via the toggle (data-theme). */
 :root[data-theme="dark"] {
-  --ground: #12131f;
-  --ground-2: #0d0e18;
-  --surface: #1a1c2b;
-  --surface-2: #212335;
-  --surface-3: #2a2d42;
-  --ink: #edeefb;
-  --ink-2: #b6b9d4;
-  --ink-3: #8b8fac;
-  --line: #2e3146;
-  --line-soft: #262940;
+  --ground: #1c0f16;
+  --ground-2: #150a10;
+  --surface: #2a1622;
+  --surface-2: #33192c;
+  --surface-3: #402038;
+  --ink: #f5e9ef;
+  --ink-2: #d8c3ce;
+  --ink-3: #a98b9b;
+  --line: #4a2438;
+  --line-soft: #3a1c2c;
 
-  --accent: #8f92ff;
-  --accent-hover: #a7a9ff;
-  --accent-soft: #23244a;
-  --accent-line: #3d3f76;
-  --on-accent: #12131f;
+  --accent: #efa3c6;
+  --accent-hover: #f4beda;
+  --accent-soft: #3a1b2c;
+  --accent-line: #5c2e44;
+  --on-accent: #1c0f16;
 
+  --st-superior: #a693ff;
   --st-on-track: #4ecfa0;
   --st-emerging: #e2b95c;
   --st-needs-focus: #f09a63;
   --st-consult: #f0798b;
-  --on-status: #12131f;
+  --on-status: #1c0f16;
 
+  --st-superior-soft: #241f3d;
   --st-on-track-soft: #16332a;
   --st-emerging-soft: #332b17;
   --st-needs-focus-soft: #35251a;
   --st-consult-soft: #351d24;
 
-  --focus-ring: #8f92ff;
+  --focus-ring: #efa3c6;
 
-  --clay-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px -1px rgba(0, 0, 0, 0.3);
-  --clay: 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 28px -14px rgba(0, 0, 0, 0.75);
-  --clay-lg: 0 4px 8px rgba(0, 0, 0, 0.4), 0 28px 56px -24px rgba(0, 0, 0, 0.85);
-  --clay-brand: 0 2px 6px rgba(0, 0, 0, 0.4), 0 16px 30px -16px rgba(90, 84, 220, 0.55);
+  --clay-sm: 0 1px 2px rgba(10, 4, 8, 0.4), 0 1px 3px -1px rgba(10, 4, 8, 0.3);
+  --clay: 0 2px 4px rgba(10, 4, 8, 0.35), 0 14px 28px -14px rgba(10, 4, 8, 0.75);
+  --clay-lg: 0 4px 8px rgba(10, 4, 8, 0.4), 0 28px 56px -24px rgba(10, 4, 8, 0.85);
+  --clay-brand: 0 2px 6px rgba(10, 4, 8, 0.4), 0 16px 30px -16px rgba(239, 163, 198, 0.5);
 }
 
 @theme inline {
@@ -175,8 +195,8 @@
   --color-accent-line: var(--accent-line);
   --color-sun: var(--sun-400);
 
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display-raw), var(--font-jakarta), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-poetsen), var(--font-inter), ui-sans-serif, sans-serif;
 }
 
 /* ── base ────────────────────────────────────────────────────────────────── */
@@ -202,11 +222,10 @@ body {
   overflow-x: hidden;
 }
 
-.display,
 h1,
 h2,
 h3 {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.12;
@@ -221,10 +240,17 @@ h3 {
      unreadable. Inheriting instead of declaring sidesteps that entirely. */
 }
 
+/* Poetsen One is the source site's rounded display face, but it is used
+   sparingly there too — reserved here for hero-scale moments only, never for
+   every h1-h3, which stay in Inter. It ships one weight (400), which already
+   reads as bold/chunky, so it does not take the 700 the other headings do. */
 .display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+  text-wrap: balance;
   font-size: clamp(2.4rem, 5.6vw, 4rem);
-  line-height: 1.04;
-  letter-spacing: -0.02em;
 }
 
 h1 {
@@ -326,17 +352,44 @@ h4,
   box-shadow: var(--clay-sm);
 }
 
-/* Tinted panels — each section/feature gets its own soft ground. */
+/* Tinted panels — each section/feature carries its colour in the border and
+   an ambient glow tinted to match, not a flat colour-wash fill. A card that
+   is 90% pastel paint reads as a candy block; a white card with a
+   colour-true hairline and a soft coloured glow underneath reads as a
+   designed surface that merely *belongs* to that colour. Six of these next
+   to each other stay calm because the saturation lives in the edges and
+   shadow, not the field. */
 .tint {
-  border: 1px solid color-mix(in srgb, var(--tint-color) 18%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--tint-color) 26%, var(--line));
   border-radius: var(--radius-lg);
-  background:
-    radial-gradient(
-      120% 120% at 12% 0%,
-      color-mix(in srgb, var(--tint-color) 16%, var(--surface)) 0%,
-      var(--surface) 62%
-    );
-  box-shadow: var(--clay-sm);
+  background: var(--surface);
+  box-shadow:
+    0 1px 2px rgba(69, 77, 93, 0.06),
+    0 22px 40px -26px color-mix(in srgb, var(--tint-color) 55%, transparent);
+}
+
+/* Decorative hover-lift for cards the user browses rather than reads inside
+   (info cards, stat tiles) — not applied to form/tint panels generally,
+   since a static container drifting on hover reads as a bug, not a detail. */
+.lift {
+  transition:
+    transform var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out);
+}
+@media (hover: hover) {
+  .lift:hover {
+    transform: translateY(-4px);
+  }
+  .lift.tint:hover {
+    border-color: color-mix(in srgb, var(--tint-color) 48%, var(--line));
+    box-shadow:
+      0 2px 4px rgba(69, 77, 93, 0.08),
+      0 30px 54px -26px color-mix(in srgb, var(--tint-color) 65%, transparent);
+  }
+  .lift.clay:hover {
+    box-shadow: var(--clay-lg);
+  }
 }
 
 /* ── buttons ─────────────────────────────────────────────────────────────── */
@@ -368,6 +421,23 @@ h4,
 
 .btn:active:not(:disabled) {
   transform: translateY(1px);
+}
+
+/* A trailing icon nudges forward on hover — cheap, and it's the single
+   detail that makes a button feel considered rather than templated. */
+.btn-icon-right {
+  display: inline-flex;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.btn:hover:not(:disabled) .btn-icon-right {
+  transform: translateX(3px);
+}
+.btn-icon-left {
+  display: inline-flex;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.btn:hover:not(:disabled) .btn-icon-left {
+  transform: translateX(-2px);
 }
 
 .btn:disabled {
@@ -553,14 +623,19 @@ h4,
 
 /* ── chips & badges ──────────────────────────────────────────────────────── */
 
+/* 800 (Extra Bold) at 12px, in sentence case with near-zero tracking, reads
+   heavy and slightly muddy — that weight belongs to uppercase, wide-tracked
+   labels (see .eyebrow) or large numerals, not a running sentence in a pill.
+   700 keeps the same "this is a label" signal at a size Inter renders
+   cleanly, with a touch more spacing to keep letters from crowding. */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   font-family: var(--font-sans);
   font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
+  font-weight: 700;
+  letter-spacing: 0.015em;
   padding: 0.38rem 0.8rem;
   border-radius: var(--radius-pill);
   background: var(--chip-bg, var(--surface-2));
@@ -632,7 +707,7 @@ h4,
 }
 .progress-matrix-headrow {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -663,7 +738,7 @@ h4,
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border-radius: inherit;
   overflow: hidden;
 }
@@ -677,7 +752,23 @@ h4,
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: var(--radius-pill);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: width 700ms var(--ease-out);
+}
+
+/* Grow-in on mount, for bars that render once and never change again (a
+   report snapshot) — never applied to a live-updating bar, since an
+   animation with fill-mode "both" pins a property and would fight a later
+   value change from React. The 0%→(implicit current width) keyframe reads
+   the element's own inline width as its "to", so nothing needs duplicating
+   per instance. */
+@keyframes grow-w {
+  from {
+    width: 0;
+  }
+}
+.grow-in {
+  animation: grow-w 900ms var(--ease-out) both;
 }
 .progress-matrix-dot {
   position: absolute;
@@ -690,6 +781,204 @@ h4,
   transform: translate(-50%, -50%);
   box-shadow: 0 1px 3px rgba(23, 24, 43, 0.3);
   transition: left 700ms var(--ease-out);
+}
+
+/* ── the developmental profile chart, filled in (report) ──────────────────── */
+
+.dp-chart-scroll {
+  overflow-x: auto;
+}
+.dp-chart {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 9rem) repeat(6, minmax(6.75rem, 1fr));
+  min-width: 56rem;
+}
+.dp-chart-head,
+.dp-chart-stage,
+.dp-chart-cell {
+  border-bottom: 1px solid var(--line-soft);
+  border-right: 1px solid var(--line-soft);
+}
+.dp-chart-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ink-2);
+  background: var(--surface-2);
+}
+.dp-chart-corner {
+  background: var(--surface-2);
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+.dp-chart-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.6rem 0.7rem;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.dp-chart-roman {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.dp-chart-stage-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+  opacity: 0.85;
+}
+.dp-chart-cell {
+  position: relative;
+  padding: 0.55rem 0.65rem 0.7rem;
+  min-height: 4.4rem;
+}
+.dp-chart-cell-desc {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.28;
+  /* Colour is set inline per-cell (a dark shade of the row's own hue) — the
+     cell background is always a light tint regardless of theme, so var(--ink)
+     would go the wrong way in dark mode. This is just the fallback. */
+  color: var(--ink);
+}
+.dp-chart-cell-kind {
+  margin: 0.2rem 0 0;
+  font-size: 0.62rem;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink-3);
+}
+.dp-chart-marker {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: grid;
+  place-items: center;
+}
+.dp-chart-marker-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(23, 24, 43, 0.15);
+}
+.dp-chart-marker-here {
+  filter: drop-shadow(0 1px 3px rgba(23, 24, 43, 0.25));
+}
+.dp-chart-cell-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 0 2px 2px 0;
+  opacity: 0.85;
+}
+
+/* current: a solid ring in the competence's own colour */
+.dp-chart-cell[data-state="current"] {
+  box-shadow: inset 0 0 0 2.5px var(--cell-color);
+  z-index: 1;
+}
+/* next: a dashed outline — this stage has real answers, just not enough yet */
+.dp-chart-cell[data-state="next"] {
+  box-shadow: inset 0 0 0 2px var(--cell-color);
+  outline: none;
+}
+.dp-chart-cell[data-state="next"] .dp-chart-cell-desc,
+.dp-chart-cell[data-state="next"] .dp-chart-cell-kind {
+  opacity: 0.75;
+}
+/* ahead: not yet approached — recede rather than disappear, so the row is
+   still legible as "this exists, just not here yet" */
+.dp-chart-cell[data-state="ahead"] {
+  opacity: 0.42;
+}
+/* reached: full-strength, the default look — nothing extra needed beyond the
+   check mark already placed in the corner */
+
+/* a stronger rule between the three "taking it in" competences and the three
+   "putting it out" ones, echoing the body silhouette on the printed chart.
+   Column 5 (1-indexed, header+6 = 7 columns) is Mobility, the first "out"
+   column — nth-child(7n+5) lands on it in every row including the header. */
+.dp-chart > *:nth-child(7n + 5) {
+  border-left: 2px solid var(--line);
+}
+
+@media print {
+  .dp-chart-head,
+  .dp-chart-stage,
+  .dp-chart-cell {
+    border-color: var(--line) !important;
+  }
+  .dp-chart-head,
+  .dp-chart-corner {
+    background: #fff !important;
+    color: var(--ink) !important;
+  }
+  .dp-chart-stage {
+    background: #fff !important;
+    color: var(--ink) !important;
+    border-left: 3px solid var(--ink-3);
+  }
+  .dp-chart-stage span {
+    color: var(--ink) !important;
+  }
+  .dp-chart-cell {
+    background: #fff !important;
+  }
+  .dp-chart-cell-desc,
+  .dp-chart-cell-kind {
+    color: var(--ink) !important;
+  }
+  .dp-chart-cell-kind {
+    color: var(--ink-3) !important;
+  }
+  .dp-chart-cell[data-state="current"] {
+    box-shadow: inset 0 0 0 2px var(--ink) !important;
+  }
+  .dp-chart-cell[data-state="next"] {
+    box-shadow: inset 0 0 0 1.5px var(--ink-2) !important;
+  }
+  .dp-chart-cell[data-state="ahead"] {
+    opacity: 0.55;
+  }
+  .dp-chart-marker-check {
+    box-shadow: none;
+    border: 1px solid var(--ink-3);
+  }
+  .dp-chart-cell-fill {
+    background: var(--ink) !important;
+  }
+}
+
+/* ── native <details>/<summary> disclosures ────────────────────────────────
+ * Every accordion in the app (admin item bank, report "area by area") is a
+ * plain <details>, so the marker is hidden once here rather than per usage.
+ * Firefox honours list-style; WebKit needs its own pseudo-element hidden too.
+ */
+summary {
+  list-style: none;
+}
+summary::-webkit-details-marker,
+summary::marker {
+  display: none;
+}
+.report-domain-summary {
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.report-domain-summary:hover {
+  background: var(--surface-2);
 }
 
 /* ── report cover: frosted meta strip ─────────────────────────────────────── */
@@ -795,6 +1084,32 @@ h4,
   padding: 0.9rem max(1.25rem, env(safe-area-inset-left));
   padding-bottom: max(0.9rem, env(safe-area-inset-bottom));
   box-shadow: 0 -8px 28px -18px rgba(23, 24, 43, 0.35);
+}
+
+/* Ties a stock/real photo into the brand palette instead of leaving it as a
+   raw, uncoloured rectangle next to flat brand-coloured illustrations — a
+   low-opacity duotone wash, multiply so it only ever darkens/tints and never
+   flattens highlights. */
+.photo-frame {
+  position: relative;
+}
+.photo-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--brand-600) 30%, transparent) 0%,
+    transparent 50%,
+    color-mix(in srgb, var(--coral-500) 22%, transparent) 100%
+  );
+  mix-blend-mode: multiply;
+}
+:root[data-theme="dark"] .photo-frame::after {
+  mix-blend-mode: soft-light;
+  opacity: 0.75;
 }
 
 /* ── decorative ──────────────────────────────────────────────────────────── */
@@ -1122,6 +1437,14 @@ h4,
     display: none !important;
   }
 
+  /* A collapsed area-by-area card is a screen-only convenience — a printed
+     or downloaded report is a document the parent keeps, and every area's
+     full detail belongs in it whether or not it happened to be open when
+     they clicked print. */
+  details > *:not(summary) {
+    display: block !important;
+  }
+
   * {
     animation: none !important;
     transition: none !important;
@@ -1170,7 +1493,8 @@ h4,
     break-before: page;
   }
   .bloom,
-  .confetti-piece {
+  .confetti-piece,
+  .photo-frame::after {
     display: none !important;
   }
 

@@ -76,10 +76,10 @@ export default function AdminSubmissionDetailPage({
         <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Field label="Assessment id" value={assessment.id} />
           <Field label="Item bank version" value={assessment.bankVersion} />
-          <Field
-            label="Answered"
-            value={`${result?.answeredCount ?? 0} / ${result?.totalCount ?? 0}`}
-          />
+          {/* The adaptive walk means there is no fixed total to divide by —
+              a child who climbs is asked more questions than one who does not,
+              and both are complete. */}
+          <Field label="Questions answered" value={String(result?.answeredCount ?? 0)} />
           <Field
             label="Status"
             value={assessment.completedAt ? `Completed ${assessment.completedAt.slice(0, 10)}` : "In progress"}

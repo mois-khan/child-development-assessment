@@ -11,8 +11,12 @@
  * itself via liveGetVideo() rather than this type growing a field only it
  * cares about.
  */
-import { DOMAINS, STAGE_FOR_BAND } from "@/content/domains";
-import { ACTIVITIES, activitiesFor as baseActivitiesFor } from "@/content/activities";
+import { DOMAINS } from "@/content/domains";
+import {
+  ACTIVITIES,
+  ACTIVITY_BAND,
+  activitiesFor as baseActivitiesFor,
+} from "@/content/activities";
 import type { Activity, DomainCode } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { ItemStatus } from "./content";
@@ -95,17 +99,17 @@ export function adminListActivities(filter?: { domain?: DomainCode; stage?: stri
 }
 
 /**
- * What a parent's report actually shows for one domain at one age band: the
- * shipped activities, with any admin edits/additions/deletions applied.
- * Falls back to the plain shipped set when Supabase is configured, since
- * admin activities don't live there yet — see adminListActivities above.
+ * What a parent's report actually shows for one competence, given the brain
+ * stage the child reached: the shipped activities, with any admin
+ * edits/additions/deletions applied. Falls back to the plain shipped set when
+ * Supabase is configured, since admin activities don't live there yet — see
+ * adminListActivities above.
  */
-export function liveActivitiesFor(domain: DomainCode, band: string): AdminActivity[] {
+export function liveActivitiesFor(domain: DomainCode, stage: string): AdminActivity[] {
   if (isSupabaseConfigured()) {
-    return baseActivitiesFor(domain, band).map((a) => ({ ...a, status: "base" as const }));
+    return baseActivitiesFor(domain, stage).map((a) => ({ ...a, status: "base" as const }));
   }
-  const stage = STAGE_FOR_BAND[band];
-  return mergedActivities({ domain, stage });
+  return mergedActivities({ domain, stage: ACTIVITY_BAND[stage] ?? "a1" });
 }
 
 export function adminSaveActivity(input: ActivityInput): void {

@@ -95,7 +95,6 @@ export function SectionHeading({
 const NAV_LINKS: [string, string][] = [
   ["/", "Home"],
   ["/children", "My children"],
-  ["/#how", "How it works"],
 ];
 
 export function TopBar({

@@ -31,19 +31,19 @@ export function Mascot({
       height={size}
       viewBox="0 0 120 120"
       className={className}
-      style={style}
+      style={{ filter: "drop-shadow(0 10px 18px rgba(147, 89, 15, 0.32))", ...style }}
       role="img"
       aria-label="Kaushalya sun mascot"
     >
       <defs>
         <radialGradient id="sunFace" cx="38%" cy="32%" r="72%">
           <stop offset="0%" stopColor="#FEF08A" />
-          <stop offset="60%" stopColor="#FBBF24" />
-          <stop offset="100%" stopColor="#F59E0B" />
+          <stop offset="60%" stopColor="#F4A93B" />
+          <stop offset="100%" stopColor="#E8971F" />
         </radialGradient>
         <linearGradient id="sunRay" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FCD34D" />
-          <stop offset="100%" stopColor="#F59E0B" />
+          <stop offset="0%" stopColor="#F8CE7C" />
+          <stop offset="100%" stopColor="#E8971F" />
         </linearGradient>
       </defs>
 
@@ -61,11 +61,21 @@ export function Mascot({
       ))}
 
       <circle cx="60" cy="60" r="38" fill="url(#sunFace)" />
-      <circle cx="60" cy="60" r="38" fill="none" stroke="#F59E0B" strokeOpacity="0.35" strokeWidth="2" />
+      <circle cx="60" cy="60" r="38" fill="none" stroke="#E8971F" strokeOpacity="0.35" strokeWidth="2" />
+      {/* rim highlight — the one extra stroke that lifts a flat vector fill
+          into something with a hint of dimension */}
+      <path
+        d="M36 40a26 26 0 0 1 20-12"
+        fill="none"
+        stroke="#FEF08A"
+        strokeOpacity="0.55"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
 
       {/* cheeks */}
-      <ellipse cx="42" cy="66" rx="6.5" ry="4.5" fill="#FB7185" opacity="0.42" />
-      <ellipse cx="78" cy="66" rx="6.5" ry="4.5" fill="#FB7185" opacity="0.42" />
+      <ellipse cx="42" cy="66" rx="6.5" ry="4.5" fill="#F2A08E" opacity="0.42" />
+      <ellipse cx="78" cy="66" rx="6.5" ry="4.5" fill="#F2A08E" opacity="0.42" />
 
       {/* eyes */}
       {mood === "cheer" ? (
@@ -98,7 +108,7 @@ export function Mascot({
         <g>
           <path
             d="M96 74c4-2 8 1 7 5l-2 8"
-            stroke="#F59E0B"
+            stroke="#E8971F"
             strokeWidth="5"
             strokeLinecap="round"
             fill="none"
@@ -114,11 +124,11 @@ export function Mascot({
 const STAGE_TINT = [
   "#E0455A",
   "#F97316",
-  "#FBBF24",
+  "#F4A93B",
   "#10B981",
   "#0EA5E9",
-  "#6366F1",
-  "#8B5CF6",
+  "#7C5CE0",
+  "#4D1435",
 ];
 
 /**
@@ -134,9 +144,9 @@ export function BrainJourney({
   stages,
   className = "",
 }: {
-  /** 1-7, the child's current module. */
+  /** 1-7, the order of the child's current brain stage. */
   current?: number;
-  stages: { name: string; ageLabel: string }[];
+  stages: { name: string; ageLabel: string; roman?: string }[];
   className?: string;
 }) {
   const W = 900;
@@ -172,8 +182,8 @@ export function BrainJourney({
       <defs>
         <linearGradient id="journeyLine" x1="0" y1="1" x2="1" y2="0">
           <stop offset="0%" stopColor="#E0455A" />
-          <stop offset="50%" stopColor="#FBBF24" />
-          <stop offset="100%" stopColor="#8B5CF6" />
+          <stop offset="50%" stopColor="#F4A93B" />
+          <stop offset="100%" stopColor="#4D1435" />
         </linearGradient>
       </defs>
 
@@ -273,8 +283,8 @@ export function SectionWheel({
     >
       <defs>
         <radialGradient id="wheelCore" cx="40%" cy="34%" r="70%">
-          <stop offset="0%" stopColor="#EEF1FF" />
-          <stop offset="100%" stopColor="#C7CCFF" />
+          <stop offset="0%" stopColor="#FBF0F4" />
+          <stop offset="100%" stopColor="#EBB9CE" />
         </radialGradient>
       </defs>
 
@@ -335,12 +345,13 @@ export function StarBadge({
       height={size}
       viewBox="0 0 100 100"
       className={className}
+      style={earned ? { filter: `drop-shadow(0 8px 16px color-mix(in srgb, ${color} 45%, transparent))` } : undefined}
       role="img"
       aria-label={earned ? "Star earned" : "Star not earned yet"}
     >
       <defs>
         <linearGradient id="badgeGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FDE68A" />
+          <stop offset="0%" stopColor="#F8CE7C" />
           <stop offset="100%" stopColor={color} />
         </linearGradient>
       </defs>
@@ -392,7 +403,7 @@ export function Blooms() {
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       <span
         className="bloom"
-        style={{ width: 420, height: 420, top: -200, left: -140, opacity: 0.28, "--bloom-color": "#C7CCFF" } as CSSProperties}
+        style={{ width: 420, height: 420, top: -200, left: -140, opacity: 0.28, "--bloom-color": "var(--brand-200)" } as CSSProperties}
       />
     </div>
   );

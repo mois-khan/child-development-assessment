@@ -1,27 +1,27 @@
 import type { Metadata } from "next";
-import { Sora, Plus_Jakarta_Sans } from "next/font/google";
+import { Inter, Poetsen_One } from "next/font/google";
 import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/components/theme-toggle";
 
 /**
- * Two voices, deliberately.
+ * The KGKP brand's own two voices (see kgkpdesign.md).
  *
- * Sora carries every heading — a geometric, confident grotesk that reads as
- * agency-designed rather than a rounded "kids app" face. Plus Jakarta Sans
- * carries the interface and the report: neutral, premium, and unambiguous at
- * 12px, which is where a display face falls apart.
+ * Inter carries the interface, body copy and every heading — neutral,
+ * premium, and unambiguous at 12px, which is where a display face falls
+ * apart. Poetsen One, the source site's rounded display face, is kept for
+ * `.display` hero moments only; it ships a single weight (400).
  */
-const sora = Sora({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-display-raw",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-inter",
   display: "swap",
 });
 
-const jakarta = Plus_Jakarta_Sans({
+const poetsen = Poetsen_One({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-jakarta",
+  weight: ["400"],
+  variable: "--font-poetsen",
   display: "swap",
 });
 
@@ -39,7 +39,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className={`${sora.variable} ${jakarta.variable}`}>{children}</body>
+      <body className={`${inter.variable} ${poetsen.variable}`}>{children}</body>
     </html>
   );
 }

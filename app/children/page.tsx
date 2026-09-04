@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
-import { moduleForAge } from "@/content/domains";
+import { stageForAge } from "@/lib/stage";
 import { assessmentsForChild, createChild, listChildren, type SavedChild } from "@/lib/store";
 import type { Gender } from "@/lib/types";
 import {
@@ -125,7 +125,7 @@ export default function ChildrenPage() {
 function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
   const router = useRouter();
   const age = summariseAge(child.dob, todayISO(), child.gestationalWeeks);
-  const mod = moduleForAge(age.assessedMonths);
+  const stage = stageForAge(age.assessedMonths);
   const checks = assessmentsForChild(child.id).length;
 
   return (
@@ -152,7 +152,7 @@ function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Badge tone="accent">
-          Module {mod.id} · {mod.name}
+          Stage {stage.roman} · {stage.name}
         </Badge>
         <Badge tone={checks > 0 ? "success" : "neutral"}>
           {checks === 0 ? "No checks yet" : `${checks} check${checks === 1 ? "" : "s"}`}
@@ -190,7 +190,7 @@ function NewChildForm({
   const dobInvalid = dobTouched && dob !== "" && age === null;
   const nameOk = name.trim().length > 0;
   const canSubmit = nameOk && dob !== "" && gender !== "" && age !== null && !tooOld;
-  const mod = age && !tooOld ? moduleForAge(age.assessedMonths) : null;
+  const stage = age && !tooOld ? stageForAge(age.assessedMonths) : null;
 
   function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -325,9 +325,9 @@ function NewChildForm({
       </div>
 
       {/* live confirmation — the parent sees the consequence before committing */}
-      {age && !tooOld && mod && (
+      {age && !tooOld && stage && (
         <div
-          key={mod.id}
+          key={stage.id}
           className="animate-rise mt-7 flex items-center gap-4 rounded-[var(--radius)] p-4"
           style={{ background: "var(--accent-soft)" }}
         >
@@ -338,7 +338,7 @@ function NewChildForm({
             </strong>{" "}
             — that&rsquo;s{" "}
             <strong className="font-extrabold text-accent">
-              Module {mod.id}, {mod.name}
+              Stage {stage.roman}, {stage.name}
             </strong>
             .
           </p>

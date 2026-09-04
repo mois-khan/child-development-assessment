@@ -3,15 +3,23 @@
 import { Fragment, use, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { DOMAIN_BY_CODE, moduleForAge } from "@/content/domains";
+import { DOMAINS, DOMAIN_BY_CODE } from "@/content/domains";
+import { BRAIN_STAGES, STAGE_BY_ID, cellFor } from "@/content/stages";
 import { liveActivitiesFor, type AdminActivity } from "@/lib/admin/activities";
 import { liveGetVideo, type AdminVideo } from "@/lib/admin/videos";
 import { resolveRecommendedCourse, type AdminCourse } from "@/lib/admin/recommendations";
 import { formatAge, summariseAge } from "@/lib/age";
 import { DISCLAIMER, domainNote, headline, nextSteps, summary } from "@/lib/narrative";
-import { STATUSES, bandForAge, scoreAssessment } from "@/lib/scoring";
+import { STATUSES, scoreAssessment } from "@/lib/scoring";
+import { stageForAge } from "@/lib/stage";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
-import type { AssessmentResult, DomainCode, DomainScore, Module } from "@/lib/types";
+import type {
+  AssessmentResult,
+  BrainStage,
+  Child,
+  DomainCode,
+  DomainScore,
+} from "@/lib/types";
 import {
   Avatar,
   Badge,
@@ -21,7 +29,9 @@ import {
   Disclaimer,
   Footer,
   IconArrowRight,
+  IconCalendar,
   IconCheck,
+  IconChevronRight,
   IconClock,
   IconDownload,
   IconHeart,
@@ -30,19 +40,21 @@ import {
   Mascot,
   Meter,
   Section,
+  SectionIcon,
   SectionTile,
   Shell,
   StatusChip,
   TopBar,
   Wordmark,
   domainColor,
+  statusColor,
 } from "@/components/ui";
 
 /** A still for each section's suggested video. Real clips drop in later. */
 const VIDEO_STILL: Record<DomainCode, string> = {
   vision: "/images/play-blocks.jpg",
   auditory: "/images/baby-laughing.jpg",
-  social: "/images/child-smile.jpg",
+  tactile: "/images/child-smile.jpg",
   mobility: "/images/outdoor-play.jpg",
   language: "/images/parent-reading.jpg",
   hand: "/images/playful-child.jpg",
@@ -67,7 +79,8 @@ export default function ReportPage({
       child: record.child,
       assessedOn: record.assessedOn,
       responses: record.responses,
-      bandsByDomain: record.bandsByDomain,
+      details: record.details,
+      stagesByDomain: record.stagesByDomain,
     });
   }, [record]);
 
@@ -113,7 +126,7 @@ export default function ReportPage({
 
   const child = record.child;
   const age = summariseAge(child.dob, record.assessedOn, child.gestationalWeeks);
-  const mod = moduleForAge(age.assessedMonths);
+  const startStage = stageForAge(age.assessedMonths);
   const ordered = [...result.domainScores].sort(
     (a, b) => DOMAIN_BY_CODE[a.domain].order - DOMAIN_BY_CODE[b.domain].order,
   );
@@ -158,23 +171,24 @@ export default function ReportPage({
             style={{
               borderRadius: "var(--radius-xl)",
               background: "linear-gradient(160deg, var(--brand-500) 0%, var(--brand-700) 58%, var(--brand-900) 100%)",
-              boxShadow: "var(--clay-lg)",
+              boxShadow:
+                "0 2px 5px rgba(69, 77, 93, 0.14), 0 40px 70px -28px color-mix(in srgb, var(--brand-600) 60%, transparent)",
             }}
           >
             <span
               aria-hidden="true"
               className="bloom"
-              style={{ width: 420, height: 420, top: -200, left: "-4%", "--bloom-color": "#a5a9fb", opacity: 0.5 } as React.CSSProperties}
+              style={{ width: 420, height: 420, top: -200, left: "-4%", "--bloom-color": "var(--brand-300)", opacity: 0.5 } as React.CSSProperties}
             />
             <span
               aria-hidden="true"
               className="bloom"
-              style={{ width: 300, height: 300, bottom: -160, right: "4%", "--bloom-color": "#fbbf24", opacity: 0.22 } as React.CSSProperties}
+              style={{ width: 300, height: 300, bottom: -160, right: "4%", "--bloom-color": "var(--sun-400)", opacity: 0.22 } as React.CSSProperties}
             />
             <span
               aria-hidden="true"
               className="bloom print:hidden"
-              style={{ width: 220, height: 220, top: -70, right: "2%", "--bloom-color": "#c7ccff", opacity: 0.4 } as React.CSSProperties}
+              style={{ width: 220, height: 220, top: -70, right: "2%", "--bloom-color": "var(--brand-200)", opacity: 0.4 } as React.CSSProperties}
             />
 
             <div className="relative flex flex-col gap-8 sm:gap-10">
@@ -214,7 +228,10 @@ export default function ReportPage({
                     child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—",
                   ],
                   ["Assessment date", formatDate(record.assessedOn)],
-                  ["Stage", `Module ${mod.id} · ${mod.name}`],
+                  [
+                    "Started at",
+                    `Stage ${startStage.roman} · ${startStage.name}`,
+                  ],
                 ].map(([label, value]) => (
                   <div key={label} className="cover-meta-item">
                     <dt>{label}</dt>
@@ -320,8 +337,11 @@ export default function ReportPage({
                             ))}
                           </div>
                           <div
-                            className="progress-matrix-fill"
-                            style={{ width: `${pct}%`, background: color, opacity: 0.28 }}
+                            className="progress-matrix-fill grow-in"
+                            style={{
+                              width: `${pct}%`,
+                              background: `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 78%, black))`,
+                            }}
                           />
                           <div
                             className="progress-matrix-dot"
@@ -333,6 +353,19 @@ export default function ReportPage({
                   })}
                 </div>
               </div>
+            </Card>
+          </Section>
+
+          {/* ══ page 2b · the chart itself, filled in ═══════════════════════ */}
+          <Section size="sm" className="print-break">
+            <h2>{child.name}&rsquo;s Developmental Profile</h2>
+            <p className="mt-2 max-w-[58ch] text-[0.95rem] leading-relaxed text-ink-2">
+              The same seven-stage chart the programme uses on paper, filled in with{" "}
+              {child.name}&rsquo;s own answers — reflex stage at the bottom, sophisticated
+              cortex at the top.
+            </p>
+            <Card variant="clay" className="mt-6 overflow-hidden !p-0">
+              <DevelopmentalProfileChart result={result} childName={child.name} />
             </Card>
           </Section>
 
@@ -370,22 +403,21 @@ export default function ReportPage({
 
             <div className="mt-5 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
               <Card variant="clay" className="p-6 sm:p-8">
-                <div className="prose-read space-y-4">
-                  {summary(result, child).map((p) => (
-                    <p key={p.slice(0, 40)}>{p}</p>
-                  ))}
-                </div>
+                <SummaryProse result={result} child={child} />
 
-                <ul className="mt-7 list-none space-y-3.5 p-0 border-t border-line-soft pt-6">
-                  {nextSteps(result, child).map((s) => (
-                    <li key={s.slice(0, 30)} className="flex items-start gap-3">
-                      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-accent">
-                        <IconCheck size={13} />
-                      </span>
-                      <span className="text-[0.94rem] leading-relaxed text-ink-2">{s}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-7 border-t border-line-soft pt-6">
+                  <p className="eyebrow mb-4">What to do next</p>
+                  <ul className="list-none space-y-3.5 p-0">
+                    {nextSteps(result, child).map((s) => (
+                      <li key={s.slice(0, 30)} className="flex items-start gap-3">
+                        <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-accent">
+                          <IconCheck size={13} />
+                        </span>
+                        <span className="text-[0.94rem] leading-relaxed text-ink-2">{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </Card>
 
               {/* the course recommendation — an admin rule match (see
@@ -394,7 +426,7 @@ export default function ReportPage({
               {recommendation ? (
                 <RecommendedCourseCard course={recommendation.course} />
               ) : (
-                <DefaultRecommendationCard mod={mod} />
+                <DefaultRecommendationCard stage={startStage} />
               )}
             </div>
           </Section>
@@ -454,6 +486,295 @@ export default function ReportPage({
   );
 }
 
+/* ══ the chart itself, filled in ══════════════════════════════════════════ */
+
+type CellState = "reached" | "current" | "next" | "ahead";
+
+/**
+ * Where one competence's score puts it on one row of the chart.
+ *
+ * "reached" and "current" only ever look at the stage the child actually
+ * landed on (DomainScore.achievedStage) — they never assume a stage was
+ * literally asked about. That is deliberate: reaching stage VI implies I
+ * through V without re-testing them, exactly as the physical chart assumes.
+ * "next" is the one state that DOES require the stage to have been asked
+ * (DomainScore.stagesAsked) — we only draw a progress bar into a stage we
+ * have actual answers for, never a guess.
+ */
+function cellState(
+  score: DomainScore,
+  stage: BrainStage,
+): { state: CellState; frac?: number } {
+  const achieved = STAGE_BY_ID[score.achievedStage];
+
+  if (achieved) {
+    if (stage.order < achieved.order) return { state: "reached" };
+    if (stage.order === achieved.order) return { state: "current" };
+    if (stage.order === achieved.order + 1 && score.stagesAsked.includes(stage.id)) {
+      const span = stage.averageMonths - achieved.averageMonths;
+      const frac =
+        span <= 0
+          ? 0
+          : clamp01((score.neurologicalMonths - achieved.averageMonths) / span);
+      return { state: "next", frac };
+    }
+    return { state: "ahead" };
+  }
+
+  // Nothing passed yet: anchor "current" on the lowest stage we actually
+  // asked about, using the domain's overall answer rate as its fill.
+  const lowestAsked = [...score.stagesAsked]
+    .map((id) => STAGE_BY_ID[id])
+    .filter((s): s is BrainStage => !!s)
+    .sort((a, b) => a.order - b.order)[0];
+  if (lowestAsked && stage.id === lowestAsked.id) {
+    return { state: "current", frac: score.percent };
+  }
+  return { state: "ahead" };
+}
+
+function clamp01(n: number): number {
+  return Math.min(1, Math.max(0, n));
+}
+
+/**
+ * The Developmental Profile chart, filled in with one child's answers.
+ *
+ * Seven rows (the brain stages, reflex at the bottom to match the printed
+ * chart), six columns (the competences, in the chart's own order — the three
+ * that take information in, then the three that put it back out). Every one
+ * of the 42 cells carries the chart's own wording, so this reads as the same
+ * document a family already has on paper, just marked up with where their
+ * child stands.
+ */
+function DevelopmentalProfileChart({
+  result,
+  childName,
+}: {
+  result: AssessmentResult;
+  childName: string;
+}) {
+  const scoreByDomain = Object.fromEntries(
+    result.domainScores.map((s) => [s.domain, s]),
+  ) as Record<DomainCode, DomainScore>;
+  const rows = [...BRAIN_STAGES].sort((a, b) => b.order - a.order); // VII at top
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line-soft px-5 py-3.5 text-[0.78rem] font-semibold text-ink-3 sm:px-7">
+        <LegendItem swatch={<LegendCheck />} label="Already reached" />
+        <LegendItem swatch={<LegendRing />} label={`${childName} is here`} />
+        <LegendItem swatch={<LegendDash />} label="In progress" />
+        <LegendItem swatch={<LegendFaded />} label="Not reached yet" />
+      </div>
+
+      <div className="dp-chart-scroll">
+        <div className="dp-chart">
+          <div className="dp-chart-head dp-chart-corner" aria-hidden="true" />
+          {DOMAINS.map((d) => (
+            <div key={d.code} className="dp-chart-head">
+              <SectionIcon code={d.code} size={17} />
+              <span>{d.short}</span>
+            </div>
+          ))}
+
+          {rows.flatMap((stage) => [
+              <div
+                key={`${stage.id}-label`}
+                className="dp-chart-stage"
+                style={{
+                  background: `hsl(${stage.hue} 68% 93%)`,
+                  color: `hsl(${stage.hue} 60% 28%)`,
+                }}
+              >
+                <span className="dp-chart-roman">{stage.roman}</span>
+                <span className="dp-chart-stage-name">{stage.name}</span>
+              </div>,
+              ...DOMAINS.map((d) => {
+                const score = scoreByDomain[d.code];
+                const cell = cellFor(stage.id, d.code);
+                const { state, frac } = cellState(score, stage);
+                const color = domainColor(d.code);
+                return (
+                  <div
+                    key={`${stage.id}-${d.code}`}
+                    className="dp-chart-cell"
+                    data-state={state}
+                    style={
+                      {
+                        background: `hsl(${stage.hue} 55% 96%)`,
+                        "--cell-color": color,
+                      } as React.CSSProperties
+                    }
+                  >
+                    {state === "reached" && (
+                      <span className="dp-chart-marker dp-chart-marker-check" style={{ color }}>
+                        <IconCheck size={11} />
+                      </span>
+                    )}
+                    {state === "current" && (
+                      <span className="dp-chart-marker dp-chart-marker-here">
+                        <Avatar name={childName} size={20} />
+                      </span>
+                    )}
+                    {/* Inline, theme-independent ink — this cell's background is
+                        always a light tint of the row's own hue, by design, the
+                        same way the printed chart never changes with the light in
+                        the room. var(--ink) would flip to a pale colour in dark
+                        mode and vanish against it, so the text carries its own
+                        dark shade of the same hue instead. */}
+                    <p
+                      className="dp-chart-cell-desc"
+                      style={{ color: `hsl(${stage.hue} 45% 20%)` }}
+                    >
+                      {cell.description}
+                    </p>
+                    <p
+                      className="dp-chart-cell-kind"
+                      style={{ color: `hsl(${stage.hue} 25% 38%)` }}
+                    >
+                      {cell.kind}
+                    </p>
+                    {state === "next" && frac !== undefined && (
+                      <span
+                        className="dp-chart-cell-fill"
+                        style={{ width: `${Math.max(6, frac * 100)}%`, background: color }}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
+                );
+              }),
+          ])}
+        </div>
+      </div>
+
+      <p className="border-t border-line-soft px-5 py-3.5 text-[0.78rem] leading-relaxed text-ink-3 sm:px-7">
+        Cells below where {childName} is marked are assumed in place, the same way the paper
+        chart reads — reaching a later stage means the earlier ones are already there.
+      </p>
+    </div>
+  );
+}
+
+function LegendItem({ swatch, label }: { swatch: React.ReactNode; label: string }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      {swatch}
+      {label}
+    </span>
+  );
+}
+
+function LegendCheck() {
+  return (
+    <span
+      className="grid size-4 place-items-center rounded-full"
+      style={{ background: "var(--surface-3)", color: "var(--ink-2)" }}
+    >
+      <IconCheck size={10} />
+    </span>
+  );
+}
+
+function LegendRing() {
+  return (
+    <span
+      className="size-4 rounded-full"
+      style={{ border: "2.5px solid var(--ink-2)", background: "var(--surface)" }}
+    />
+  );
+}
+
+function LegendDash() {
+  return (
+    <span
+      className="size-4 rounded-full"
+      style={{ border: "2px dashed var(--ink-3)", background: "var(--surface)" }}
+    />
+  );
+}
+
+function LegendFaded() {
+  return (
+    <span
+      className="size-4 rounded-full"
+      style={{ background: "var(--surface-3)", opacity: 0.5 }}
+    />
+  );
+}
+
+/* ══ the summary, readable rather than a wall of text ══════════════════════ */
+
+/**
+ * `summary()` (lib/narrative.ts) returns 2-4 sentences as plain paragraph
+ * strings — reviewed prose, not something this page should restructure. What
+ * it can fix is how those paragraphs are read: the first one is always scene-
+ * setting (the child's age, how this report was scored), so it drops back to
+ * a small muted line rather than competing with the verdict; the paragraphs
+ * that actually say how the child is doing get a colour-coded callout, more
+ * breathing room, and their key phrases picked out, so the one sentence a
+ * busy parent needs doesn't have to be found by reading every word.
+ */
+function SummaryProse({ result, child }: { result: AssessmentResult; child: Child }) {
+  const [context, ...verdict] = summary(result, child);
+
+  const terms = [
+    child.name,
+    ...DOMAINS.map((d) => d.name.toLowerCase()),
+    STATUSES[result.overallStatus].label.toLowerCase(),
+  ];
+
+  return (
+    <div>
+      {context && (
+        <p className="flex items-start gap-2 text-[0.86rem] font-semibold leading-relaxed text-ink-3">
+          <IconCalendar size={15} className="mt-0.5 shrink-0" />
+          {context}
+        </p>
+      )}
+
+      <div
+        className="mt-5 space-y-4 rounded-r-[var(--radius-sm)] py-1 pl-5 sm:pl-6"
+        style={{ borderLeft: `3px solid ${statusColor(result.overallStatus)}` }}
+      >
+        {verdict.map((p) => (
+          <p key={p.slice(0, 40)} className="text-[1.02rem] leading-[1.75] text-ink-2">
+            <Highlight text={p} terms={terms} />
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Wraps any occurrence of `terms` (case-insensitive) in the text with `<strong>`. */
+function Highlight({ text, terms }: { text: string; terms: string[] }) {
+  const unique = Array.from(new Set(terms.filter((t) => t.trim().length > 0)));
+  if (unique.length === 0) return <>{text}</>;
+
+  const pattern = new RegExp(`(${unique.map(escapeRegExp).join("|")})`, "gi");
+  const parts = text.split(pattern);
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        unique.some((t) => t.toLowerCase() === part.toLowerCase()) ? (
+          <strong key={i} className="font-extrabold text-ink">
+            {part}
+          </strong>
+        ) : (
+          <Fragment key={i}>{part}</Fragment>
+        ),
+      )}
+    </>
+  );
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /* ══ one area ══════════════════════════════════════════════════════════════ */
 
 function DomainCard({
@@ -472,6 +793,11 @@ function DomainCard({
   const domain = DOMAIN_BY_CODE[score.domain];
   const color = domainColor(score.domain);
   const value = score.dq === null ? score.percent * 100 : score.dq;
+  // Open by default for the areas actually worth reading about; collapsed
+  // for the ones that are already fine, so six full-length cards don't force
+  // a long scroll past detail nobody needs yet. The status chip, score and
+  // blurb stay visible either way, in the summary row.
+  const defaultOpen = score.status === "slow" || score.status === "consult";
 
   const levels = [
     {
@@ -480,13 +806,6 @@ function DomainCard({
       n: score.achieved.length,
       tone: "var(--st-on-track)",
       icon: <IconCheck size={12} />,
-    },
-    {
-      key: "emerging",
-      label: "Arriving",
-      n: score.emerging.length,
-      tone: "var(--st-emerging)",
-      icon: <IconSparkle size={12} />,
     },
     {
       key: "notYet",
@@ -501,24 +820,41 @@ function DomainCard({
     <Card variant="clay" className="overflow-hidden">
       <div aria-hidden="true" className="h-1.5 w-full" style={{ background: color }} />
 
-      <div className="p-6 sm:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line-soft pb-5">
-          <div className="flex items-center gap-4">
-            <SectionTile code={score.domain} size={52} />
-            <div>
-              <h3 className="text-[1.15rem]">{domain.name}</h3>
-              <p className="mt-0.5 text-[0.84rem] font-semibold text-ink-3">{domain.blurb}</p>
+      {/* A dropdown rather than a fixed block: the status chip, score and
+          blurb below are enough to read this area at a glance, so the full
+          breakdown — what to work on, activities, video — only costs a click
+          when it's wanted. Printing/downloading still gets everything: see
+          the "print: force every <details> open" rule in globals.css. */}
+      <details className="group/domain" open={defaultOpen}>
+        <summary className="report-domain-summary cursor-pointer list-none p-6 sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <SectionTile code={score.domain} size={52} />
+              <div>
+                <h3 className="text-[1.15rem]">{domain.name}</h3>
+                <p className="mt-0.5 text-[0.84rem] font-semibold text-ink-3">{domain.blurb}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <StatusChip status={score.status} label={STATUSES[score.status].label} />
+              <span
+                aria-hidden="true"
+                className="no-print grid size-8 shrink-0 place-items-center rounded-full bg-[var(--surface-2)] text-ink-3 transition-transform group-open/domain:rotate-90"
+              >
+                <IconChevronRight size={16} />
+              </span>
             </div>
           </div>
-          <StatusChip status={score.status} label={STATUSES[score.status].label} />
-        </div>
 
-        <div className="mt-5 flex items-center gap-4 border-b border-line-soft pb-5">
-          <Meter value={Math.min(100, value)} color={color} className="flex-1" />
-          <span className="tnum text-[0.95rem] font-extrabold text-ink">{Math.round(value)}</span>
-        </div>
+          <div className="mt-5 flex items-center gap-4">
+            <Meter value={Math.min(100, value)} color={color} className="flex-1" animate />
+            <span className="tnum text-[0.95rem] font-extrabold text-ink">{Math.round(value)}</span>
+          </div>
+        </summary>
 
-        <div className={`mt-6 grid gap-6 ${suggestVideo ? "lg:grid-cols-[1fr_17rem]" : ""}`}>
+        <div
+          className={`border-t border-line-soft p-6 sm:p-7 grid gap-6 ${suggestVideo ? "lg:grid-cols-[1fr_17rem]" : ""}`}
+        >
           <div>
             <p className="prose-read !text-[0.97rem]">{note}</p>
 
@@ -610,13 +946,15 @@ function DomainCard({
                 </div>
               )}
               <p className="mt-2.5 text-[0.82rem] font-semibold leading-snug text-ink-2">
-                {video ? video.title : `${domain.short} practice for ${formatMonths(score.developmentalMonths)}`}
+                {video
+                  ? video.title
+                  : `${domain.short} practice for ${formatMonths(score.neurologicalMonths)}`}
               </p>
               {!video && <Badge className="mt-2">Video coming soon</Badge>}
             </div>
           )}
         </div>
-      </div>
+      </details>
     </Card>
   );
 }
@@ -700,12 +1038,12 @@ function RecommendationShell({
   );
 }
 
-function DefaultRecommendationCard({ mod }: { mod: Module }) {
+function DefaultRecommendationCard({ stage }: { stage: BrainStage }) {
   return (
     <RecommendationShell
       eyebrow="Recommended next"
-      title={`Milestones Acceleration · Phase ${mod.phase}`}
-      description={`The Kaushalya 0–6 programme for ${mod.name}: day-wise activity plans and short videos across exactly the six areas in this report, ten minutes of screen time and thirty minutes of play a day.`}
+      title={`Milestones Acceleration · Stage ${stage.roman}`}
+      description={`The Kaushalya 0–6 programme for ${stage.name}: day-wise activity plans and short videos across exactly the six areas in this report, ten minutes of screen time and thirty minutes of play a day.`}
       bullets={["Monthly course for this phase", "Day-wise activity plans", "Milestone checklists"]}
       primaryHref="https://www.kaushalyageniuskid.com"
       primaryLabel="Explore the programme"
@@ -732,15 +1070,26 @@ function RecommendedCourseCard({ course }: { course: AdminCourse }) {
 
 /* ══ helpers ═══════════════════════════════════════════════════════════════ */
 
-/** Presentation-only stage bands for the progress matrix — a coarser, five-way
- * read of the same score the status chips already use (see STATUSES in
- * lib/scoring.ts), for a chart that reads at a glance. Does not touch scoring. */
+/**
+ * The columns of the progress matrix — the chart's own TIME FRAME columns,
+ * read as a quotient.
+ *
+ * These are not chosen thresholds. Every stage on the chart puts its slow
+ * column at twice its average and its superior column at half, so reaching a
+ * stage at the slow age is a quotient of 50, at the average age 100, and at
+ * the superior age 200. The boundaries below are those three numbers, and the
+ * labels are the chart's four verdicts.
+ *
+ * Deliberately NOT the old five-way "developmental delay" scale. This is a
+ * screening result a parent reads alone, at home, about their own child, and
+ * naming a delay is a clinician's job — see the wording rules at the top of
+ * lib/narrative.ts.
+ */
 const STAGES = [
-  { label: "Significant developmental delay", max: 50 },
-  { label: "Developmental delay", max: 70 },
-  { label: "Mild developmental gaps", max: 85 },
-  { label: "Typically developing", max: 115 },
-  { label: "Advanced development", max: Infinity },
+  { label: "Worth a closer look", max: 50 },
+  { label: "Needs focus", max: 100 },
+  { label: "On track", max: 200 },
+  { label: "Ahead of the chart", max: Infinity },
 ] as const;
 
 function stagePosition(value: number): { index: number; frac: number } {
@@ -757,9 +1106,13 @@ function stagePosition(value: number): { index: number; frac: number } {
   return { index: 0, frac: 0 };
 }
 
+/**
+ * Activities are picked from the stage the child actually reached, not the one
+ * their age points at. A child working at stage III needs stage III play, and
+ * handing them their age's activities is how a report becomes discouraging.
+ */
 function pickActivities(score: DomainScore): AdminActivity[] {
-  const band = bandForAge(Math.round(score.developmentalMonths));
-  return liveActivitiesFor(score.domain, band.id).slice(0, 4);
+  return liveActivitiesFor(score.domain, score.achievedStage || "s1").slice(0, 4);
 }
 
 function formatDate(iso: string): string {

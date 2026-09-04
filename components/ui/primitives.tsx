@@ -63,9 +63,9 @@ export function Button({
       style={style}
       {...rest}
     >
-      {iconLeft}
+      {iconLeft && <span className="btn-icon-left">{iconLeft}</span>}
       {children}
-      {iconRight}
+      {iconRight && <span className="btn-icon-right">{iconRight}</span>}
     </button>
   );
 }
@@ -96,9 +96,9 @@ export function ButtonLink({
   );
   const inner = (
     <>
-      {iconLeft}
+      {iconLeft && <span className="btn-icon-left">{iconLeft}</span>}
       {children}
-      {iconRight}
+      {iconRight && <span className="btn-icon-right">{iconRight}</span>}
     </>
   );
 
@@ -198,16 +198,16 @@ export function Badge({
 }
 
 const STATUS_TONE: Record<StatusCode, BadgeTone> = {
-  on_track: "success",
-  emerging: "warn",
-  needs_focus: "warn",
+  superior: "success",
+  average: "success",
+  slow: "warn",
   consult: "danger",
 };
 
 const STATUS_VAR: Record<StatusCode, string> = {
-  on_track: "--st-on-track",
-  emerging: "--st-emerging",
-  needs_focus: "--st-needs-focus",
+  superior: "--st-superior",
+  average: "--st-on-track",
+  slow: "--st-needs-focus",
   consult: "--st-consult",
 };
 
@@ -261,12 +261,16 @@ export function Meter({
   color,
   className = "",
   label,
+  animate = false,
 }: {
   value: number;
   max?: number;
   color?: string;
   className?: string;
   label?: string;
+  /** Grow in from 0 on mount. Only for bars that render once and never
+   *  change again (a report snapshot) — never on a live-updating bar. */
+  animate?: boolean;
 }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
@@ -276,11 +280,17 @@ export function Meter({
       aria-label={label ?? `${Math.round(pct)} percent`}
     >
       <div
-        className="meter-fill"
+        className={cx("meter-fill", animate && "grow-in")}
         style={{
           width: `${pct}%`,
+          // A gradient that stays within the colour's own hue (light-to-dark
+          // of itself, not blended toward white) so a short bar — most of
+          // these, since scores under 50 are exactly the ones worth reading —
+          // never fades into a pale, low-contrast smear.
           ...(color
-            ? { background: `linear-gradient(90deg, color-mix(in srgb, ${color} 68%, white), ${color})` }
+            ? {
+                background: `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 78%, black))`,
+              }
             : null),
         }}
       />
@@ -423,7 +433,7 @@ export function ChildCard({
 const SECTION_ICON: Record<DomainCode, (p: IconProps) => React.JSX.Element> = {
   vision: IconVisual,
   auditory: IconAuditory,
-  social: IconTactile,
+  tactile: IconTactile,
   mobility: IconMobility,
   language: IconLanguage,
   hand: IconManual,
@@ -432,7 +442,7 @@ const SECTION_ICON: Record<DomainCode, (p: IconProps) => React.JSX.Element> = {
 const SECTION_COLOR: Record<DomainCode, string> = {
   vision: "var(--sec-visual)",
   auditory: "var(--sec-auditory)",
-  social: "var(--sec-tactile)",
+  tactile: "var(--sec-tactile)",
   mobility: "var(--sec-mobility)",
   language: "var(--sec-language)",
   hand: "var(--sec-manual)",
@@ -478,7 +488,10 @@ export function SectionTile({
         borderRadius: size * 0.32,
         color,
         background: `color-mix(in srgb, ${color} 14%, var(--surface))`,
-        boxShadow: `0 4px 10px -6px color-mix(in srgb, ${color} 55%, transparent)`,
+        boxShadow: [
+          `0 1px 2px rgba(69, 77, 93, 0.08)`,
+          `0 8px 18px -8px color-mix(in srgb, ${color} 60%, transparent)`,
+        ].join(", "),
       }}
       aria-hidden="true"
     >
@@ -552,7 +565,7 @@ export function Stat({
           {icon}
         </span>
       )}
-      <p className="tnum text-[1.75rem] font-extrabold leading-none" style={{ fontFamily: "var(--font-display)", color }}>
+      <p className="tnum text-[1.75rem] font-extrabold leading-none" style={{ fontFamily: "var(--font-sans)", color }}>
         {value}
       </p>
       <p className="mt-1.5 text-[0.82rem] font-semibold text-ink-3">{label}</p>

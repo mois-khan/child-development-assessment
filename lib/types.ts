@@ -1,80 +1,147 @@
 /**
  * Core domain types for the Kaushalya milestone screener.
  *
- * Everything in `content/` is data, not code: the item bank, the activities
- * and the domain/band definitions are all plain objects so they can be moved
- * into Supabase tables (see supabase/migrations) and edited by the child
- * development team without a deploy.
+ * The model follows the programme's own Developmental Profile chart (see
+ * content/stages.ts): seven brain stages by six competences. A child is placed
+ * at one stage per competence, and the chart's own time frames say what that
+ * placement means.
+ *
+ * Everything in `content/` is data, not code: the stage table, the item bank
+ * and the activities are all plain objects so they can be moved into Supabase
+ * tables (see supabase/migrations) and edited by the child development team
+ * without a deploy.
  */
 
+/**
+ * The six competences the chart tracks. `hand` is the chart's "Manual
+ * Competence" and `vision` its "Visual Competence"; the shorter codes are kept
+ * because they are already the storage keys.
+ */
 export type DomainCode =
-  | "auditory"
   | "vision"
+  | "auditory"
+  | "tactile"
   | "mobility"
-  | "hand"
   | "language"
-  | "social";
+  | "hand";
+
+/** Chart-facing alias. The chart calls these competences, the storage calls them domains. */
+export type CompetenceCode = DomainCode;
 
 export interface Domain {
   code: DomainCode;
-  /** Short parent-facing name, used on report cards. */
+  /** The chart's own column heading, e.g. "Visual Competence". */
   name: string;
   /** One word, for chart axes and other places the full name will not fit. */
   short: string;
   /** One sentence a parent can understand, shown under the name. */
   blurb: string;
-  /** What the domain covers, in professional terms. For the handoff/PDF. */
+  /** What the competence covers, in professional terms. For the handoff/PDF. */
   scope: string;
-  /** Hue used for this domain's chart series and card accent. */
+  /** Hue used for this competence's chart series and card accent. */
   hue: number;
   order: number;
-  /** True while this section's real content is still a stand-in — see content/domains.ts. */
-  placeholder?: boolean;
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Brain stages
+ * ──────────────────────────────────────────────────────────────────────────*/
 
 /**
- * One of the programme's seven phases of brain development (Phase I-VII).
- * Presentation-layer only — see content/domains.ts for how it relates to the
- * scoring engine's thirteen age bands.
+ * One of the seven rows of the Developmental Profile.
+ *
+ * The three month figures are the chart's TIME FRAME column, and they are the
+ * only thresholds this engine has — nothing else is invented. A child who
+ * reaches this stage at or before `superiorMonths` is superior, by
+ * `averageMonths` is average, by `slowMonths` is slow, and after that the
+ * profile is worth a professional look.
  */
-export interface Module {
-  id: number;
-  /** Roman numeral, as the programme names its phases (I-VII). */
-  phase: string;
-  name: string;
-  minMonths: number;
-  maxMonths: number;
-}
-
-export interface AgeBand {
+export interface BrainStage {
   id: string;
-  label: string;
-  minMonths: number;
-  /** Inclusive upper bound. A child of exactly this age is still in the band. */
-  maxMonths: number;
   order: number;
+  /** "I" through "VII", as the chart numbers them. */
+  roman: string;
+  /** "Pons", "Mid-Brain", "Initial Cortex"… */
+  name: string;
+  superiorMonths: number;
+  averageMonths: number;
+  slowMonths: number;
+  /** Row colour on the printed chart, so the report can match it. */
+  hue: number;
 }
 
-export type ItemSource = "CDC" | "NIDCD" | "WHO" | "AUTHORED";
+/** One of the forty-two boxes on the chart. */
+export interface StageCell {
+  /** 1–42, as printed in the corner of each box. */
+  number: number;
+  stage: string;
+  competence: CompetenceCode;
+  /** The main line, e.g. "Outline perception". */
+  description: string;
+  /** The italic line beneath, e.g. "Vital perception". */
+  kind: string;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Items
+ * ──────────────────────────────────────────────────────────────────────────*/
+
+/**
+ * What kind of answer an item takes.
+ *
+ * Only `yesno` items score. The rest are recorded because the paper booklet
+ * records them and a clinician reading the report wants them — which hand the
+ * child writes with, how many words they say — but they are observations, not
+ * evidence for or against a stage.
+ */
+export type ItemKind = "yesno" | "choice" | "count" | "percent" | "text";
+
+export type ItemSource = "ACE" | "AUTHORED";
 
 export interface Item {
   id: string;
   domain: DomainCode;
-  band: string;
+  /** Which of the seven stages this item tests. */
+  stage: string;
   /** The question as the parent reads it. */
   text: string;
   /** Concrete instruction so the parent tests rather than recalls. */
   how: string;
+  kind: ItemKind;
   source: ItemSource;
+  /**
+   * True when "yes" is the concerning answer rather than the expected one —
+   * the booklet's "Are his arms and/or legs too tight or too floppy?". Scoring
+   * flips these, so the parent still answers naturally.
+   */
+  invert?: boolean;
+  /**
+   * Only ask this item once the child is at least this old. The booklet's
+   * "if over six…" questions, which are meaningless before then.
+   */
+  minAgeMonths?: number;
+  /** For `choice` items: the two labels, e.g. ["Left", "Right"]. */
+  choices?: [string, string];
+  /** For `count` and `percent` items: the unit shown beside the input. */
+  unit?: string;
 }
 
-/** Yes = 2, Sometimes = 1, Not yet = 0. Unanswered items leave the denominator. */
-export type ResponseValue = 0 | 1 | 2;
+/**
+ * No = 0, Yes = 1. The booklet is strictly yes/no and so is this — a stage is
+ * something a child either has or has not reached.
+ *
+ * Unanswered items leave the denominator rather than scoring as no.
+ */
+export type ResponseValue = 0 | 1;
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Activities
+ * ──────────────────────────────────────────────────────────────────────────*/
 
 export interface Activity {
   id: string;
   domain: DomainCode;
-  /** Activities are written per stage, not per band — see content/activities.ts */
+  /** Activities are written per stage — one set per row of the chart. */
   stage: string;
   title: string;
   description: string;
@@ -82,6 +149,10 @@ export interface Activity {
   minutes: number;
   frequency: string;
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Children
+ * ──────────────────────────────────────────────────────────────────────────*/
 
 export type Gender = "girl" | "boy" | "other";
 
@@ -101,7 +172,18 @@ export interface Child {
   photoUrl?: string;
 }
 
-export type StatusCode = "on_track" | "emerging" | "needs_focus" | "consult";
+/* ────────────────────────────────────────────────────────────────────────────
+ * Results
+ * ──────────────────────────────────────────────────────────────────────────*/
+
+/**
+ * The chart's own four verdicts, in its own words, plus the one it implies
+ * past the slow column.
+ *
+ * These are not thresholds anyone chose — they are read straight off the
+ * TIME FRAME column of whichever stage the child reached.
+ */
+export type StatusCode = "superior" | "average" | "slow" | "consult";
 
 export interface Status {
   code: StatusCode;
@@ -112,18 +194,30 @@ export interface Status {
 
 export interface DomainScore {
   domain: DomainCode;
+  /** The highest stage the child passed, with everything below it also passed. */
+  achievedStage: string;
+  /** The chart cell that stage lands in — what the report names. */
+  cell: StageCell;
+  /** Stages actually asked about, in chart order. */
+  stagesAsked: string[];
+  /** Yes answers, out of the yes/no items answered. */
   raw: number;
   max: number;
-  /** Share of the maximum possible score across the whole window, 0-1. */
   percent: number;
-  /** Estimated developmental age for this domain, in months. */
-  developmentalMonths: number;
-  /** developmentalMonths / assessed age * 100. Null under 4 months old. */
+  /**
+   * Neurological age in months: the achieved stage's average month, plus
+   * partial credit into the stage above.
+   */
+  neurologicalMonths: number;
+  /** neurologicalMonths / assessed age * 100. Null when too young to be stable. */
   dq: number | null;
   status: StatusCode;
+  /** Items answered yes at the achieved stage and below. */
   achieved: Item[];
-  emerging: Item[];
+  /** Items answered no — the concrete next things to work on. */
   notYet: Item[];
+  /** Non-scoring observations the parent recorded, keyed by item id. */
+  details: Record<string, string>;
 }
 
 export interface AssessmentResult {
@@ -131,14 +225,17 @@ export interface AssessmentResult {
   assessedMonths: number;
   chronologicalMonths: number;
   corrected: boolean;
-  bands: AgeBand[];
+  /** The stage the assessment started at, from the child's age alone. */
+  startStage: string;
+  /** Every stage asked about, across all six competences. */
+  stages: BrainStage[];
   domainScores: DomainScore[];
   overallDq: number | null;
   overallStatus: StatusCode;
   /**
    * Set when the overall status is worse than the average alone would give,
-   * because a single domain needs attention. Without this the report can show
-   * a healthy-looking average beside a cautious status and read as a
+   * because a single competence needs attention. Without this the report can
+   * show a healthy-looking average beside a cautious status and read as a
    * contradiction.
    */
   overallRaisedBy: DomainCode | null;
@@ -147,14 +244,16 @@ export interface AssessmentResult {
   /** True when the child is too young for a meaningful ratio. */
   suppressDq: boolean;
   answeredCount: number;
-  totalCount: number;
 }
 
 export interface Assessment {
   id: string;
   child: Child;
   assessedOn: string; // ISO yyyy-mm-dd
+  /** Yes/no answers, keyed by item id. */
   responses: Record<string, ResponseValue>;
+  /** Non-scoring answers (counts, percentages, which hand, examples). */
+  details: Record<string, string>;
   completedAt?: string;
   /** Which revision of the item bank produced this assessment. */
   bankVersion: string;

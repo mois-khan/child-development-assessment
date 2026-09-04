@@ -1,8 +1,15 @@
-import { AGE_BANDS, DOMAINS } from "@/content/domains";
-import { itemsFor } from "@/content/items";
+import {
+  BRAIN_STAGES,
+  STAGE_BY_ID,
+  cellFor,
+  stageAbove,
+  stageBelow,
+} from "@/content/stages";
+import { DOMAINS } from "@/content/domains";
+import { itemsFor, scoredItemsFor } from "@/content/items";
 import type {
-  AgeBand,
   AssessmentResult,
+  BrainStage,
   Child,
   DomainCode,
   DomainScore,
@@ -12,47 +19,93 @@ import type {
   StatusCode,
 } from "./types";
 import { summariseAge } from "./age";
+import { classifyAgainstStage, stageForAge } from "./stage";
 
 /* ────────────────────────────────────────────────────────────────────────────
- * Constants. These are clinical judgements, not engineering ones. They are
- * defensible defaults drawn from standard screening practice, and Kaushalya's
- * child development lead should confirm them before any real family sees a
- * result.
+ * How this engine works, in one place.
+ *
+ * The Developmental Profile chart (content/stages.ts) is the whole instrument.
+ * For each of the six competences, the engine finds the highest of the seven
+ * brain stages the child has actually reached, and then lets the chart say
+ * what that means.
+ *
+ *   1. The child's corrected age picks a STARTING stage — the one whose
+ *      average month is nearest their age. Nothing else is asked first.
+ *
+ *   2. For each competence independently, we ask that stage's questions.
+ *      Pass, and we climb: ask the stage above, and keep climbing until they
+ *      stop passing or we run out of chart. Fail, and we descend: ask the
+ *      stage below, and keep descending until they pass one or we reach the
+ *      bottom. The walk never changes direction, so it always terminates.
+ *
+ *   3. The highest stage passed — with every stage asked below it also passed
+ *      — is the stage the child has reached. Partial credit from the stage
+ *      above interpolates between the two, so a child halfway up does not have
+ *      to round down a whole stage.
+ *
+ *   4. The chart classifies it. Reach stage IV by 6 months and the chart's
+ *      superior column says superior; by 12 its average column says average;
+ *      by 24 its slow column says slow. Past that the chart has nothing more
+ *      to say, which is exactly where a professional should look.
+ *
+ * Worth knowing: the chart's slow column is always twice its average, and its
+ * superior column is half (0.4× at stage II). So these four verdicts are the
+ * same scale as the developmental quotient — 200, 100 and 50 — and the DQ and
+ * the status can never disagree. That is a property of the chart, not a
+ * coincidence, and it is why no threshold in this file was chosen by us.
  * ──────────────────────────────────────────────────────────────────────────*/
 
-/** Share of a band's points a child needs to count as having mastered it. */
-export const MASTERY_THRESHOLD = 0.75;
-
-/** Below this age a developmental quotient is too unstable to report. */
-export const MIN_AGE_FOR_DQ = 4;
+/**
+ * Share of a stage's scored questions a child must answer "yes" to have
+ * reached it.
+ *
+ * CLINICAL CONSTANT — Kaushalya's child development lead should confirm this
+ * before any real family sees a result.
+ *
+ * A consequence worth knowing: most cells of the chart carry only two or three
+ * questions, and at 0.75 that means every one of them has to be "yes". Only
+ * the cells with four or more questions can absorb a single "no". That is very
+ * close to how the paper booklet is read in the room, which is why it is the
+ * default.
+ */
+export const PASS_THRESHOLD = 0.75;
 
 /**
- * Mastery at or above this on the highest band asked triggers a higher band.
- * There is no matching floor constant: we reach downwards whenever the lowest
- * band asked was not mastered, which is the basal rule itself.
+ * Below this age the ratio of neurological to actual age divides by something
+ * too small to be stable, so no quotient is reported. The chart itself still
+ * works — stage I begins at birth — so the profile is shown, just without a
+ * number attached to it.
  */
-export const CEILING_TRIGGER = 0.9;
-
-/** Safety stop, so a child who answers "not yet" to everything terminates. */
-export const MAX_EXTENSION_ROUNDS = 4;
+export const MIN_AGE_FOR_DQ = 1;
 
 export const STATUSES: Record<StatusCode, Status> = {
-  on_track: {
-    code: "on_track",
+  superior: {
+    code: "superior",
+    label: "Superior",
+    meaning: "Ahead of the chart's average for this age — this is a real strength.",
+  },
+  average: {
+    code: "average",
+    /* The chart's own word for this column is "Average", but a child who
+       reached the stage a good deal earlier than average also lands here —
+       the next column up asks for twice the pace, not a little more. Calling
+       the band "Average" would then sit oddly beside a quotient of 150, so the
+       label says what the band actually means and the number says how far
+       ahead. */
     label: "On track",
-    meaning: "Doing what we would expect at this age, or ahead of it.",
-  },
-  emerging: {
-    code: "emerging",
-    label: "Emerging",
     meaning:
-      "A little behind the typical range. Targeted play at home, and check again in three months.",
+      "Reached this stage at the age the chart expects, or earlier. Nothing to act on.",
   },
-  needs_focus: {
-    code: "needs_focus",
+  slow: {
+    code: "slow",
+    /* The chart's own word for this column is "Slow". That is the right word
+       on a clinician's wall chart and the wrong one on a report a parent reads
+       alone, at home, about their own child — so the code keeps the chart's
+       term and the label does not. See the wording rules at the top of
+       lib/narrative.ts. */
     label: "Needs focus",
     meaning:
-      "Meaningfully behind. Worth daily focused activity, and worth mentioning at the next visit to your doctor.",
+      "Behind the age the chart expects for this stage, but within its range — the chart calls this band “slow”. Worth daily focused activity, and worth mentioning at the next visit to your doctor.",
   },
   consult: {
     code: "consult",
@@ -63,282 +116,302 @@ export const STATUSES: Record<StatusCode, Status> = {
 };
 
 const STATUS_SEVERITY: Record<StatusCode, number> = {
-  on_track: 0,
-  emerging: 1,
-  needs_focus: 2,
+  superior: 0,
+  average: 1,
+  slow: 2,
   consult: 3,
 };
 
-export function statusFromDq(dq: number): StatusCode {
-  if (dq >= 90) return "on_track";
-  if (dq >= 75) return "emerging";
-  if (dq >= 60) return "needs_focus";
-  return "consult";
-}
+const SEVERITY_STATUS: StatusCode[] = ["superior", "average", "slow", "consult"];
 
 /* ────────────────────────────────────────────────────────────────────────────
- * Band selection
+ * Reading one cell of the chart
  * ──────────────────────────────────────────────────────────────────────────*/
 
-export function bandForAge(months: number): AgeBand {
-  const found = AGE_BANDS.find(
-    (b) => months >= b.minMonths && months <= b.maxMonths,
-  );
-  if (found) return found;
-  return months < AGE_BANDS[0].minMonths
-    ? AGE_BANDS[0]
-    : AGE_BANDS[AGE_BANDS.length - 1];
+export interface CellResult {
+  /** Share of scored questions answered as expected, 0–1. */
+  value: number;
+  answered: number;
+  total: number;
+  passed: boolean;
 }
 
 /**
- * The three-band assessment window: the band below the child's age (skills
- * that should already be consolidated), the band at their age (what is
- * expected now), and the band above (headroom, so strengths show up too).
+ * How the child did on one stage of one competence.
  *
- * Testing only the child's own band would tell a parent that something is
- * wrong without telling them where their child actually is, which is the one
- * thing they need in order to act.
+ * Inverted questions — the booklet's "are his arms and/or legs too tight or
+ * too floppy?" — count backwards, so the parent can answer naturally and "no"
+ * is what scores. Unanswered questions leave the denominator rather than
+ * counting as "no".
  */
-export const WINDOW_WIDTH = 3;
-
-export function initialWindow(assessedMonths: number): AgeBand[] {
-  const current = bandForAge(assessedMonths);
-  const i = AGE_BANDS.findIndex((b) => b.id === current.id);
-
-  // Keep the window a full three bands wide by sliding it when the child sits
-  // at either end of the range, rather than truncating it. A child in the top
-  // band has no headroom above, so the extra band has to come from below or
-  // the developmental age estimate has nowhere to land.
-  let from = i - 1;
-  if (from < 0) from = 0;
-  if (from + WINDOW_WIDTH > AGE_BANDS.length) {
-    from = Math.max(0, AGE_BANDS.length - WINDOW_WIDTH);
-  }
-  return AGE_BANDS.slice(from, from + WINDOW_WIDTH);
-}
-
-function mastery(
-  band: string,
+export function readCell(
+  stage: string,
   domain: DomainCode,
   responses: Record<string, ResponseValue>,
-): { value: number; answered: number } {
-  const items = itemsFor(band, domain);
+  assessedMonths?: number,
+): CellResult {
+  const items = scoredItemsFor(stage, domain, assessedMonths);
   let raw = 0;
   let answered = 0;
   for (const item of items) {
     const v = responses[item.id];
     if (v === undefined) continue;
-    raw += v;
+    raw += item.invert ? 1 - v : v;
     answered += 1;
   }
-  // Unanswered items leave the denominator rather than scoring as zero.
-  return { value: answered === 0 ? 0 : raw / (answered * 2), answered };
+  const value = answered === 0 ? 0 : raw / answered;
+  return {
+    value,
+    answered,
+    total: items.length,
+    passed: answered > 0 && value >= PASS_THRESHOLD,
+  };
 }
 
-/**
- * Which extra bands a child needs next, per domain, given what has been asked
- * so far. Returns only bands not already present, so it can be called after
- * each round until it comes back empty.
- *
- * Downwards, this is the basal rule: until the child masters the lowest band
- * they were asked, we do not know where they actually are, and the estimate is
- * pinned to the bottom of the range we happened to choose. Reaching down one
- * band at a time until they master one is what makes the developmental age
- * meaningful rather than an artefact of the starting window.
- *
- * Upwards it is the ceiling rule, and one band is enough: a child at the top of
- * the window has headroom we did not measure, but knowing they are at least
- * that far ahead is all the report needs.
- */
-export function extensionsFor(
-  bandsByDomain: Record<DomainCode, string[]>,
+/** True once every scored question in a cell has an answer. */
+export function cellComplete(
+  stage: string,
+  domain: DomainCode,
   responses: Record<string, ResponseValue>,
-): Record<DomainCode, string[]> {
-  const out = {} as Record<DomainCode, string[]>;
-
-  for (const domain of DOMAINS) {
-    const extra: string[] = [];
-    const asked = AGE_BANDS.filter((b) =>
-      (bandsByDomain[domain.code] ?? []).includes(b.id),
-    );
-    if (asked.length === 0) {
-      out[domain.code] = extra;
-      continue;
-    }
-
-    const lowest = asked[0];
-    const highest = asked[asked.length - 1];
-    const lowIdx = AGE_BANDS.findIndex((b) => b.id === lowest.id);
-    const highIdx = AGE_BANDS.findIndex((b) => b.id === highest.id);
-
-    const low = mastery(lowest.id, domain.code, responses);
-    const high = mastery(highest.id, domain.code, responses);
-
-    if (low.answered > 0 && low.value < MASTERY_THRESHOLD && lowIdx > 0) {
-      extra.push(AGE_BANDS[lowIdx - 1].id);
-    }
-    if (
-      high.answered > 0 &&
-      high.value >= CEILING_TRIGGER &&
-      highIdx < AGE_BANDS.length - 1
-    ) {
-      extra.push(AGE_BANDS[highIdx + 1].id);
-    }
-    out[domain.code] = extra;
-  }
-  return out;
+  assessedMonths?: number,
+): boolean {
+  const items = scoredItemsFor(stage, domain, assessedMonths);
+  return items.length > 0 && items.every((i) => responses[i.id] !== undefined);
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
- * Developmental age
+ * The ladder walk
  * ──────────────────────────────────────────────────────────────────────────*/
 
-/**
- * Estimate a developmental age in months for one domain.
- *
- * Walk the bands the child was actually asked, lowest first. The highest band
- * they mastered — with every asked band below it also mastered — sets the
- * base. Partial credit from the next band up interpolates within it.
- *
- * A child who fully masters 19-24 months and scores 40% on 25-30 months lands
- * at 24 + 0.4 x (30 - 24) = 26.4 months.
- */
-export function developmentalAge(
-  bands: AgeBand[],
-  domain: DomainCode,
-  responses: Record<string, ResponseValue>,
-): { months: number; bounded: "floor" | "ceiling" | null } {
-  const asked = bands
-    .filter((b) => mastery(b.id, domain, responses).answered > 0)
-    .sort((a, b) => a.order - b.order);
+/** The stage a child of this age is asked about first, before anything else. */
+export function startStageFor(assessedMonths: number): BrainStage {
+  return stageForAge(assessedMonths);
+}
 
-  if (asked.length === 0) return { months: 0, bounded: "floor" };
+function sortStages(ids: string[]): BrainStage[] {
+  return ids
+    .map((id) => STAGE_BY_ID[id])
+    .filter(Boolean)
+    .sort((a, b) => a.order - b.order);
+}
+
+/**
+ * The next stage to ask one competence about, or null when it has settled.
+ *
+ * The rule has no memory of which way it has been travelling, because it does
+ * not need one: climb while the top of the range asked keeps passing, descend
+ * while the bottom of it keeps failing, and stop when neither is true. A walk
+ * that started upwards can never satisfy the descend condition (its bottom
+ * stage passed), and one that started downwards can never satisfy the climb
+ * condition (its top stage failed), so it cannot oscillate.
+ */
+export function nextStageFor(
+  domain: DomainCode,
+  stagesAsked: string[],
+  responses: Record<string, ResponseValue>,
+  assessedMonths: number,
+): BrainStage | null {
+  const asked = sortStages(stagesAsked);
+  if (asked.length === 0) return startStageFor(assessedMonths);
+
+  const lowest = asked[0];
+  const highest = asked[asked.length - 1];
+
+  // Never move on from a stage that is still half answered.
+  if (!cellComplete(highest.id, domain, responses, assessedMonths)) return null;
+  if (!cellComplete(lowest.id, domain, responses, assessedMonths)) return null;
+
+  if (readCell(highest.id, domain, responses, assessedMonths).passed) {
+    return stageAbove(highest); // null at the top of the chart — settled there
+  }
+  if (!readCell(lowest.id, domain, responses, assessedMonths).passed) {
+    return stageBelow(lowest); // null at the bottom of the chart — settled there
+  }
+  return null;
+}
+
+/**
+ * The stage this competence has settled at: the highest one passed, with every
+ * stage asked below it also passed.
+ *
+ * Null means the child did not pass the lowest stage we asked about. After a
+ * full walk that can only happen at stage I, since the descent does not stop
+ * until it finds a pass or runs out of chart.
+ */
+export function achievedStageFor(
+  domain: DomainCode,
+  stagesAsked: string[],
+  responses: Record<string, ResponseValue>,
+  assessedMonths: number,
+): { stage: BrainStage | null; nextAsked: BrainStage | null } {
+  const asked = sortStages(stagesAsked).filter(
+    (s) => readCell(s.id, domain, responses, assessedMonths).answered > 0,
+  );
+  if (asked.length === 0) return { stage: null, nextAsked: null };
 
   let baseIdx = -1;
   for (let i = 0; i < asked.length; i++) {
-    if (mastery(asked[i].id, domain, responses).value >= MASTERY_THRESHOLD) {
-      baseIdx = i;
-    } else {
-      break; // basal rule: stop at the first band not mastered
-    }
+    if (readCell(asked[i].id, domain, responses, assessedMonths).passed) baseIdx = i;
+    else break; // the first stage not passed is the ceiling of what they have
   }
 
-  // Mastered nothing we asked about. Running the basal rule to completion
-  // makes this rare: it means either we reached the very first band, or the
-  // extension hit its round cap. Either way the child sits somewhere below the
-  // bottom of what we asked, so interpolate across that unknown range and flag
-  // the estimate as bounded.
-  if (baseIdx === -1) {
-    const lowest = asked[0];
-    const m = mastery(lowest.id, domain, responses).value;
-    const lowIdx = AGE_BANDS.findIndex((b) => b.id === lowest.id);
-    // At the very first band there is nothing below, so the band's own span is
-    // the range. Otherwise everything below it is unmeasured.
-    const ceiling = lowIdx === 0 ? lowest.maxMonths : lowest.minMonths;
-    return { months: m * ceiling, bounded: "floor" };
+  return {
+    stage: baseIdx === -1 ? null : asked[baseIdx],
+    nextAsked: asked[baseIdx + 1] ?? null,
+  };
+}
+
+/**
+ * Neurological age in months for one competence.
+ *
+ * The stage reached sets the base — its average month, straight off the chart.
+ * Partial credit on the stage above interpolates within it, so a child who has
+ * fully reached stage IV (12 months) and answers half of stage V lands at
+ * 12 + 0.5 × (18 − 12) = 15 months rather than rounding down to 12.
+ */
+export function neurologicalAge(
+  domain: DomainCode,
+  stagesAsked: string[],
+  responses: Record<string, ResponseValue>,
+  assessedMonths: number,
+): number {
+  const { stage, nextAsked } = achievedStageFor(
+    domain,
+    stagesAsked,
+    responses,
+    assessedMonths,
+  );
+
+  // Did not pass even the lowest stage asked. Interpolate across the range
+  // below it, which is everything we have no evidence about.
+  if (!stage) {
+    const lowest = sortStages(stagesAsked)[0];
+    if (!lowest) return 0;
+    const cell = readCell(lowest.id, domain, responses, assessedMonths);
+    return cell.value * lowest.averageMonths;
   }
 
-  const base = asked[baseIdx].maxMonths;
-  const next = asked[baseIdx + 1];
+  if (!nextAsked) return stage.averageMonths; // reached the top of what we asked
 
-  // Mastered everything we asked, including the top band.
-  if (!next) return { months: base, bounded: "ceiling" };
-
-  const m = mastery(next.id, domain, responses).value;
-  return { months: base + m * (next.maxMonths - base), bounded: null };
+  const cell = readCell(nextAsked.id, domain, responses, assessedMonths);
+  return (
+    stage.averageMonths + cell.value * (nextAsked.averageMonths - stage.averageMonths)
+  );
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
- * Full result
+ * The full result
  * ──────────────────────────────────────────────────────────────────────────*/
 
 export interface ScoreInput {
   child: Child;
   assessedOn: string;
   responses: Record<string, ResponseValue>;
-  /** Bands actually presented, per domain. */
-  bandsByDomain: Record<DomainCode, string[]>;
+  details?: Record<string, string>;
+  /** Stages actually presented, per competence, as the walk recorded them. */
+  stagesByDomain: Record<DomainCode, string[]>;
 }
 
 export function scoreAssessment(input: ScoreInput): AssessmentResult {
-  const { child, assessedOn, responses, bandsByDomain } = input;
+  const { child, assessedOn, responses, stagesByDomain } = input;
+  const details = input.details ?? {};
   const age = summariseAge(child.dob, assessedOn, child.gestationalWeeks);
-  const suppressDq = age.assessedMonths < MIN_AGE_FOR_DQ;
+  const months = age.assessedMonths;
+  const suppressDq = age.assessedExact < MIN_AGE_FOR_DQ;
 
   const domainScores: DomainScore[] = DOMAINS.map((domain) => {
-    const bandIds = bandsByDomain[domain.code] ?? [];
-    const bands = AGE_BANDS.filter((b) => bandIds.includes(b.id));
-    const items = bands.flatMap((b) => itemsFor(b.id, domain.code));
+    const stageIds = stagesByDomain[domain.code] ?? [];
+    const asked = sortStages(stageIds);
+    const items = asked.flatMap((s) => itemsFor(s.id, domain.code, months));
 
+    const achieved: Item[] = [];
+    const notYet: Item[] = [];
+    const observed: Record<string, string> = {};
     let raw = 0;
     let answered = 0;
-    const achieved: Item[] = [];
-    const emerging: Item[] = [];
-    const notYet: Item[] = [];
 
     for (const item of items) {
+      if (item.kind !== "yesno") {
+        const note = details[item.id];
+        if (note !== undefined && note !== "") observed[item.id] = note;
+        continue;
+      }
       const v = responses[item.id];
       if (v === undefined) continue;
-      raw += v;
+      const asExpected = item.invert ? 1 - v : v;
+      raw += asExpected;
       answered += 1;
-      if (v === 2) achieved.push(item);
-      else if (v === 1) emerging.push(item);
+      if (asExpected === 1) achieved.push(item);
       else notYet.push(item);
     }
 
-    const max = answered * 2;
-    const percent = max === 0 ? 0 : raw / max;
-    const { months } = developmentalAge(bands, domain.code, responses);
+    const { stage } = achievedStageFor(domain.code, stageIds, responses, months);
+    const neurologicalMonths = neurologicalAge(
+      domain.code,
+      stageIds,
+      responses,
+      months,
+    );
 
-    let dq: number | null = null;
-    let status: StatusCode;
-    if (suppressDq) {
-      // Too young for a stable ratio — fall back to plain achievement.
-      status =
-        percent >= 0.75 ? "on_track" : percent >= 0.5 ? "emerging" : "needs_focus";
-    } else {
-      dq = Math.round((months / age.assessedExact) * 100);
-      status = statusFromDq(dq);
-    }
+    // The chart classifies by the stage reached, not by the interpolation —
+    // a child either has a stage or is still working towards it.
+    const status: StatusCode = stage
+      ? classifyAgainstStage(stage, months)
+      : "consult";
+
+    const dq = suppressDq
+      ? null
+      : Math.round((neurologicalMonths / Math.max(age.assessedExact, 0.5)) * 100);
 
     return {
       domain: domain.code,
+      achievedStage: stage?.id ?? "",
+      cell: cellFor(stage?.id ?? BRAIN_STAGES[0].id, domain.code),
+      stagesAsked: asked.map((s) => s.id),
       raw,
-      max,
-      percent,
-      developmentalMonths: Math.round(months * 10) / 10,
+      max: answered,
+      percent: answered === 0 ? 0 : raw / answered,
+      neurologicalMonths: Math.round(neurologicalMonths * 10) / 10,
       dq,
       status,
       achieved,
-      emerging,
       notYet,
+      details: observed,
     };
   });
 
-  const dqs = domainScores
-    .map((d) => d.dq)
-    .filter((d): d is number => d !== null);
+  const dqs = domainScores.map((d) => d.dq).filter((d): d is number => d !== null);
   const overallDq =
-    dqs.length === 0 ? null : Math.round(dqs.reduce((a, b) => a + b, 0) / dqs.length);
+    dqs.length === 0
+      ? null
+      : Math.round(dqs.reduce((a, b) => a + b, 0) / dqs.length);
 
-  // A single weak domain must not be averaged away. One domain at 55 with five
-  // at 95 averages to a comfortable-looking 88, and that child needs attention.
-  let overallStatus: StatusCode = overallDq === null
-    ? worstOf(domainScores.map((d) => d.status))
-    : statusFromDq(overallDq);
+  /* The overall verdict is the median of the six, not their mean. Averaging a
+     quotient across competences lets one very high number cancel one very low
+     one, which is the opposite of what a screener should do. The median says
+     what this child is mostly like, and the rule below then refuses to let a
+     single struggling competence disappear behind it. */
+  const severities = domainScores.map((d) => STATUS_SEVERITY[d.status]).sort((a, b) => a - b);
+  const median = Math.ceil(
+    (severities[Math.floor((severities.length - 1) / 2)] +
+      severities[Math.ceil((severities.length - 1) / 2)]) /
+      2,
+  );
+  let overallStatus: StatusCode = SEVERITY_STATUS[median];
 
-  const statusFromAverage = overallStatus;
+  const statusFromMedian = overallStatus;
   const worstDomain = worstOf(domainScores.map((d) => d.status));
   if (worstDomain === "consult" && STATUS_SEVERITY[overallStatus] < 2) {
-    overallStatus = "needs_focus";
-  } else if (worstDomain === "needs_focus" && STATUS_SEVERITY[overallStatus] < 1) {
-    overallStatus = "emerging";
+    overallStatus = "slow";
+  } else if (worstDomain === "slow" && STATUS_SEVERITY[overallStatus] < 1) {
+    overallStatus = "average";
   }
 
-  // If the average alone would have read better, name the domain responsible
-  // so the report can explain itself rather than looking self-contradictory.
+  // If the median alone would have read better, name the competence
+  // responsible so the report can explain itself rather than looking
+  // self-contradictory.
   const overallRaisedBy =
-    STATUS_SEVERITY[overallStatus] > STATUS_SEVERITY[statusFromAverage]
+    STATUS_SEVERITY[overallStatus] > STATUS_SEVERITY[statusFromMedian]
       ? ([...domainScores].sort(
           (a, b) => STATUS_SEVERITY[b.status] - STATUS_SEVERITY[a.status],
         )[0]?.domain ?? null)
@@ -346,19 +419,14 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
 
   const { strengths, focusAreas } = pickHighlights(domainScores);
 
-  const answeredCount = domainScores.reduce((n, d) => n + d.max / 2, 0);
-  const totalCount = DOMAINS.reduce((n, domain) => {
-    const bandIds = bandsByDomain[domain.code] ?? [];
-    return n + bandIds.reduce((k, b) => k + itemsFor(b, domain.code).length, 0);
-  }, 0);
+  const allStages = new Set(Object.values(stagesByDomain).flat());
 
   return {
-    assessedMonths: age.assessedMonths,
+    assessedMonths: months,
     chronologicalMonths: age.chronologicalMonths,
     corrected: age.corrected,
-    bands: AGE_BANDS.filter((b) =>
-      Object.values(bandsByDomain).some((ids) => ids.includes(b.id)),
-    ),
+    startStage: startStageFor(months).id,
+    stages: BRAIN_STAGES.filter((s) => allStages.has(s.id)),
     domainScores,
     overallDq,
     overallStatus,
@@ -366,32 +434,32 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
     strengths,
     focusAreas,
     suppressDq,
-    answeredCount,
-    totalCount,
+    answeredCount: domainScores.reduce((n, d) => n + d.max, 0),
   };
 }
 
 function worstOf(codes: StatusCode[]): StatusCode {
   return codes.reduce(
     (worst, c) => (STATUS_SEVERITY[c] > STATUS_SEVERITY[worst] ? c : worst),
-    "on_track" as StatusCode,
+    "superior" as StatusCode,
   );
 }
 
 /**
- * Top two and bottom two domains — but only when the profile is uneven enough
- * for the labels to mean something. A child whose six domains are all within a
- * few points of each other does not have a weakness, and should not be told
- * they do.
+ * Top two and bottom two competences — but only when the profile is uneven
+ * enough for the labels to mean something. A child whose six competences all
+ * land within a few points of each other does not have a weakness, and should
+ * not be told they do.
  */
 function pickHighlights(scores: DomainScore[]): {
   strengths: DomainCode[];
   focusAreas: DomainCode[];
 } {
-  const metric = (d: DomainScore) => (d.dq === null ? d.percent * 100 : d.dq);
+  const metric = (d: DomainScore) =>
+    d.dq === null ? (STAGE_BY_ID[d.achievedStage]?.order ?? 0) * 20 : d.dq;
   const values = scores.map(metric);
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const SPREAD = 5;
+  const SPREAD = 10;
 
   const sorted = [...scores].sort((a, b) => metric(b) - metric(a));
 
@@ -402,7 +470,10 @@ function pickHighlights(scores: DomainScore[]): {
 
   const focusAreas = [...sorted]
     .reverse()
-    .filter((d) => d.status !== "on_track" || metric(d) <= mean - SPREAD)
+    .filter(
+      (d) =>
+        STATUS_SEVERITY[d.status] >= STATUS_SEVERITY.slow || metric(d) <= mean - SPREAD,
+    )
     .slice(0, 2)
     .map((d) => d.domain);
 
