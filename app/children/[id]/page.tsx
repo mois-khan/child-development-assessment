@@ -109,7 +109,7 @@ export default function ChildProfilePage({
     <>
       <TopBar
         right={
-          <ButtonLink href={`/children/${child.id}/assessments`} size="sm" iconRight={<IconArrowRight size={16} />}>
+          <ButtonLink href={`/children/${child.id}/pay`} size="sm" iconRight={<IconArrowRight size={16} />}>
             New check
           </ButtonLink>
         }
@@ -202,7 +202,7 @@ export default function ChildProfilePage({
                   report will live right here from then on.
                 </p>
                 <ButtonLink
-                  href={`/children/${child.id}/assessments`}
+                  href={`/children/${child.id}/pay`}
                   size="lg"
                   className="mt-7"
                   iconRight={<IconArrowRight size={18} />}
@@ -327,7 +327,7 @@ export default function ChildProfilePage({
 
               <div className="mt-6">
                 <ButtonLink
-                  href={`/children/${child.id}/assessments`}
+                  href={`/children/${child.id}/pay`}
                   variant="secondary"
                   iconRight={<IconArrowRight size={17} />}
                 >

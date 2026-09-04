@@ -707,7 +707,7 @@ h4,
 }
 .progress-matrix-headrow {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -738,7 +738,7 @@ h4,
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border-radius: inherit;
   overflow: hidden;
 }
@@ -780,6 +780,185 @@ h4,
   transform: translate(-50%, -50%);
   box-shadow: 0 1px 3px rgba(23, 24, 43, 0.3);
   transition: left 700ms var(--ease-out);
+}
+
+/* ── the developmental profile chart, filled in (report) ──────────────────── */
+
+.dp-chart-scroll {
+  overflow-x: auto;
+}
+.dp-chart {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 9rem) repeat(6, minmax(6.75rem, 1fr));
+  min-width: 56rem;
+}
+.dp-chart-head,
+.dp-chart-stage,
+.dp-chart-cell {
+  border-bottom: 1px solid var(--line-soft);
+  border-right: 1px solid var(--line-soft);
+}
+.dp-chart-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ink-2);
+  background: var(--surface-2);
+}
+.dp-chart-corner {
+  background: var(--surface-2);
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+.dp-chart-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.6rem 0.7rem;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.dp-chart-roman {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.dp-chart-stage-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+  opacity: 0.85;
+}
+.dp-chart-cell {
+  position: relative;
+  padding: 0.55rem 0.65rem 0.7rem;
+  min-height: 4.4rem;
+}
+.dp-chart-cell-desc {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.28;
+  /* Colour is set inline per-cell (a dark shade of the row's own hue) — the
+     cell background is always a light tint regardless of theme, so var(--ink)
+     would go the wrong way in dark mode. This is just the fallback. */
+  color: var(--ink);
+}
+.dp-chart-cell-kind {
+  margin: 0.2rem 0 0;
+  font-size: 0.62rem;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink-3);
+}
+.dp-chart-marker {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: grid;
+  place-items: center;
+}
+.dp-chart-marker-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(23, 24, 43, 0.15);
+}
+.dp-chart-marker-here {
+  filter: drop-shadow(0 1px 3px rgba(23, 24, 43, 0.25));
+}
+.dp-chart-cell-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 0 2px 2px 0;
+  opacity: 0.85;
+}
+
+/* current: a solid ring in the competence's own colour */
+.dp-chart-cell[data-state="current"] {
+  box-shadow: inset 0 0 0 2.5px var(--cell-color);
+  z-index: 1;
+}
+/* next: a dashed outline — this stage has real answers, just not enough yet */
+.dp-chart-cell[data-state="next"] {
+  box-shadow: inset 0 0 0 2px var(--cell-color);
+  outline: none;
+}
+.dp-chart-cell[data-state="next"] .dp-chart-cell-desc,
+.dp-chart-cell[data-state="next"] .dp-chart-cell-kind {
+  opacity: 0.75;
+}
+/* ahead: not yet approached — recede rather than disappear, so the row is
+   still legible as "this exists, just not here yet" */
+.dp-chart-cell[data-state="ahead"] {
+  opacity: 0.42;
+}
+/* reached: full-strength, the default look — nothing extra needed beyond the
+   check mark already placed in the corner */
+
+/* a stronger rule between the three "taking it in" competences and the three
+   "putting it out" ones, echoing the body silhouette on the printed chart.
+   Column 5 (1-indexed, header+6 = 7 columns) is Mobility, the first "out"
+   column — nth-child(7n+5) lands on it in every row including the header. */
+.dp-chart > *:nth-child(7n + 5) {
+  border-left: 2px solid var(--line);
+}
+
+@media print {
+  .dp-chart-head,
+  .dp-chart-stage,
+  .dp-chart-cell {
+    border-color: var(--line) !important;
+  }
+  .dp-chart-head,
+  .dp-chart-corner {
+    background: #fff !important;
+    color: var(--ink) !important;
+  }
+  .dp-chart-stage {
+    background: #fff !important;
+    color: var(--ink) !important;
+    border-left: 3px solid var(--ink-3);
+  }
+  .dp-chart-stage span {
+    color: var(--ink) !important;
+  }
+  .dp-chart-cell {
+    background: #fff !important;
+  }
+  .dp-chart-cell-desc,
+  .dp-chart-cell-kind {
+    color: var(--ink) !important;
+  }
+  .dp-chart-cell-kind {
+    color: var(--ink-3) !important;
+  }
+  .dp-chart-cell[data-state="current"] {
+    box-shadow: inset 0 0 0 2px var(--ink) !important;
+  }
+  .dp-chart-cell[data-state="next"] {
+    box-shadow: inset 0 0 0 1.5px var(--ink-2) !important;
+  }
+  .dp-chart-cell[data-state="ahead"] {
+    opacity: 0.55;
+  }
+  .dp-chart-marker-check {
+    box-shadow: none;
+    border: 1px solid var(--ink-3);
+  }
+  .dp-chart-cell-fill {
+    background: var(--ink) !important;
+  }
 }
 
 /* ── report cover: frosted meta strip ─────────────────────────────────────── */

@@ -21,14 +21,27 @@ import {
   IconSparkle,
   Mascot,
   Section,
+  SectionTile,
   Shell,
   TopBar,
+  domainColor,
 } from "@/components/ui";
 
 const ASSESSMENT_SLUG = "genius-milestones-check";
 const VALID_COUPON = "GENIUS99";
 const PRICE = 99;
 
+/**
+ * Start the check — one screen, one decision.
+ *
+ * This used to be two pages: a "choose a check" screen that showed the one
+ * real option next to two greyed-out "coming soon" cards and made a parent
+ * click "Continue" to confirm the only choice available, then a separate
+ * "unlock" screen for the coupon. Picking among one option isn't a choice, so
+ * that click was pure friction — merged here into a single screen: what the
+ * check covers, then the one thing that actually needs a decision (the
+ * coupon), then go.
+ */
 export default function PayPage({
   params,
 }: {
@@ -57,13 +70,15 @@ export default function PayPage({
      front — a child who passes everything climbs, one who does not descends.
      What we can show honestly is where it starts, and that most checks land
      within a stage or two of that. */
-  const questionCount = useMemo(() => {
-    if (!startStage || !age) return 0;
-    return DOMAINS.reduce(
-      (n, d) => n + scoredItemsFor(startStage.id, d.code, age.assessedMonths).length,
-      0,
-    );
+  const perSection = useMemo(() => {
+    if (!startStage || !age) return [];
+    return DOMAINS.map((d) => ({
+      code: d.code,
+      name: d.name,
+      count: scoredItemsFor(startStage.id, d.code, age.assessedMonths).length,
+    }));
   }, [startStage, age]);
+  const questionCount = perSection.reduce((n, s) => n + s.count, 0);
 
   function applyCoupon(e: React.FormEvent) {
     e.preventDefault();
@@ -124,8 +139,12 @@ export default function PayPage({
           <Shell width="reading">
             <div className="flex flex-wrap items-end justify-between gap-5">
               <div>
-                <p className="eyebrow eyebrow-accent">Step 2 of 2</p>
-                <h1 className="mt-3">Unlock the check</h1>
+                <p className="eyebrow eyebrow-accent">Genius Milestone Check</p>
+                <h1 className="mt-3">Start {child.name}&rsquo;s check</h1>
+                <p className="lede mt-3 max-w-[46ch]">
+                  Built for {child.name}&rsquo;s exact stage — Stage {startStage.roman},{" "}
+                  {startStage.name}.
+                </p>
               </div>
               <ChildCard
                 name={child.name}
@@ -134,20 +153,16 @@ export default function PayPage({
               />
             </div>
 
-            {/* order summary */}
             <Card variant="clay" className="clay-lg mt-8 overflow-hidden">
               <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-7">
-                <div>
-                  <h2 className="text-[1.3rem]">Genius Milestone Check</h2>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Badge tone="accent">
-                      <IconSparkle size={14} /> Stage {startStage.roman} · {startStage.name}
-                    </Badge>
-                    <Badge tone="neutral">from {questionCount} questions</Badge>
-                    <Badge tone="neutral">
-                      <IconClock size={14} /> ~10 min
-                    </Badge>
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge tone="accent" size="lg">
+                    <IconSparkle size={14} /> Stage {startStage.roman} · {startStage.name}
+                  </Badge>
+                  <Badge tone="neutral">from {questionCount} questions</Badge>
+                  <Badge tone="neutral">
+                    <IconClock size={14} /> ~10 min
+                  </Badge>
                 </div>
                 <div className="text-right">
                   <p
@@ -164,7 +179,31 @@ export default function PayPage({
                 </div>
               </div>
 
+              {/* what's inside — the "which check" question, answered rather
+                  than asked, since there is only ever one real option today */}
               <div className="border-t border-line-soft bg-[var(--surface-2)] p-6 sm:p-7">
+                <p className="eyebrow mb-4">Six short sections, one question at a time</p>
+                <ul className="grid list-none gap-3 p-0 sm:grid-cols-2">
+                  {perSection.map((s) => (
+                    <li key={s.code} className="flex items-center gap-3">
+                      <SectionTile code={s.code} size={38} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[0.9rem] font-bold text-ink">
+                          {s.name}
+                        </span>
+                        <span
+                          className="block text-[0.78rem] font-semibold"
+                          style={{ color: domainColor(s.code) }}
+                        >
+                          {s.count} question{s.count === 1 ? "" : "s"}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="border-t border-line-soft p-6 sm:p-7">
                 {applied ? (
                   <div className="flex items-center gap-4">
                     <span className="animate-pop grid size-12 shrink-0 place-items-center rounded-full bg-[var(--st-on-track-soft)] text-[var(--st-on-track)]">

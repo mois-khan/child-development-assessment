@@ -25,6 +25,7 @@ import {
   IconBolt,
   IconCheck,
   IconClock,
+  IconClose,
   IconSparkle,
   IconStarFilled,
   Mascot,
@@ -420,6 +421,20 @@ export default function AssessmentPage({
                 size={38}
                 ring
               />
+              {/* Every answer saves as it's given (saveResponse/saveDetail),
+                  so leaving mid-check loses nothing — but nothing else in this
+                  full-screen flow says that or offers a way out beyond the
+                  browser's own back button, which isn't obvious inside what
+                  looks like a native app screen. */}
+              <button
+                type="button"
+                onClick={() => router.push(`/children/${record.child.id}`)}
+                aria-label={`Save and exit ${record.child.name}'s check`}
+                title="Your answers are saved — come back any time"
+                className="btn btn-ghost !min-h-11 !min-w-11 !px-0"
+              >
+                <IconClose size={18} />
+              </button>
             </div>
           </div>
         </Shell>

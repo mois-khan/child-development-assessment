@@ -3,8 +3,8 @@
 import { Fragment, use, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { DOMAIN_BY_CODE } from "@/content/domains";
-import { STAGE_BY_ID } from "@/content/stages";
+import { DOMAINS, DOMAIN_BY_CODE } from "@/content/domains";
+import { BRAIN_STAGES, STAGE_BY_ID, cellFor } from "@/content/stages";
 import { liveActivitiesFor, type AdminActivity } from "@/lib/admin/activities";
 import { liveGetVideo, type AdminVideo } from "@/lib/admin/videos";
 import { resolveRecommendedCourse, type AdminCourse } from "@/lib/admin/recommendations";
@@ -37,6 +37,7 @@ import {
   Mascot,
   Meter,
   Section,
+  SectionIcon,
   SectionTile,
   Shell,
   StatusChip,
@@ -348,6 +349,19 @@ export default function ReportPage({
             </Card>
           </Section>
 
+          {/* ══ page 2b · the chart itself, filled in ═══════════════════════ */}
+          <Section size="sm" className="print-break">
+            <h2>{child.name}&rsquo;s Developmental Profile</h2>
+            <p className="mt-2 max-w-[58ch] text-[0.95rem] leading-relaxed text-ink-2">
+              The same seven-stage chart the programme uses on paper, filled in with{" "}
+              {child.name}&rsquo;s own answers — reflex stage at the bottom, sophisticated
+              cortex at the top.
+            </p>
+            <Card variant="clay" className="mt-6 overflow-hidden !p-0">
+              <DevelopmentalProfileChart result={result} childName={child.name} />
+            </Card>
+          </Section>
+
           {/* ══ page 3+ · area by area ═══════════════════════════════════ */}
           <Section size="sm" className="print-break">
             <h2>Area by area</h2>
@@ -463,6 +477,224 @@ export default function ReportPage({
 
       <Footer />
     </>
+  );
+}
+
+/* ══ the chart itself, filled in ══════════════════════════════════════════ */
+
+type CellState = "reached" | "current" | "next" | "ahead";
+
+/**
+ * Where one competence's score puts it on one row of the chart.
+ *
+ * "reached" and "current" only ever look at the stage the child actually
+ * landed on (DomainScore.achievedStage) — they never assume a stage was
+ * literally asked about. That is deliberate: reaching stage VI implies I
+ * through V without re-testing them, exactly as the physical chart assumes.
+ * "next" is the one state that DOES require the stage to have been asked
+ * (DomainScore.stagesAsked) — we only draw a progress bar into a stage we
+ * have actual answers for, never a guess.
+ */
+function cellState(
+  score: DomainScore,
+  stage: BrainStage,
+): { state: CellState; frac?: number } {
+  const achieved = STAGE_BY_ID[score.achievedStage];
+
+  if (achieved) {
+    if (stage.order < achieved.order) return { state: "reached" };
+    if (stage.order === achieved.order) return { state: "current" };
+    if (stage.order === achieved.order + 1 && score.stagesAsked.includes(stage.id)) {
+      const span = stage.averageMonths - achieved.averageMonths;
+      const frac =
+        span <= 0
+          ? 0
+          : clamp01((score.neurologicalMonths - achieved.averageMonths) / span);
+      return { state: "next", frac };
+    }
+    return { state: "ahead" };
+  }
+
+  // Nothing passed yet: anchor "current" on the lowest stage we actually
+  // asked about, using the domain's overall answer rate as its fill.
+  const lowestAsked = [...score.stagesAsked]
+    .map((id) => STAGE_BY_ID[id])
+    .filter((s): s is BrainStage => !!s)
+    .sort((a, b) => a.order - b.order)[0];
+  if (lowestAsked && stage.id === lowestAsked.id) {
+    return { state: "current", frac: score.percent };
+  }
+  return { state: "ahead" };
+}
+
+function clamp01(n: number): number {
+  return Math.min(1, Math.max(0, n));
+}
+
+/**
+ * The Developmental Profile chart, filled in with one child's answers.
+ *
+ * Seven rows (the brain stages, reflex at the bottom to match the printed
+ * chart), six columns (the competences, in the chart's own order — the three
+ * that take information in, then the three that put it back out). Every one
+ * of the 42 cells carries the chart's own wording, so this reads as the same
+ * document a family already has on paper, just marked up with where their
+ * child stands.
+ */
+function DevelopmentalProfileChart({
+  result,
+  childName,
+}: {
+  result: AssessmentResult;
+  childName: string;
+}) {
+  const scoreByDomain = Object.fromEntries(
+    result.domainScores.map((s) => [s.domain, s]),
+  ) as Record<DomainCode, DomainScore>;
+  const rows = [...BRAIN_STAGES].sort((a, b) => b.order - a.order); // VII at top
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line-soft px-5 py-3.5 text-[0.78rem] font-semibold text-ink-3 sm:px-7">
+        <LegendItem swatch={<LegendCheck />} label="Already reached" />
+        <LegendItem swatch={<LegendRing />} label={`${childName} is here`} />
+        <LegendItem swatch={<LegendDash />} label="In progress" />
+        <LegendItem swatch={<LegendFaded />} label="Not reached yet" />
+      </div>
+
+      <div className="dp-chart-scroll">
+        <div className="dp-chart">
+          <div className="dp-chart-head dp-chart-corner" aria-hidden="true" />
+          {DOMAINS.map((d) => (
+            <div key={d.code} className="dp-chart-head">
+              <SectionIcon code={d.code} size={17} />
+              <span>{d.short}</span>
+            </div>
+          ))}
+
+          {rows.flatMap((stage) => [
+              <div
+                key={`${stage.id}-label`}
+                className="dp-chart-stage"
+                style={{
+                  background: `hsl(${stage.hue} 68% 93%)`,
+                  color: `hsl(${stage.hue} 60% 28%)`,
+                }}
+              >
+                <span className="dp-chart-roman">{stage.roman}</span>
+                <span className="dp-chart-stage-name">{stage.name}</span>
+              </div>,
+              ...DOMAINS.map((d) => {
+                const score = scoreByDomain[d.code];
+                const cell = cellFor(stage.id, d.code);
+                const { state, frac } = cellState(score, stage);
+                const color = domainColor(d.code);
+                return (
+                  <div
+                    key={`${stage.id}-${d.code}`}
+                    className="dp-chart-cell"
+                    data-state={state}
+                    style={
+                      {
+                        background: `hsl(${stage.hue} 55% 96%)`,
+                        "--cell-color": color,
+                      } as React.CSSProperties
+                    }
+                  >
+                    {state === "reached" && (
+                      <span className="dp-chart-marker dp-chart-marker-check" style={{ color }}>
+                        <IconCheck size={11} />
+                      </span>
+                    )}
+                    {state === "current" && (
+                      <span className="dp-chart-marker dp-chart-marker-here">
+                        <Avatar name={childName} size={20} />
+                      </span>
+                    )}
+                    {/* Inline, theme-independent ink — this cell's background is
+                        always a light tint of the row's own hue, by design, the
+                        same way the printed chart never changes with the light in
+                        the room. var(--ink) would flip to a pale colour in dark
+                        mode and vanish against it, so the text carries its own
+                        dark shade of the same hue instead. */}
+                    <p
+                      className="dp-chart-cell-desc"
+                      style={{ color: `hsl(${stage.hue} 45% 20%)` }}
+                    >
+                      {cell.description}
+                    </p>
+                    <p
+                      className="dp-chart-cell-kind"
+                      style={{ color: `hsl(${stage.hue} 25% 38%)` }}
+                    >
+                      {cell.kind}
+                    </p>
+                    {state === "next" && frac !== undefined && (
+                      <span
+                        className="dp-chart-cell-fill"
+                        style={{ width: `${Math.max(6, frac * 100)}%`, background: color }}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
+                );
+              }),
+          ])}
+        </div>
+      </div>
+
+      <p className="border-t border-line-soft px-5 py-3.5 text-[0.78rem] leading-relaxed text-ink-3 sm:px-7">
+        Cells below where {childName} is marked are assumed in place, the same way the paper
+        chart reads — reaching a later stage means the earlier ones are already there.
+      </p>
+    </div>
+  );
+}
+
+function LegendItem({ swatch, label }: { swatch: React.ReactNode; label: string }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      {swatch}
+      {label}
+    </span>
+  );
+}
+
+function LegendCheck() {
+  return (
+    <span
+      className="grid size-4 place-items-center rounded-full"
+      style={{ background: "var(--surface-3)", color: "var(--ink-2)" }}
+    >
+      <IconCheck size={10} />
+    </span>
+  );
+}
+
+function LegendRing() {
+  return (
+    <span
+      className="size-4 rounded-full"
+      style={{ border: "2.5px solid var(--ink-2)", background: "var(--surface)" }}
+    />
+  );
+}
+
+function LegendDash() {
+  return (
+    <span
+      className="size-4 rounded-full"
+      style={{ border: "2px dashed var(--ink-3)", background: "var(--surface)" }}
+    />
+  );
+}
+
+function LegendFaded() {
+  return (
+    <span
+      className="size-4 rounded-full"
+      style={{ background: "var(--surface-3)", opacity: 0.5 }}
+    />
   );
 }
 
