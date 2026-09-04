@@ -752,6 +752,7 @@ h4,
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: var(--radius-pill);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: width 700ms var(--ease-out);
 }
 
@@ -959,6 +960,25 @@ h4,
   .dp-chart-cell-fill {
     background: var(--ink) !important;
   }
+}
+
+/* ── native <details>/<summary> disclosures ────────────────────────────────
+ * Every accordion in the app (admin item bank, report "area by area") is a
+ * plain <details>, so the marker is hidden once here rather than per usage.
+ * Firefox honours list-style; WebKit needs its own pseudo-element hidden too.
+ */
+summary {
+  list-style: none;
+}
+summary::-webkit-details-marker,
+summary::marker {
+  display: none;
+}
+.report-domain-summary {
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.report-domain-summary:hover {
+  background: var(--surface-2);
 }
 
 /* ── report cover: frosted meta strip ─────────────────────────────────────── */
@@ -1415,6 +1435,14 @@ h4,
 
   .no-print {
     display: none !important;
+  }
+
+  /* A collapsed area-by-area card is a screen-only convenience — a printed
+     or downloaded report is a document the parent keeps, and every area's
+     full detail belongs in it whether or not it happened to be open when
+     they clicked print. */
+  details > *:not(summary) {
+    display: block !important;
   }
 
   * {

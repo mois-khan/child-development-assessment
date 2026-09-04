@@ -283,8 +283,14 @@ export function Meter({
         className={cx("meter-fill", animate && "grow-in")}
         style={{
           width: `${pct}%`,
+          // A gradient that stays within the colour's own hue (light-to-dark
+          // of itself, not blended toward white) so a short bar — most of
+          // these, since scores under 50 are exactly the ones worth reading —
+          // never fades into a pale, low-contrast smear.
           ...(color
-            ? { background: `linear-gradient(90deg, color-mix(in srgb, ${color} 68%, white), ${color})` }
+            ? {
+                background: `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 78%, black))`,
+              }
             : null),
         }}
       />

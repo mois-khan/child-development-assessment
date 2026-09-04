@@ -16,6 +16,7 @@ import { getAssessment, type StoredAssessment } from "@/lib/store";
 import type {
   AssessmentResult,
   BrainStage,
+  Child,
   DomainCode,
   DomainScore,
 } from "@/lib/types";
@@ -28,7 +29,9 @@ import {
   Disclaimer,
   Footer,
   IconArrowRight,
+  IconCalendar,
   IconCheck,
+  IconChevronRight,
   IconClock,
   IconDownload,
   IconHeart,
@@ -44,6 +47,7 @@ import {
   TopBar,
   Wordmark,
   domainColor,
+  statusColor,
 } from "@/components/ui";
 
 /** A still for each section's suggested video. Real clips drop in later. */
@@ -334,7 +338,10 @@ export default function ReportPage({
                           </div>
                           <div
                             className="progress-matrix-fill grow-in"
-                            style={{ width: `${pct}%`, background: color, opacity: 0.28 }}
+                            style={{
+                              width: `${pct}%`,
+                              background: `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 78%, black))`,
+                            }}
                           />
                           <div
                             className="progress-matrix-dot"
@@ -396,22 +403,21 @@ export default function ReportPage({
 
             <div className="mt-5 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
               <Card variant="clay" className="p-6 sm:p-8">
-                <div className="prose-read space-y-4">
-                  {summary(result, child).map((p) => (
-                    <p key={p.slice(0, 40)}>{p}</p>
-                  ))}
-                </div>
+                <SummaryProse result={result} child={child} />
 
-                <ul className="mt-7 list-none space-y-3.5 p-0 border-t border-line-soft pt-6">
-                  {nextSteps(result, child).map((s) => (
-                    <li key={s.slice(0, 30)} className="flex items-start gap-3">
-                      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-accent">
-                        <IconCheck size={13} />
-                      </span>
-                      <span className="text-[0.94rem] leading-relaxed text-ink-2">{s}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-7 border-t border-line-soft pt-6">
+                  <p className="eyebrow mb-4">What to do next</p>
+                  <ul className="list-none space-y-3.5 p-0">
+                    {nextSteps(result, child).map((s) => (
+                      <li key={s.slice(0, 30)} className="flex items-start gap-3">
+                        <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-accent">
+                          <IconCheck size={13} />
+                        </span>
+                        <span className="text-[0.94rem] leading-relaxed text-ink-2">{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </Card>
 
               {/* the course recommendation — an admin rule match (see
@@ -698,6 +704,77 @@ function LegendFaded() {
   );
 }
 
+/* ══ the summary, readable rather than a wall of text ══════════════════════ */
+
+/**
+ * `summary()` (lib/narrative.ts) returns 2-4 sentences as plain paragraph
+ * strings — reviewed prose, not something this page should restructure. What
+ * it can fix is how those paragraphs are read: the first one is always scene-
+ * setting (the child's age, how this report was scored), so it drops back to
+ * a small muted line rather than competing with the verdict; the paragraphs
+ * that actually say how the child is doing get a colour-coded callout, more
+ * breathing room, and their key phrases picked out, so the one sentence a
+ * busy parent needs doesn't have to be found by reading every word.
+ */
+function SummaryProse({ result, child }: { result: AssessmentResult; child: Child }) {
+  const [context, ...verdict] = summary(result, child);
+
+  const terms = [
+    child.name,
+    ...DOMAINS.map((d) => d.name.toLowerCase()),
+    STATUSES[result.overallStatus].label.toLowerCase(),
+  ];
+
+  return (
+    <div>
+      {context && (
+        <p className="flex items-start gap-2 text-[0.86rem] font-semibold leading-relaxed text-ink-3">
+          <IconCalendar size={15} className="mt-0.5 shrink-0" />
+          {context}
+        </p>
+      )}
+
+      <div
+        className="mt-5 space-y-4 rounded-r-[var(--radius-sm)] py-1 pl-5 sm:pl-6"
+        style={{ borderLeft: `3px solid ${statusColor(result.overallStatus)}` }}
+      >
+        {verdict.map((p) => (
+          <p key={p.slice(0, 40)} className="text-[1.02rem] leading-[1.75] text-ink-2">
+            <Highlight text={p} terms={terms} />
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Wraps any occurrence of `terms` (case-insensitive) in the text with `<strong>`. */
+function Highlight({ text, terms }: { text: string; terms: string[] }) {
+  const unique = Array.from(new Set(terms.filter((t) => t.trim().length > 0)));
+  if (unique.length === 0) return <>{text}</>;
+
+  const pattern = new RegExp(`(${unique.map(escapeRegExp).join("|")})`, "gi");
+  const parts = text.split(pattern);
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        unique.some((t) => t.toLowerCase() === part.toLowerCase()) ? (
+          <strong key={i} className="font-extrabold text-ink">
+            {part}
+          </strong>
+        ) : (
+          <Fragment key={i}>{part}</Fragment>
+        ),
+      )}
+    </>
+  );
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /* ══ one area ══════════════════════════════════════════════════════════════ */
 
 function DomainCard({
@@ -716,6 +793,11 @@ function DomainCard({
   const domain = DOMAIN_BY_CODE[score.domain];
   const color = domainColor(score.domain);
   const value = score.dq === null ? score.percent * 100 : score.dq;
+  // Open by default for the areas actually worth reading about; collapsed
+  // for the ones that are already fine, so six full-length cards don't force
+  // a long scroll past detail nobody needs yet. The status chip, score and
+  // blurb stay visible either way, in the summary row.
+  const defaultOpen = score.status === "slow" || score.status === "consult";
 
   const levels = [
     {
@@ -738,24 +820,41 @@ function DomainCard({
     <Card variant="clay" className="overflow-hidden">
       <div aria-hidden="true" className="h-1.5 w-full" style={{ background: color }} />
 
-      <div className="p-6 sm:p-7">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line-soft pb-5">
-          <div className="flex items-center gap-4">
-            <SectionTile code={score.domain} size={52} />
-            <div>
-              <h3 className="text-[1.15rem]">{domain.name}</h3>
-              <p className="mt-0.5 text-[0.84rem] font-semibold text-ink-3">{domain.blurb}</p>
+      {/* A dropdown rather than a fixed block: the status chip, score and
+          blurb below are enough to read this area at a glance, so the full
+          breakdown — what to work on, activities, video — only costs a click
+          when it's wanted. Printing/downloading still gets everything: see
+          the "print: force every <details> open" rule in globals.css. */}
+      <details className="group/domain" open={defaultOpen}>
+        <summary className="report-domain-summary cursor-pointer list-none p-6 sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <SectionTile code={score.domain} size={52} />
+              <div>
+                <h3 className="text-[1.15rem]">{domain.name}</h3>
+                <p className="mt-0.5 text-[0.84rem] font-semibold text-ink-3">{domain.blurb}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <StatusChip status={score.status} label={STATUSES[score.status].label} />
+              <span
+                aria-hidden="true"
+                className="no-print grid size-8 shrink-0 place-items-center rounded-full bg-[var(--surface-2)] text-ink-3 transition-transform group-open/domain:rotate-90"
+              >
+                <IconChevronRight size={16} />
+              </span>
             </div>
           </div>
-          <StatusChip status={score.status} label={STATUSES[score.status].label} />
-        </div>
 
-        <div className="mt-5 flex items-center gap-4 border-b border-line-soft pb-5">
-          <Meter value={Math.min(100, value)} color={color} className="flex-1" animate />
-          <span className="tnum text-[0.95rem] font-extrabold text-ink">{Math.round(value)}</span>
-        </div>
+          <div className="mt-5 flex items-center gap-4">
+            <Meter value={Math.min(100, value)} color={color} className="flex-1" animate />
+            <span className="tnum text-[0.95rem] font-extrabold text-ink">{Math.round(value)}</span>
+          </div>
+        </summary>
 
-        <div className={`mt-6 grid gap-6 ${suggestVideo ? "lg:grid-cols-[1fr_17rem]" : ""}`}>
+        <div
+          className={`border-t border-line-soft p-6 sm:p-7 grid gap-6 ${suggestVideo ? "lg:grid-cols-[1fr_17rem]" : ""}`}
+        >
           <div>
             <p className="prose-read !text-[0.97rem]">{note}</p>
 
@@ -855,7 +954,7 @@ function DomainCard({
             </div>
           )}
         </div>
-      </div>
+      </details>
     </Card>
   );
 }
