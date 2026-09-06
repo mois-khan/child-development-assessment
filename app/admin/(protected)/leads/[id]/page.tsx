@@ -4,15 +4,13 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  FOLLOW_UP_VERDICTS,
-  LEAD_STAGES,
-  adminDeleteLead,
   adminGetLead,
-  adminLogFollowUp,
   adminUpdateLead,
-  type FollowUpVerdict,
+  adminLogInteraction,
   type Lead,
-  type LeadStage,
+  type LeadStatus,
+  type InteractionOutcome,
+  type InteractionChannel,
 } from "@/lib/admin/leads";
 import { useAdminSession } from "@/lib/admin/auth";
 import { todayISO } from "@/lib/age";
@@ -21,25 +19,50 @@ import {
   Badge,
   Button,
   Card,
-  ConfirmDeleteButton,
   IconArrowLeft,
   IconCalendar,
   IconCheck,
 } from "@/components/ui";
 
-const STAGE_TONE: Record<LeadStage, "neutral" | "accent" | "success" | "danger"> = {
+const STATUS_TONE: Record<LeadStatus, "neutral" | "accent" | "success" | "danger" | "warn"> = {
   new: "accent",
   contacted: "neutral",
-  won: "success",
+  interested: "success",
+  follow_up: "warn",
+  converted: "success",
+  not_interested: "danger",
   lost: "danger",
 };
 
-const VERDICT_TONE: Record<FollowUpVerdict, "success" | "danger" | "warn" | "neutral"> = {
-  interested: "success",
-  no_answer: "warn",
-  converted: "success",
-  not_interested: "danger",
-  do_not_contact: "danger",
+const STATUS_LABEL: Record<LeadStatus, string> = {
+  new: "New",
+  contacted: "Contacted",
+  interested: "Interested",
+  follow_up: "Follow Up",
+  converted: "Converted",
+  not_interested: "Not Interested",
+  lost: "Lost",
+};
+
+const OUTCOME_LABEL: Record<InteractionOutcome, string> = {
+  interested: "Interested",
+  not_interested: "Not Interested",
+  call_back: "Call Back",
+  info_requested: "Info Requested",
+  payment_discussion: "Payment Discussion",
+  assessment_discussion: "Assessment Discussion",
+  converted: "Converted",
+  no_response: "No Response",
+  other: "Other"
+};
+
+const CHANNEL_LABEL: Record<InteractionChannel, string> = {
+  phone: "Phone",
+  whatsapp: "WhatsApp",
+  email: "Email",
+  sms: "SMS",
+  in_person: "In Person",
+  other: "Other"
 };
 
 export default function AdminLeadDetailPage({
@@ -68,8 +91,7 @@ export default function AdminLeadDetailPage({
     );
   }
 
-  const closed = lead.stage === "won" || lead.stage === "lost";
-  const timeline = [...lead.followUps].reverse();
+  const closed = lead.status === "converted" || lead.status === "lost" || lead.status === "not_interested";
 
   return (
     <div className="space-y-6">
@@ -77,137 +99,148 @@ export default function AdminLeadDetailPage({
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Avatar name={lead.parentName ?? lead.childName} size={56} />
+          <Avatar name={lead.parentName || "Unknown"} size={64} />
           <div>
-            <h1 className="!text-[1.4rem]">{lead.parentName ?? `For ${lead.childName}`}</h1>
-            <p className="text-[0.85rem] text-ink-3">
-              {lead.parentName ? `Child: ${lead.childName}` : "Parent's name not recorded yet"}
+            <h1 className="!text-[1.6rem]">{lead.parentName || "Unnamed Parent"}</h1>
+            <p className="text-[0.9rem] text-ink-3 mt-1">
+              {lead.phone || "No phone"} · {lead.email || "No email"}
+            </p>
+            <p className="text-[0.8rem] text-ink-3 mt-1">
+              Lead created: {new Date(lead.createdAt).toLocaleDateString()}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2.5">
-          <Badge tone={STAGE_TONE[lead.stage]} size="lg">
-            {LEAD_STAGES.find((s) => s.value === lead.stage)?.label}
+        <div className="flex flex-col items-end gap-3">
+          <Badge tone={STATUS_TONE[lead.status]} size="lg">
+            {STATUS_LABEL[lead.status]}
           </Badge>
-          {lead.assessmentId && (
-            <Link
-              href={`/admin/submissions/${lead.assessmentId}`}
-              className="text-[0.85rem] font-semibold text-accent hover:underline"
-            >
-              View assessment
-            </Link>
+          {lead.nextFollowUpAt && !closed && (
+            <Card variant="tint" tint="var(--st-emerging)" className="!p-3 !py-2 text-right">
+              <p className="text-[0.7rem] uppercase font-bold text-ink-3 tracking-wider">Next Follow-Up</p>
+              <p className="text-[1.1rem] font-bold text-ink flex items-center gap-2">
+                <IconCalendar size={16} /> {new Date(lead.nextFollowUpAt).toLocaleDateString()}
+              </p>
+            </Card>
           )}
         </div>
       </div>
 
-      <Card className="!p-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="!text-[1rem]">Contact details</h2>
-          <Button size="sm" variant="ghost" onClick={() => setEditingDetails((s) => !s)}>
-            {editingDetails ? "Done" : "Edit"}
-          </Button>
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-6">
+          <Card className="!p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="!text-[1.1rem]">Parent Details</h2>
+              <Button size="sm" variant="ghost" onClick={() => setEditingDetails((s) => !s)}>
+                {editingDetails ? "Cancel" : "Edit"}
+              </Button>
+            </div>
+
+            {editingDetails ? (
+              <LeadDetailsForm
+                lead={lead}
+                onSaved={() => {
+                  refresh();
+                  setEditingDetails(false);
+                }}
+              />
+            ) : (
+              <dl className="mt-5 grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-2">
+                <Field label="Name" value={lead.parentName || "—"} />
+                <Field label="Phone" value={lead.phone || "—"} />
+                <Field label="Email" value={lead.email || "—"} />
+                <Field label="Source" value={lead.source} />
+                <Field label="Assigned to" value={lead.assignedToEmail || "Unassigned"} />
+              </dl>
+            )}
+          </Card>
+
+          <Card className="!p-6">
+            <h2 className="!text-[1.1rem]">Children & Assessments</h2>
+            {lead.children.length === 0 ? (
+              <p className="mt-4 text-[0.88rem] text-ink-3">No children recorded.</p>
+            ) : (
+              <div className="mt-5 space-y-5">
+                {lead.children.map(c => (
+                  <div key={c.id} className="border-l-2 border-line-soft pl-4">
+                    <p className="font-bold text-ink">{c.name}</p>
+                    <p className="text-[0.8rem] text-ink-3">Born {c.dob}</p>
+                    {c.assessments.length > 0 ? (
+                      <div className="mt-2 space-y-2">
+                        {c.assessments.map(a => (
+                          <div key={a.id} className="flex items-center justify-between bg-surface-2 p-2 rounded text-[0.85rem]">
+                            <span>{a.assessedOn}</span>
+                            {a.completedAt ? (
+                              <Link href={`/report/${a.id}`} className="text-accent font-semibold hover:underline">View Report</Link>
+                            ) : (
+                              <span className="text-ink-3 italic">In progress</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-[0.85rem] text-ink-3">No assessments started.</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
 
-        {editingDetails ? (
-          <LeadDetailsForm
-            lead={lead}
-            onSaved={() => {
-              refresh();
-              setEditingDetails(false);
-            }}
-          />
-        ) : (
-          <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Field label="Phone" value={lead.phone || "Not recorded"} />
-            <Field label="City" value={lead.city || "—"} />
-            <Field label="Source" value={SOURCE_LABEL[lead.source]} />
-            <Field label="Assigned to" value={lead.assignedTo || "Unassigned"} />
-          </dl>
-        )}
-      </Card>
+        <div className="space-y-6">
+          {!closed && (
+            <Card className="!p-6">
+              <h2 className="!text-[1.1rem]">Log Interaction</h2>
+              <LogInteractionForm
+                leadId={lead.id}
+                loggedByUserId={session?.id ?? ""}
+                onLogged={refresh}
+              />
+            </Card>
+          )}
 
-      {!closed && (
-        <Card className="!p-6">
-          <h2 className="!text-[1rem]">Log a follow-up</h2>
-          <p className="mt-1 text-[0.82rem] text-ink-3">
-            What happened on this call, and — unless it&rsquo;s settled — when to try again.
-          </p>
-          <LogFollowUpForm
-            leadId={lead.id}
-            defaultLoggedBy={session?.email ?? ""}
-            onLogged={refresh}
-          />
-        </Card>
-      )}
-
-      <Card className="!p-6">
-        <h2 className="!text-[1rem]">Call history</h2>
-        {timeline.length === 0 ? (
-          <p className="mt-3 text-[0.88rem] text-ink-3">
-            {lead.isSaved
-              ? "No calls logged yet."
-              : "Nobody has followed up on this lead yet — log the first call above."}
-          </p>
-        ) : (
-          <ul className="mt-4 list-none space-y-4 p-0">
-            {timeline.map((f) => (
-              <li key={f.id} className="flex gap-3 border-l-2 border-line-soft pl-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge tone={VERDICT_TONE[f.verdict]} size="sm">
-                      {FOLLOW_UP_VERDICTS.find((v) => v.value === f.verdict)?.label}
-                    </Badge>
-                    <span className="text-[0.78rem] font-semibold text-ink-3">{f.date}</span>
-                  </div>
-                  {f.note && <p className="mt-1.5 text-[0.88rem] text-ink-2">{f.note}</p>}
-                  <p className="mt-1 text-[0.74rem] text-ink-3">
-                    Logged by {f.loggedBy || "unknown"}
-                    {f.nextFollowUpAt && ` · next follow-up ${f.nextFollowUpAt}`}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      {lead.isSaved && (
-        <Card className="!p-6">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="!text-[1rem]">Remove this lead</h2>
-              <p className="mt-1 text-[0.82rem] text-ink-3">
-                {lead.assessmentId
-                  ? "Clears the call history you've logged. The assessment itself is untouched, and this lead reappears as untouched next time you look."
-                  : "This lead has no assessment behind it — deleting it removes it for good."}
-              </p>
-            </div>
-            <ConfirmDeleteButton
-              onConfirm={() => {
-                adminDeleteLead(lead.id);
-                router.push("/admin/leads");
-              }}
-            />
-          </div>
-        </Card>
-      )}
+          <Card className="!p-6">
+            <h2 className="!text-[1.1rem]">Interaction History</h2>
+            {lead.interactions.length === 0 ? (
+              <p className="mt-4 text-[0.88rem] text-ink-3">No interactions logged yet.</p>
+            ) : (
+              <ul className="mt-5 list-none space-y-5 p-0">
+                {lead.interactions.map((f) => (
+                  <li key={f.id} className="flex gap-3 border-l-2 border-line-soft pl-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge tone="neutral" size="sm">
+                          {OUTCOME_LABEL[f.outcome]}
+                        </Badge>
+                        <span className="text-[0.78rem] font-semibold text-ink-3">
+                          {new Date(f.occurredAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                        </span>
+                        <span className="text-[0.75rem] text-ink-3 bg-surface-2 px-1.5 py-0.5 rounded">
+                          {CHANNEL_LABEL[f.channel]}
+                        </span>
+                      </div>
+                      {f.remarks && <p className="mt-2 text-[0.88rem] text-ink-2 whitespace-pre-wrap">{f.remarks}</p>}
+                      <p className="mt-2 text-[0.74rem] text-ink-3">
+                        Logged by {f.loggedByEmail || "unknown"}
+                        {f.nextFollowUpAt && ` · set next follow-up ${new Date(f.nextFollowUpAt).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
-
-const SOURCE_LABEL: Record<Lead["source"], string> = {
-  assessment: "From an assessment",
-  referral: "Referral",
-  website: "Website inquiry",
-  walk_in: "Walk-in",
-  other: "Other",
-};
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
       <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink-3">{label}</dt>
-      <dd className="mt-0.5 truncate text-[0.88rem] font-semibold text-ink">{value}</dd>
+      <dd className="mt-0.5 truncate text-[0.9rem] font-medium text-ink">{value}</dd>
     </div>
   );
 }
@@ -226,25 +259,21 @@ function BackLink() {
 function LeadDetailsForm({ lead, onSaved }: { lead: Lead; onSaved: () => void }) {
   const [parentName, setParentName] = useState(lead.parentName ?? "");
   const [phone, setPhone] = useState(lead.phone ?? "");
-  const [city, setCity] = useState(lead.city ?? "");
-  const [assignedTo, setAssignedTo] = useState(lead.assignedTo ?? "");
+  const [email, setEmail] = useState(lead.email ?? "");
 
   async function save() {
     await adminUpdateLead(lead.id, {
-      childName: lead.childName,
-      parentName: parentName.trim() || undefined,
-      phone: phone.trim() || undefined,
-      city: city.trim() || undefined,
-      assignedTo: assignedTo.trim() || undefined,
-      source: lead.source,
+      parentName: parentName.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
     });
     onSaved();
   }
 
   return (
-    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-      <div>
-        <label className="label">Parent&rsquo;s name</label>
+    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <label className="label">Parent&rsquo;s Name</label>
         <input className="field" value={parentName} onChange={(e) => setParentName(e.target.value)} autoFocus />
       </div>
       <div>
@@ -252,19 +281,10 @@ function LeadDetailsForm({ lead, onSaved }: { lead: Lead; onSaved: () => void })
         <input type="tel" className="field" value={phone} onChange={(e) => setPhone(e.target.value)} />
       </div>
       <div>
-        <label className="label">City</label>
-        <input className="field" value={city} onChange={(e) => setCity(e.target.value)} />
+        <label className="label">Email</label>
+        <input type="email" className="field" value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
-      <div>
-        <label className="label">Assigned to</label>
-        <input
-          className="field"
-          value={assignedTo}
-          onChange={(e) => setAssignedTo(e.target.value)}
-          placeholder="rep@kaushalyageniuskid.com"
-        />
-      </div>
-      <div className="sm:col-span-2 flex justify-end">
+      <div className="sm:col-span-2 flex justify-end mt-2">
         <Button size="sm" onClick={save} iconLeft={<IconCheck size={14} />}>
           Save details
         </Button>
@@ -273,67 +293,63 @@ function LeadDetailsForm({ lead, onSaved }: { lead: Lead; onSaved: () => void })
   );
 }
 
-function LogFollowUpForm({
+function LogInteractionForm({
   leadId,
-  defaultLoggedBy,
+  loggedByUserId,
   onLogged,
 }: {
   leadId: string;
-  defaultLoggedBy: string;
+  loggedByUserId: string;
   onLogged: () => void;
 }) {
-  const [date, setDate] = useState(todayISO());
-  const [verdict, setVerdict] = useState<FollowUpVerdict>("interested");
-  const [note, setNote] = useState("");
+  const [channel, setChannel] = useState<InteractionChannel>("phone");
+  const [outcome, setOutcome] = useState<InteractionOutcome>("interested");
+  const [remarks, setRemarks] = useState("");
   const [nextDate, setNextDate] = useState("");
 
-  const meta = FOLLOW_UP_VERDICTS.find((v) => v.value === verdict)!;
-  const needsNextDate = !meta.closes;
-  const canSave = date !== "" && (!needsNextDate || nextDate !== "");
+  const needsNextDate = !["converted", "not_interested", "lost"].includes(outcome);
+  const canSave = !needsNextDate || nextDate !== "";
 
   async function save() {
     if (!canSave) return;
-    await adminLogFollowUp(leadId, {
-      date,
-      verdict,
-      note: note.trim(),
-      loggedBy: defaultLoggedBy,
+    await adminLogInteraction(leadId, {
+      channel,
+      outcome,
+      remarks: remarks.trim(),
+      loggedByUserId,
       nextFollowUpAt: needsNextDate ? nextDate : undefined,
     });
-    setNote("");
+    setRemarks("");
     setNextDate("");
+    setOutcome("interested");
     onLogged();
   }
 
   return (
-    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+    <div className="mt-5 grid gap-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="label">Channel</label>
+          <select className="field w-full" value={channel} onChange={(e) => setChannel(e.target.value as InteractionChannel)}>
+            {Object.entries(CHANNEL_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="label">Outcome</label>
+          <select className="field w-full" value={outcome} onChange={(e) => setOutcome(e.target.value as InteractionOutcome)}>
+            {Object.entries(OUTCOME_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </div>
+      </div>
+      
       <div>
-        <label className="label">Call date</label>
-        <input type="date" className="field" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} />
+        <label className="label">Remarks</label>
+        <textarea className="field w-full" rows={3} value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Summary of the conversation..." />
       </div>
-      <div>
-        <label className="label">Verdict</label>
-        <select
-          className="field !w-auto"
-          value={verdict}
-          onChange={(e) => setVerdict(e.target.value as FollowUpVerdict)}
-        >
-          {FOLLOW_UP_VERDICTS.map((v) => (
-            <option key={v.value} value={v.value}>
-              {v.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="sm:col-span-2">
-        <label className="label">
-          Note <span className="font-normal text-ink-3">(optional)</span>
-        </label>
-        <textarea className="field" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
-      </div>
+      
       {needsNextDate && (
         <div>
-          <label className="label">Next follow-up date</label>
+          <label className="label">Next Follow-Up</label>
           <input
             type="date"
             className="field"
@@ -341,12 +357,12 @@ function LogFollowUpForm({
             min={todayISO()}
             onChange={(e) => setNextDate(e.target.value)}
           />
-          {!nextDate && <p className="hint">Needed so this lead shows back up on the worklist.</p>}
         </div>
       )}
-      <div className={`flex items-end ${needsNextDate ? "" : "sm:col-span-2"} justify-end`}>
+      
+      <div className="flex justify-end mt-2">
         <Button size="sm" onClick={save} disabled={!canSave} iconLeft={<IconCalendar size={14} />}>
-          Log follow-up
+          Log interaction
         </Button>
       </div>
     </div>

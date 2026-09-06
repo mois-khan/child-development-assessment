@@ -97,14 +97,80 @@ export default function PayPage({
   async function startAssessment() {
     if (!child || !age || !startStage) return;
     setStarting(true);
-    markUnlocked(child.id, ASSESSMENT_SLUG);
-    // Every competence opens on the same stage — the one the child's age
-    // points at. Where each goes from there is decided question by question.
-    const stagesByDomain = Object.fromEntries(
-      DOMAINS.map((d) => [d.code, [startStage.id]]),
-    ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
-    const record = await createAssessment(child, today, stagesByDomain);
-    router.push(`/assessment/${record.id}`);
+    setError("");
+
+    if (applied) {
+      // Coupon applied - skip payment
+      markUnlocked(child.id, ASSESSMENT_SLUG);
+      const stagesByDomain = Object.fromEntries(
+        DOMAINS.map((d) => [d.code, [startStage.id]]),
+      ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
+      const record = await createAssessment(child, today, stagesByDomain);
+      router.push(`/assessment/${record.id}`);
+      return;
+    }
+
+    try {
+      const orderRes = await fetch("/api/payments/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: PRICE,
+          childId: child.id,
+          assessmentSlug: ASSESSMENT_SLUG,
+        }),
+      });
+      if (!orderRes.ok) throw new Error("Failed to create order");
+      const order = await orderRes.json();
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Kaushalya Genius",
+        description: "Genius Milestone Check",
+        order_id: order.id,
+        handler: async function (response: any) {
+          const verifyRes = await fetch("/api/payments/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          if (verifyRes.ok) {
+            markUnlocked(child.id, ASSESSMENT_SLUG);
+            const stagesByDomain = Object.fromEntries(
+              DOMAINS.map((d) => [d.code, [startStage.id]]),
+            ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
+            const record = await createAssessment(child, today, stagesByDomain);
+            router.push(`/assessment/${record.id}`);
+          } else {
+            setError("Payment verification failed. Please contact support.");
+            setStarting(false);
+          }
+        },
+        prefill: {
+          name: child.name,
+        },
+        theme: {
+          color: "#E24A7F", // brand accent
+        },
+      };
+
+      const rzp1 = new (window as any).Razorpay(options);
+      rzp1.on("payment.failed", function (response: any) {
+        setError(response.error.description || "Payment failed");
+        setStarting(false);
+      });
+      rzp1.open();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to initiate payment. Please try again.");
+      setStarting(false);
+    }
   }
 
   if (child === undefined) {
@@ -255,17 +321,12 @@ export default function PayPage({
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Button
                 size="lg"
-                disabled={!applied || starting}
+                disabled={starting}
                 onClick={startAssessment}
                 iconRight={<IconArrowRight size={18} />}
               >
-                {starting ? "Preparing questions…" : "Start the check"}
+                {starting ? "Preparing…" : applied ? "Start the check" : `Pay ₹${PRICE} & Start`}
               </Button>
-              {!applied && (
-                <span className="text-[0.88rem] font-semibold text-ink-3">
-                  Apply a coupon code to continue
-                </span>
-              )}
             </div>
 
             <div className="mt-8 flex items-start gap-3 rounded-[var(--radius)] border border-line bg-[var(--surface)] p-4">

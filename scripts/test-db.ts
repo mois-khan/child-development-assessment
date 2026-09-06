@@ -9,12 +9,11 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 async function test() {
-  const { data, error } = await supabase.from('profiles').select('*').limit(1)
+  const { data, error } = await supabase.from('leads').select('*, profiles(*)');
   if (error) {
-    console.error('Error querying profiles:', error.message)
+    console.error(error);
   } else {
-    console.log('Profiles query successful:', data)
+    console.log('Leads with profiles query successful:', JSON.stringify(data, null, 2));
   }
 }
 test()
-

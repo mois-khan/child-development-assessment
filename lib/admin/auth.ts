@@ -22,6 +22,7 @@ const DEV_SESSION_KEY = "kaushalya.admin.dev-session";
 const DEV_ADMIN_EMAIL = "dev-admin@local";
 
 export interface AdminSession {
+  id: string;
   email: string;
   role: "super_admin" | "sales" | "content_editor";
   /** True when this is the local dev-mode bypass, not a real signed-in admin. */
@@ -31,7 +32,7 @@ export interface AdminSession {
 function readDevSession(): AdminSession | null {
   if (typeof window === "undefined") return null;
   if (window.localStorage.getItem(DEV_SESSION_KEY) !== "1") return null;
-  return { email: DEV_ADMIN_EMAIL, role: "super_admin", isDevSession: true };
+  return { id: "00000000-0000-0000-0000-000000000000", email: DEV_ADMIN_EMAIL, role: "super_admin", isDevSession: true };
 }
 
 export function startDevSession(): void {
@@ -88,7 +89,7 @@ export function useAdminSession(): {
       if (!cancelled) {
         setSession(
           adminRow
-            ? { email: adminRow.email, role: adminRow.role, isDevSession: false }
+            ? { id: authSession.user.id, email: adminRow.email, role: adminRow.role, isDevSession: false }
             : null,
         );
         setLoading(false);

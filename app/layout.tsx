@@ -32,6 +32,8 @@ export const metadata: Metadata = {
     "A ten-minute milestone check for children aged 0–6, across six areas of brain development, with a keepsake report and activities to do at home.",
 };
 
+import Script from "next/script";
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -42,6 +44,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${poetsen.variable}`}>
         <AuthProvider>{children}</AuthProvider>
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       </body>
     </html>
   );

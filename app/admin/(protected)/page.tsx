@@ -62,7 +62,7 @@ export default function AdminDashboardPage() {
             label="Worth a closer look"
             icon={<IconShield size={20} />}
             color="var(--st-consult)"
-            href="/admin/submissions?filter=consult"
+            href="/admin/leads"
           />
         </div>
       )}
@@ -100,8 +100,8 @@ export default function AdminDashboardPage() {
         <h2 className="!text-[1.05rem]">Get started</h2>
         <p className="mt-2 max-w-[52ch] text-[0.88rem] leading-relaxed text-ink-3">
           Every submission made through the parent-facing check shows up in{" "}
-          <Link href="/admin/submissions" className="font-semibold text-accent">
-            Submissions
+          <Link href="/admin/leads" className="font-semibold text-accent">
+            Leads
           </Link>
           . Try it: open the check in another tab, answer a few questions, and it will appear
           here immediately — no setup needed.
