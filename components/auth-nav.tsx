@@ -15,10 +15,17 @@ export function AuthNav() {
 
   if (user) {
     return (
-      <div className="flex items-center gap-4">
-        <span className="hidden text-[0.88rem] font-medium text-ink-2 md:inline">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/profile"
+          className="hidden text-[0.88rem] font-bold text-ink hover:text-accent md:inline transition-colors"
+          title="View Parent Profile"
+        >
           {profile?.fullName || user.email}
-        </span>
+        </Link>
+        <ButtonLink href="/profile" variant="ghost" size="sm">
+          Profile
+        </ButtonLink>
         <Button
           variant="secondary"
           size="sm"
@@ -35,8 +42,10 @@ export function AuthNav() {
 
   if (pathname === "/join") return null;
 
+  const targetNext = !pathname || pathname === "/" || pathname === "/join" ? "/profile" : pathname;
+
   return (
-    <ButtonLink href={`/join?next=${encodeURIComponent(pathname)}`} size="sm" iconRight={<IconArrowRight size={16} />}>
+    <ButtonLink href={`/join?next=${encodeURIComponent(targetNext)}`} size="sm" iconRight={<IconArrowRight size={16} />}>
       Sign in
     </ButtonLink>
   );

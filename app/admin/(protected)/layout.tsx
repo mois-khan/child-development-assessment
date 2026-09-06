@@ -13,6 +13,8 @@ import {
   IconLock,
   IconMenu,
   IconPhone,
+  IconTrophy,
+  IconUsers,
   Wordmark,
   cx,
 } from "@/components/ui";
@@ -25,9 +27,13 @@ import {
  * parent attached to it isn't something anyone acts on.
  */
 const NAV: { href: string; label: string; icon: ReactNode; soon?: boolean }[] = [
-  { href: "/admin", label: "Dashboard", icon: <IconChart size={18} /> },
-  { href: "/admin/leads", label: "Leads", icon: <IconPhone size={18} /> },
-  { href: "/admin/item-bank", label: "Question bank", icon: <IconBolt size={18} /> },
+  { href: "/admin",              label: "Dashboard",      icon: <IconChart size={18} /> },
+  { href: "/admin/parents",      label: "Parents",        icon: <IconUsers size={18} /> },
+  { href: "/admin/children",     label: "Children",       icon: <IconUsers size={18} /> },
+  { href: "/admin/assessments",  label: "Assessments",    icon: <IconTrophy size={18} /> },
+  { href: "/admin/purchases",    label: "Purchases",      icon: <IconBolt size={18} /> },
+  { href: "/admin/leads",        label: "Leads",          icon: <IconPhone size={18} /> },
+  { href: "/admin/item-bank",    label: "Question bank",  icon: <IconBolt size={18} /> },
 ];
 
 export default function AdminProtectedLayout({ children }: { children: ReactNode }) {

@@ -63,19 +63,20 @@ export async function adminListLeads(): Promise<Lead[]> {
       admin_users ( email )
     ` as any)
     .order("next_follow_up_at", { ascending: true, nullsFirst: false }) as any);
-  if (error) throw error;
+  
+  if (error) throw new Error("Leads query failed: " + (error.message || JSON.stringify(error)));
 
   const profileIds = leadsData.map((l: any) => l.profile_id);
   
-  // Fetch children for these profiles
   const { data: childrenData, error: childErr } = await (supabase
     .from("children")
     .select(`
       id, profile_id, name, dob,
-      assessments ( id, assessed_on, completed_at, result )
+      assessments ( id, assessed_on, completed_at )
     ` as any)
-    .in("profile_id", profileIds) as any);
-  if (childErr) throw childErr;
+    .in("profile_id", profileIds.length > 0 ? profileIds : ["00000000-0000-0000-0000-000000000000"]) as any);
+    
+  if (childErr) throw new Error("Children query failed: " + (childErr.message || JSON.stringify(childErr)));
 
   const childrenByProfile = new Map<string, LeadChild[]>();
   for (const child of childrenData || []) {
@@ -88,7 +89,6 @@ export async function adminListLeads(): Promise<Lead[]> {
         id: a.id,
         assessedOn: a.assessed_on,
         completedAt: a.completed_at || undefined,
-        result: a.result || undefined
       }))
     });
   }
@@ -128,7 +128,7 @@ export async function adminGetLead(id: string): Promise<Lead | null> {
     .from("children")
     .select(`
       id, profile_id, name, dob,
-      assessments ( id, assessed_on, completed_at, result )
+      assessments ( id, assessed_on, completed_at )
     ` as any)
     .eq("profile_id", l.profile_id) as any);
 
@@ -140,7 +140,6 @@ export async function adminGetLead(id: string): Promise<Lead | null> {
       id: a.id,
       assessedOn: a.assessed_on,
       completedAt: a.completed_at || undefined,
-      result: a.result || undefined
     }))
   }));
 

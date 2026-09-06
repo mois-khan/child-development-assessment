@@ -143,10 +143,9 @@ export default function ChildProfilePage({
                 <Avatar name={child.name} photoUrl={child.photoUrl} size={88} ring />
                 <div>
                   <h1 className="text-white">{child.name}</h1>
-                  <p className="mt-1.5 text-[0.95rem] font-semibold text-white/75">
-                    {formatAge(age.chronologicalMonths)} ·{" "}
-                    {child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"} · born{" "}
-                    {formatDate(child.dob)}
+                  <p className="mt-1.5 text-[0.95rem] font-semibold text-white/80">
+                    Born {formatDate(child.dob)} ({age.chronologicalMonths} month{age.chronologicalMonths === 1 ? "" : "s"}) ·{" "}
+                    {child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"}
                   </p>
                   <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-[0.82rem] font-bold text-white backdrop-blur">
                     <IconSparkle size={15} />
@@ -156,56 +155,46 @@ export default function ChildProfilePage({
               </div>
 
               <div className="flex gap-3">
-                {[
-                  { value: completed, label: "Reports" },
-                  { value: stage.roman, label: "Stage" },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    className="min-w-[92px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur"
+                <div className="min-w-[100px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur">
+                  <p
+                    className="tnum text-[1.65rem] font-extrabold text-white"
+                    style={{ fontFamily: "var(--font-display)" }}
                   >
-                    <p
-                      className="tnum text-[1.5rem] font-extrabold text-white"
-                      style={{ fontFamily: "var(--font-display)" }}
-                    >
-                      {s.value}
-                    </p>
-                    <p className="text-[0.74rem] font-bold text-white/70">{s.label}</p>
-                  </div>
-                ))}
+                    {completed}
+                  </p>
+                  <p className="text-[0.74rem] font-bold text-white/70">
+                    {completed === 1 ? "Report" : "Reports"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </Shell>
 
-        {/* ══ latest report ══════════════════════════════════════════════ */}
+        {/* ══ 1. assessments done (tabular format) ════════════════════════ */}
         <Section size="sm">
           <Shell width="wide">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2>Latest report</h2>
-              {latest && result && (
-                <div className="flex flex-wrap gap-2.5">
-                  <ButtonLink href={`/report/${latest.id}`} variant="secondary" size="sm">
-                    Open full report
-                  </ButtonLink>
-                  <ButtonLink
-                    href={`/report/${latest.id}?download=1`}
-                    size="sm"
-                    iconLeft={<IconDownload size={16} />}
-                  >
-                    Download
-                  </ButtonLink>
-                </div>
-              )}
+              <div>
+                <p className="eyebrow eyebrow-accent">Tracked progress</p>
+                <h2 className="mt-1">Assessments &amp; Reports</h2>
+              </div>
+              <ButtonLink
+                href={`/children/${child.id}/pay`}
+                size="sm"
+                iconRight={<IconArrowRight size={16} />}
+              >
+                Start new check
+              </ButtonLink>
             </div>
 
-            {!latest || !result ? (
-              <Card variant="clay" className="mt-5 p-8 text-center sm:p-12">
+            {assessments.length === 0 ? (
+              <Card variant="clay" className="mt-6 p-8 text-center sm:p-12">
                 <Mascot size={88} mood="wave" className="mx-auto" />
-                <h3 className="mt-5 text-[1.25rem]">No report yet</h3>
+                <h3 className="mt-5 text-[1.25rem]">No assessments done yet</h3>
                 <p className="mx-auto mt-2 max-w-[40ch] text-[0.95rem] leading-relaxed text-ink-2">
                   Run {child.name}&rsquo;s first milestone check — about ten minutes, and their
-                  report will live right here from then on.
+                  report will live right here.
                 </p>
                 <ButtonLink
                   href={`/children/${child.id}/pay`}
@@ -217,6 +206,112 @@ export default function ChildProfilePage({
                 </ButtonLink>
               </Card>
             ) : (
+              <div className="mt-6 overflow-hidden rounded-[var(--radius-xl)] border border-line bg-[var(--surface)] shadow-[var(--clay-sm)]">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-line bg-[var(--surface-2)]">
+                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                          Assessment Name
+                        </th>
+                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                          Time
+                        </th>
+                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                          Status
+                        </th>
+                        <th className="px-6 py-4 text-right text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line-soft">
+                      {assessments.map((a) => (
+                        <tr key={a.id} className="hover:bg-[var(--surface-2)]/60 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <span
+                                className="grid size-10 shrink-0 place-items-center rounded-xl"
+                                style={{
+                                  background: a.completedAt ? "var(--st-on-track-soft)" : "var(--sun-100)",
+                                  color: a.completedAt ? "var(--st-on-track)" : "var(--sun-700)",
+                                }}
+                              >
+                                {a.completedAt ? <IconStarFilled size={18} /> : <IconRefresh size={18} />}
+                              </span>
+                              <div>
+                                <p className="font-extrabold text-ink text-[0.95rem]">
+                                  Genius Milestone Check
+                                </p>
+                                <p className="text-[0.78rem] font-semibold text-ink-3">
+                                  Stage {stage.roman} · {stage.name}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-[0.88rem] font-semibold text-ink-2 whitespace-nowrap">
+                            {formatDateTime(a.completedAt || (a as any).createdAt || a.assessedOn)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge tone={a.completedAt ? "success" : "sun"}>
+                              {a.completedAt ? "Completed" : "In progress"}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-2.5">
+                              {a.completedAt ? (
+                                <>
+                                  <ButtonLink href={`/report/${a.id}`} variant="secondary" size="sm">
+                                    View Report
+                                  </ButtonLink>
+                                  <ButtonLink
+                                    href={`/report/${a.id}?download=1`}
+                                    size="sm"
+                                    iconLeft={<IconDownload size={15} />}
+                                  >
+                                    Download Report
+                                  </ButtonLink>
+                                </>
+                              ) : (
+                                <ButtonLink href={`/assessment/${a.id}`} size="sm">
+                                  Resume Check
+                                </ButtonLink>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </Shell>
+        </Section>
+
+        {/* ══ 2. latest report breakdown ═══════════════════════════════════ */}
+        {latest && result && (
+          <Section size="sm">
+            <Shell width="wide">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="eyebrow eyebrow-accent">Latest evaluation</p>
+                  <h2 className="mt-1">Recent check breakdown</h2>
+                </div>
+                <div className="flex flex-wrap gap-2.5">
+                  <ButtonLink href={`/report/${latest.id}`} variant="secondary" size="sm">
+                    Open full report
+                  </ButtonLink>
+                  <ButtonLink
+                    href={`/report/${latest.id}?download=1`}
+                    size="sm"
+                    iconLeft={<IconDownload size={16} />}
+                  >
+                    Download Report
+                  </ButtonLink>
+                </div>
+              </div>
+
               <Card variant="clay" className="mt-5 overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft p-6">
                   <div className="flex items-center gap-3">
@@ -272,14 +367,15 @@ export default function ChildProfilePage({
                   })}
                 </div>
               </Card>
-            )}
-          </Shell>
-        </Section>
+            </Shell>
+          </Section>
+        )}
 
-        {/* ══ where they are on the journey ══════════════════════════════ */}
+        {/* ══ 3. their stage on the journey ══════════════════════════════ */}
         <Section size="sm">
           <Shell width="wide">
-            <h2>Their stage</h2>
+            <p className="eyebrow eyebrow-accent">Developmental milestone ladder</p>
+            <h2 className="mt-1">Their stage on the journey</h2>
             <Card variant="clay" className="mt-5 overflow-x-auto p-6 sm:p-8">
               <BrainJourney
                 stages={STAGE_JOURNEY}
@@ -289,60 +385,6 @@ export default function ChildProfilePage({
             </Card>
           </Shell>
         </Section>
-
-        {/* ══ history ════════════════════════════════════════════════════ */}
-        {assessments.length > 0 && (
-          <Section size="sm">
-            <Shell width="wide">
-              <h2>All checks</h2>
-              <ul className="mt-5 list-none space-y-3 p-0">
-                {assessments.map((a) => (
-                  <li key={a.id}>
-                    <a
-                      href={a.completedAt ? `/report/${a.id}` : `/assessment/${a.id}`}
-                      className="clay clay-press flex items-center justify-between gap-4 p-4 sm:p-5"
-                    >
-                      <div className="flex items-center gap-4">
-                        <span
-                          className="grid size-11 shrink-0 place-items-center rounded-2xl"
-                          style={{
-                            background: a.completedAt
-                              ? "var(--st-on-track-soft)"
-                              : "var(--sun-100)",
-                            color: a.completedAt ? "var(--st-on-track)" : "var(--sun-700)",
-                          }}
-                        >
-                          {a.completedAt ? <IconStarFilled size={20} /> : <IconRefresh size={20} />}
-                        </span>
-                        <div>
-                          <p className="text-[0.98rem] font-extrabold text-ink">
-                            Genius Milestone Check
-                          </p>
-                          <p className="text-[0.82rem] font-semibold text-ink-3">
-                            {formatDate(a.assessedOn)}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge tone={a.completedAt ? "success" : "sun"}>
-                        {a.completedAt ? "Completed" : "In progress"}
-                      </Badge>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6">
-                <ButtonLink
-                  href={`/children/${child.id}/pay`}
-                  variant="secondary"
-                  iconRight={<IconArrowRight size={17} />}
-                >
-                  Run another check
-                </ButtonLink>
-              </div>
-            </Shell>
-          </Section>
-        )}
       </main>
 
       <Footer />
@@ -355,5 +397,25 @@ function formatDate(iso: string): string {
     day: "numeric",
     month: "short",
     year: "numeric",
+  });
+}
+
+function formatDateTime(isoOrDate?: string | null): string {
+  if (!isoOrDate) return "—";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(isoOrDate)) {
+    return new Date(`${isoOrDate}T00:00:00`).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+  const d = new Date(isoOrDate);
+  if (isNaN(d.getTime())) return isoOrDate;
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }

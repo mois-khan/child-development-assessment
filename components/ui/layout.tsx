@@ -109,6 +109,7 @@ export function SectionHeading({
 const NAV_LINKS: [string, string][] = [
   ["/", "Home"],
   ["/children", "My children"],
+  ["/profile", "Parent profile"],
 ];
 
 export function TopBar({

@@ -1,16 +1,9 @@
 /**
- * Admin data access.
- *
- * Same fallback shape as lib/admin/auth.ts: when Supabase isn't configured
- * yet, these read straight from the same localStorage the parent-facing app
- * already writes to (lib/store.ts) — so submissions created while testing
- * the parent flow show up here immediately, in the same browser. Once
- * credentials are added, isSupabaseConfigured() flips these to real queries
- * against every parent's data, not just this browser's.
+ * Admin data access — reads from Supabase (the anon key respects RLS,
+ * so admin users see all rows via the is_admin() policy).
  */
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { listAssessments, listChildren, getAssessment, type StoredAssessment } from "@/lib/store";
-import type { SavedChild } from "@/lib/store";
 import { scoreAssessment } from "@/lib/scoring";
 import type { AssessmentResult } from "@/lib/types";
 
@@ -31,55 +24,71 @@ function toSubmission(a: StoredAssessment): AdminSubmission {
     });
   } catch {
     // Incomplete/malformed response sets score fine in practice, but this
-    // list must never break on one bad row — the admin still needs to see
-    // (and open) every other submission.
+    // list must never break on one bad row.
   }
   return { assessment: a, result };
 }
 
 export async function adminListSubmissions(): Promise<AdminSubmission[]> {
-  if (isSupabaseConfigured()) {
-    // TODO: once credentials exist, query assessments (+ responses,
-    // domain_scores, results) directly rather than recomputing scores
-    // client-side. Wiring this against a live schema now, before there is
-    // one to test against, would just be code no one has run.
-    throw new Error("Supabase-backed submissions are not wired up yet.");
+  try {
+    const list = await listAssessments();
+    return list.map(toSubmission);
+  } catch (err: any) {
+    throw new Error("Failed to list submissions: " + (err?.message ?? JSON.stringify(err)));
   }
-  const list = await listAssessments();
-  return list.map(toSubmission);
 }
 
 export async function adminGetSubmission(id: string): Promise<AdminSubmission | null> {
-  if (isSupabaseConfigured()) {
-    throw new Error("Supabase-backed submissions are not wired up yet.");
+  try {
+    const a = await getAssessment(id);
+    return a ? toSubmission(a) : null;
+  } catch (err: any) {
+    throw new Error("Failed to get submission: " + (err?.message ?? JSON.stringify(err)));
   }
-  const a = await getAssessment(id);
-  return a ? toSubmission(a) : null;
 }
 
 export interface AdminDashboardCounts {
+  totalParents: number;
   totalChildren: number;
   totalAssessments: number;
   completedAssessments: number;
   inProgressAssessments: number;
-  needsFollowUp: number; // overallStatus === "consult"
+  totalPurchases: number;
+  needsFollowUp: number;
 }
 
 export async function adminDashboardCounts(): Promise<AdminDashboardCounts> {
-  if (isSupabaseConfigured()) {
-    throw new Error("Supabase-backed dashboard is not wired up yet.");
+  try {
+    const supabase = getSupabaseBrowserClient();
+
+    const [
+      { count: parentsCount, error: pErr },
+      { count: purchasesCount, error: pyErr },
+    ] = await Promise.all([
+      supabase.from("profiles").select("*", { count: "exact", head: true }),
+      supabase.from("payments").select("*", { count: "exact", head: true }).eq("status", "paid"),
+    ]);
+
+    if (pErr) throw new Error("profiles count failed: " + pErr.message);
+    if (pyErr) throw new Error("payments count failed: " + pyErr.message);
+
+    const children = await listChildren();
+    const list = await listAssessments();
+    const submissions = list.map(toSubmission);
+
+    return {
+      totalParents: parentsCount ?? 0,
+      totalChildren: children.length,
+      totalAssessments: submissions.length,
+      completedAssessments: submissions.filter((s) => s.assessment.completedAt).length,
+      inProgressAssessments: submissions.filter((s) => !s.assessment.completedAt).length,
+      totalPurchases: purchasesCount ?? 0,
+      needsFollowUp: submissions.filter((s) => {
+        const st = s.result?.overallStatus;
+        return st === "significant" || st === "delay";
+      }).length,
+    };
+  } catch (err: any) {
+    throw new Error("Failed to load dashboard counts: " + (err?.message ?? JSON.stringify(err)));
   }
-  const children = await listChildren();
-  const list = await listAssessments();
-  const submissions = list.map(toSubmission);
-  return {
-    totalChildren: children.length,
-    totalAssessments: submissions.length,
-    completedAssessments: submissions.filter((s) => s.assessment.completedAt).length,
-    inProgressAssessments: submissions.filter((s) => !s.assessment.completedAt).length,
-    needsFollowUp: submissions.filter((s) => {
-      const st = s.result?.overallStatus;
-      return st === "significant" || st === "delay";
-    }).length,
-  };
 }

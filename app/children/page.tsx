@@ -154,7 +154,7 @@ function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
             {child.name}
           </p>
           <p className="text-[0.85rem] font-semibold text-ink-3">
-            {formatAge(age.chronologicalMonths)} old
+            {formatDate(child.dob)} ({age.chronologicalMonths} month{age.chronologicalMonths === 1 ? "" : "s"})
           </p>
         </div>
         <span className="text-ink-3">
@@ -400,3 +400,13 @@ function NewChildForm({
     </form>
   );
 }
+
+function formatDate(iso: string): string {
+  if (!iso) return "—";
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+

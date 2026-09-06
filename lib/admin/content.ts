@@ -90,11 +90,6 @@ function mergedItems(filter?: { domain?: DomainCode; stage?: string }): AdminIte
 }
 
 export function adminListItems(filter?: { domain?: DomainCode; stage?: string }): AdminItem[] {
-  if (isSupabaseConfigured()) {
-    // TODO: once credentials exist, read from the `items` table filtered to
-    // bank_version = 'draft', joined with item_bank_versions for status.
-    throw new Error("Supabase-backed item bank is not wired up yet.");
-  }
   return mergedItems(filter);
 }
 
@@ -133,9 +128,6 @@ export function liveScoredItemsFor(
 }
 
 export function adminSaveItem(input: ItemInput): void {
-  if (isSupabaseConfigured()) {
-    throw new Error("Supabase-backed item bank is not wired up yet.");
-  }
   const overlay = readOverlay();
   const id = input.id ?? newDraftId(input.domain, input.stage);
   overlay[id] = {
@@ -155,9 +147,6 @@ export function adminSaveItem(input: ItemInput): void {
 }
 
 export function adminDeleteItem(id: string): void {
-  if (isSupabaseConfigured()) {
-    throw new Error("Supabase-backed item bank is not wired up yet.");
-  }
   const overlay = readOverlay();
   const isBaseItem = ITEMS.some((i) => i.id === id);
   if (isBaseItem) {
@@ -171,16 +160,12 @@ export function adminDeleteItem(id: string): void {
 
 /** Undo an edit or a deletion, reverting a base item back to its shipped content. */
 export function adminRevertItem(id: string): void {
-  if (isSupabaseConfigured()) {
-    throw new Error("Supabase-backed item bank is not wired up yet.");
-  }
   const overlay = readOverlay();
   delete overlay[id];
   writeOverlay(overlay);
 }
 
 export function adminHasDrafts(): boolean {
-  if (isSupabaseConfigured()) return false;
   return Object.keys(readOverlay()).length > 0;
 }
 

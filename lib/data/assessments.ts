@@ -229,7 +229,7 @@ export async function listAssessments(): Promise<StoredAssessment[]> {
     .select("*, children(*)")
     .order("created_at", { ascending: false });
     
-  if (aError) throw aError;
+  if (aError) throw new Error("listAssessments (assessments) failed: " + (aError.message || JSON.stringify(aError)));
   if (!aData || aData.length === 0) return [];
   
   const { data: rData, error: rError } = await supabase
@@ -237,7 +237,7 @@ export async function listAssessments(): Promise<StoredAssessment[]> {
     .select("*")
     .in("assessment_id", aData.map((a: any) => a.id));
     
-  if (rError) throw rError;
+  if (rError) throw new Error("listAssessments (responses) failed: " + (rError.message || JSON.stringify(rError)));
   
   const responsesByAssessment: Record<string, Record<string, ResponseValue>> = {};
   for (const r of rData) {

@@ -4,165 +4,319 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { adminDashboardCounts, type AdminDashboardCounts } from "@/lib/admin/data";
 import { adminLeadStats, type LeadStats } from "@/lib/admin/leads";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
 import {
-  Badge,
-  Card,
   IconCalendar,
   IconClock,
   IconPhone,
   IconShield,
-  IconTrophy,
   IconUsers,
+  IconCheck,
+  IconSparkle,
+  IconTrophy,
+  IconChart,
 } from "@/components/ui";
-import type { ReactNode } from "react";
+import type { ReactNode, CSSProperties } from "react";
 
 export default function AdminDashboardPage() {
   const [counts, setCounts] = useState<AdminDashboardCounts | null>(null);
   const [leadStats, setLeadStats] = useState<LeadStats | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    adminDashboardCounts().then(setCounts);
-    if (!isSupabaseConfigured()) adminLeadStats().then(setLeadStats);
+    adminDashboardCounts()
+      .then(setCounts)
+      .catch((err) => setError(err.message ?? "Failed to load"));
+    adminLeadStats()
+      .then(setLeadStats)
+      .catch(() => {});
   }, []);
 
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  const urgentCount = (counts?.needsFollowUp ?? 0) + (leadStats?.overdue ?? 0);
+
   return (
-    <div className="space-y-8">
-      <div>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="!text-[1.6rem]">Dashboard</h1>
-          {!isSupabaseConfigured() && (
-            <Badge tone="warn">Dev mode — reading this browser's local data only</Badge>
+    <div className="space-y-6 pb-10">
+
+      {/* ── Greeting banner ── */}
+      <div
+        className="relative overflow-hidden rounded-2xl px-6 py-7 sm:px-8"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--brand-600) 0%, var(--brand-500) 55%, var(--coral-500) 100%)",
+        }}
+      >
+        {/* decorative circles */}
+        <div
+          className="pointer-events-none absolute -right-12 -top-12 size-52 rounded-full opacity-[0.15]"
+          style={{ background: "var(--coral-300)" }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-8 left-[40%] size-40 rounded-full opacity-[0.08]"
+          style={{ background: "var(--sun-300)" }}
+        />
+
+        <div className="relative">
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-white/60">
+            {new Date().toLocaleDateString("en-IN", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            })}
+          </p>
+          <h1 className="mt-1 !text-[1.5rem] font-extrabold text-white sm:!text-[1.75rem]">
+            {greeting}
+          </h1>
+          <p className="mt-1 text-[0.82rem] text-white/65">
+            Here's what's happening across the programme.
+          </p>
+
+          <Link
+            href="/admin/leads"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2 text-[0.82rem] font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/25"
+          >
+            View Leads
+            <span className="opacity-70">→</span>
+          </Link>
+
+          {urgentCount > 0 && (
+            <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <IconShield size={16} className="mt-px shrink-0 text-white/80" />
+              <p className="text-[0.82rem] font-semibold text-white">
+                {urgentCount} item{urgentCount !== 1 ? "s" : ""} need attention today —{" "}
+                <Link href="/admin/leads" className="underline underline-offset-2 opacity-80 hover:opacity-100">
+                  view leads
+                </Link>
+              </p>
+            </div>
           )}
         </div>
-        <p className="mt-1.5 text-[0.9rem] text-ink-3">
-          An overview of submissions across the programme.
-        </p>
       </div>
 
-      {!counts ? (
-        <p className="text-[0.9rem] text-ink-3">Loading…</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatTile value={counts.totalChildren} label="Children" icon={<IconUsers size={20} />} color="var(--accent)" />
-          <StatTile
-            value={counts.totalAssessments}
-            label="Assessments"
-            icon={<IconTrophy size={20} />}
-            color="var(--sec-manual)"
-          />
-          <StatTile
-            value={counts.inProgressAssessments}
-            label="In progress"
-            icon={<IconClock size={20} />}
-            color="var(--st-emerging)"
-          />
-          <StatTile
-            value={counts.needsFollowUp}
-            label="Worth a closer look"
-            icon={<IconShield size={20} />}
-            color="var(--st-consult)"
-            href="/admin/leads"
-          />
-        </div>
+      {error && (
+        <p className="rounded-xl bg-[var(--st-consult-soft)] px-4 py-3 text-[0.85rem] font-semibold text-[var(--st-consult-ink)]">
+          {error}
+        </p>
       )}
 
-      {leadStats && (
-        <div>
-          <h2 className="!text-[1.05rem]">Sales follow-ups</h2>
-          <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <StatTile
-              value={leadStats.overdue}
-              label="Overdue"
-              icon={<IconPhone size={20} />}
-              color="var(--st-consult)"
-              href="/admin/leads"
-            />
-            <StatTile
-              value={leadStats.dueToday}
-              label="Due today"
-              icon={<IconCalendar size={20} />}
-              color="var(--st-emerging)"
-              href="/admin/leads"
-            />
-            <StatTile
-              value={leadStats.open}
-              label="Open leads"
+      {/* ── Primary stats ── */}
+      {!counts ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 animate-pulse rounded-2xl bg-surface-3" />
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <PrimaryCard
+              value={counts.totalParents}
+              label="Parents"
               icon={<IconUsers size={20} />}
-              color="var(--accent)"
-              href="/admin/leads"
+              gradient="linear-gradient(135deg, var(--brand-600) 0%, var(--brand-500) 100%)"
+              href="/admin/parents"
+            />
+            <PrimaryCard
+              value={counts.totalChildren}
+              label="Children"
+              icon={<IconUsers size={20} />}
+              gradient="linear-gradient(135deg, var(--sec-auditory) 0%, var(--sec-visual) 100%)"
+              href="/admin/children"
+            />
+            <PrimaryCard
+              value={counts.completedAssessments}
+              label="Completed"
+              icon={<IconCheck size={20} />}
+              gradient="linear-gradient(135deg, var(--st-on-track) 0%, var(--sec-language) 100%)"
+              href="/admin/assessments"
+            />
+            <PrimaryCard
+              value={counts.totalPurchases}
+              label="Purchases"
+              icon={<IconSparkle size={20} />}
+              gradient="linear-gradient(135deg, var(--sun-500) 0%, var(--coral-500) 100%)"
+              href="/admin/purchases"
             />
           </div>
-        </div>
-      )}
 
-      <Card className="!p-6">
-        <h2 className="!text-[1.05rem]">Get started</h2>
-        <p className="mt-2 max-w-[52ch] text-[0.88rem] leading-relaxed text-ink-3">
-          Every submission made through the parent-facing check shows up in{" "}
-          <Link href="/admin/leads" className="font-semibold text-accent">
-            Leads
-          </Link>
-          . Try it: open the check in another tab, answer a few questions, and it will appear
-          here immediately — no setup needed.
-        </p>
-      </Card>
+          {/* ── Action cards ── */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <ActionCard
+              value={counts.inProgressAssessments}
+              label="In Progress"
+              note="Assessments not yet complete"
+              icon={<IconClock size={18} />}
+              color="var(--st-emerging)"
+              soft="var(--st-emerging-soft)"
+              href="/admin/assessments"
+            />
+            <ActionCard
+              value={counts.needsFollowUp}
+              label="Need Attention"
+              note="Developmental concern — call them"
+              icon={<IconShield size={18} />}
+              color="var(--st-consult)"
+              soft="var(--st-consult-soft)"
+              href="/admin/leads"
+              urgent={counts.needsFollowUp > 0}
+            />
+            <ActionCard
+              value={leadStats?.overdue ?? "—"}
+              label="Overdue Follow-Ups"
+              note="Past their scheduled call date"
+              icon={<IconPhone size={18} />}
+              color="var(--st-consult)"
+              soft="var(--st-consult-soft)"
+              href="/admin/leads"
+              urgent={(leadStats?.overdue ?? 0) > 0}
+            />
+          </div>
+
+          {/* ── Pipeline row ── */}
+          {leadStats && (
+            <div>
+              <p className="mb-2.5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-ink-3">
+                Sales Pipeline
+              </p>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <MicroCard
+                  value={leadStats.open}
+                  label="Open Leads"
+                  icon={<IconChart size={14} />}
+                  href="/admin/leads"
+                  color="var(--accent)"
+                />
+                <MicroCard
+                  value={leadStats.dueToday}
+                  label="Due Today"
+                  icon={<IconCalendar size={14} />}
+                  href="/admin/leads"
+                  color="var(--st-emerging)"
+                />
+                <MicroCard
+                  value={counts.totalAssessments}
+                  label="Total Assessments"
+                  icon={<IconTrophy size={14} />}
+                  href="/admin/assessments"
+                  color="var(--sec-visual)"
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
-/**
- * A dashboard metric with the same tinted-glow icon language as the rest of
- * the product (SectionTile), rather than a bare number in a shared card —
- * each metric gets its own colour identity and depth.
- *
- * With `href`, the tile becomes the shortest path from "how many need a
- * closer look" to the actual list of who they are — a number on its own is a
- * dead end; it should be one click from the count to the names.
- */
-function StatTile({
+/* ─── Card components ────────────────────────────────────────────────────── */
+
+function PrimaryCard({
   value,
   label,
   icon,
-  color,
+  gradient,
   href,
 }: {
   value: ReactNode;
   label: string;
   icon: ReactNode;
-  color: string;
-  href?: string;
+  gradient: string;
+  href: string;
 }) {
-  const body = (
-    <>
+  return (
+    <Link
+      href={href}
+      className="group relative overflow-hidden rounded-2xl p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg sm:p-5"
+      style={{ background: gradient } as CSSProperties}
+    >
+      {/* glow */}
+      <div className="pointer-events-none absolute -right-3 -top-3 size-16 rounded-full bg-white/20 blur-xl" />
+
+      <span className="flex size-9 items-center justify-center rounded-xl bg-white/20 text-white">
+        {icon}
+      </span>
+      <p className="tnum mt-4 text-[1.75rem] font-extrabold leading-none text-white sm:text-[2rem]">
+        {value}
+      </p>
+      <p className="mt-1 text-[0.75rem] font-semibold text-white/75">{label}</p>
+    </Link>
+  );
+}
+
+function ActionCard({
+  value,
+  label,
+  note,
+  icon,
+  color,
+  soft,
+  href,
+  urgent = false,
+}: {
+  value: ReactNode;
+  label: string;
+  note: string;
+  icon: ReactNode;
+  color: string;
+  soft: string;
+  href: string;
+  urgent?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex items-start gap-4 rounded-2xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
+      style={{
+        background: urgent ? soft : "var(--surface)",
+        border: `1.5px solid ${urgent ? color : "var(--line)"}`,
+      } as CSSProperties}
+    >
       <span
-        className="grid size-11 place-items-center rounded-2xl"
-        style={{
-          color,
-          background: `color-mix(in srgb, ${color} 14%, var(--surface))`,
-          boxShadow: `0 1px 2px rgba(69, 77, 93, 0.08), 0 8px 18px -8px color-mix(in srgb, ${color} 60%, transparent)`,
-        }}
+        className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl"
+        style={{ color, background: soft }}
       >
         {icon}
       </span>
-      <p className="tnum mt-3.5 text-[1.65rem] font-extrabold leading-none text-ink">{value}</p>
-      <p className="mt-1.5 text-[0.82rem] font-semibold text-ink-3">{label}</p>
-    </>
+      <div className="min-w-0">
+        <p className="tnum text-[1.6rem] font-extrabold leading-none" style={{ color }}>
+          {value}
+        </p>
+        <p className="mt-1 text-[0.88rem] font-bold text-ink">{label}</p>
+        <p className="mt-0.5 text-[0.73rem] leading-relaxed text-ink-3">{note}</p>
+      </div>
+    </Link>
   );
+}
 
-  if (href) {
-    return (
-      <Link href={href} className="block">
-        <Card variant="tint" tint={color} className="lift !p-5 transition-transform hover:-translate-y-0.5">
-          {body}
-        </Card>
-      </Link>
-    );
-  }
-
+function MicroCard({
+  value,
+  label,
+  icon,
+  href,
+  color,
+}: {
+  value: ReactNode;
+  label: string;
+  icon: ReactNode;
+  href: string;
+  color: string;
+}) {
   return (
-    <Card variant="tint" tint={color} className="lift !p-5">
-      {body}
-    </Card>
+    <Link
+      href={href}
+      className="flex items-center justify-between rounded-xl bg-surface px-4 py-3.5 transition-all hover:-translate-y-px hover:shadow-sm"
+      style={{ border: "1px solid var(--line)" } as CSSProperties}
+    >
+      <div className="flex items-center gap-2.5">
+        <span style={{ color }}>{icon}</span>
+        <p className="text-[0.83rem] font-semibold text-ink-2">{label}</p>
+      </div>
+      <p className="tnum font-extrabold" style={{ color }}>
+        {value}
+      </p>
+    </Link>
   );
 }

@@ -36,7 +36,8 @@ function JoinInner() {
   const params = useSearchParams();
   const { user, loading, signUp, signIn } = useAuth();
 
-  const next = params.get("next") || "/children";
+  const rawNext = params.get("next");
+  const next = !rawNext || rawNext === "/" || rawNext === "/join" ? "/profile" : rawNext;
   const [mode, setMode] = useState<"signup" | "signin">(
     params.get("mode") === "signin" ? "signin" : "signup",
   );

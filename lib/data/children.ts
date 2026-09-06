@@ -44,7 +44,7 @@ export async function listChildren(): Promise<SavedChild[]> {
     .select("*")
     .order("created_at", { ascending: true });
 
-  if (error) throw error;
+  if (error) throw new Error("listChildren failed: " + (error.message || JSON.stringify(error)));
 
   return data.map(d => ({
     id: d.id,

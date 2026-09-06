@@ -10,3 +10,10 @@ export * from "./illustrations";
 export * from "./primitives";
 export * from "./layout";
 export * from "./confirm-delete-button";
+
+export {
+  IconMessage,
+  IconMail,
+  IconUser,
+  IconDots,
+} from "./icons";

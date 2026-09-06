@@ -115,9 +115,9 @@ export default function PayPage({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: PRICE,
+          amountPaise: PRICE * 100,
           childId: child.id,
-          assessmentSlug: ASSESSMENT_SLUG,
+          metadata: { assessmentSlug: ASSESSMENT_SLUG },
         }),
       });
       if (!orderRes.ok) throw new Error("Failed to create order");

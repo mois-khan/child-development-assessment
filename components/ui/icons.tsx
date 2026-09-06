@@ -256,6 +256,41 @@ export function IconTrophy(p: IconProps) {
   );
 }
 
+export function IconMessage(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </Svg>
+  );
+}
+
+export function IconMail(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 7l8 5 8-5M4 7v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2z" />
+    </Svg>
+  );
+}
+
+export function IconUser(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </Svg>
+  );
+}
+
+export function IconDots(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
+    </Svg>
+  );
+}
+
 export function IconChart(p: IconProps) {
   return (
     <Svg {...p}>

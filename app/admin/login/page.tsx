@@ -1,19 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { startDevSession, useAdminSession } from "@/lib/admin/auth";
 import { Badge, Button, Card, IconShield, Shell, Wordmark } from "@/components/ui";
 
 export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminLoginInner />
+    </Suspense>
+  );
+}
+
+function AdminLoginInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { session, loading } = useAdminSession();
   const configured = isSupabaseConfigured();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    searchParams.get("error") === "not_admin"
+      ? "This account does not have admin access. Please use your admin credentials."
+      : ""
+  );
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
