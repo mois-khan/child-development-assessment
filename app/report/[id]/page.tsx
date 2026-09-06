@@ -766,7 +766,7 @@ function DomainCard({
   // for the ones that are already fine, so six full-length cards don't force
   // a long scroll past detail nobody needs yet. The status chip, score and
   // blurb stay visible either way, in the summary row.
-  const defaultOpen = score.status === "delay" || score.status === "significant";
+  const defaultOpen = score.status === "mild" || score.status === "delay" || score.status === "significant";
 
   const levels = [
     {
