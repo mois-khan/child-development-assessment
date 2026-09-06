@@ -12,7 +12,15 @@ import {
   type VideoProvider,
 } from "@/lib/admin/videos";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { Badge, Button, Card, IconArrowLeft, IconPlay, IconPlus } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmDeleteButton,
+  IconArrowLeft,
+  IconPlay,
+  IconPlus,
+} from "@/components/ui";
 
 const PROVIDERS: VideoProvider[] = ["youtube", "vimeo", "mp4"];
 
@@ -113,16 +121,12 @@ export default function AdminVideosPage() {
                     <Button size="sm" variant="ghost" onClick={() => setEditingId(video.id)}>
                       Edit
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
+                    <ConfirmDeleteButton
+                      onConfirm={() => {
                         adminDeleteVideo(video.id);
                         refresh();
                       }}
-                    >
-                      Delete
-                    </Button>
+                    />
                   </div>
                 </div>
               </Card>

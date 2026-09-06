@@ -1299,6 +1299,17 @@ summary::marker {
   }
 }
 
+/* A panel entering from fully off-screen — the admin mobile drawer — rather
+   than slide-in's subtle in-place nudge for content that's already visible. */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 @keyframes float-up {
   0% {
     opacity: 0;
@@ -1358,6 +1369,9 @@ summary::marker {
 }
 .animate-slide-in {
   animation: slide-in 320ms var(--ease-out) both;
+}
+.animate-slide-in-left {
+  animation: slide-in-left 240ms var(--ease-out) both;
 }
 .animate-float-up {
   animation: float-up 1000ms var(--ease-out) both;

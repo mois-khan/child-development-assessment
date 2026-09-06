@@ -17,6 +17,7 @@ import {
   Badge,
   Button,
   Card,
+  ConfirmDeleteButton,
   IconPlus,
   IconRefresh,
   domainColor,
@@ -259,7 +260,7 @@ function ItemList({
             item={item}
             onEdit={() => onEdit(item.id)}
             onDelete={() => onDelete(item.id)}
-            onRevert={item.status !== "base" ? () => onRevert(item.id) : undefined}
+            onRevert={item.status === "edited" ? () => onRevert(item.id) : undefined}
           />
         ),
       )}
@@ -299,9 +300,7 @@ function ItemRow({
             Revert
           </Button>
         )}
-        <Button size="sm" variant="ghost" onClick={onDelete}>
-          Delete
-        </Button>
+        <ConfirmDeleteButton onConfirm={onDelete} />
       </div>
     </div>
   );

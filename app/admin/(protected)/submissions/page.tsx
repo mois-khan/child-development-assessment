@@ -2,16 +2,25 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { adminListSubmissions, type AdminSubmission } from "@/lib/admin/data";
 import { STATUSES } from "@/lib/scoring";
 import { formatAge, summariseAge } from "@/lib/age";
 import { Avatar, Badge, Card, StatusChip } from "@/components/ui";
 
 type Filter = "all" | "complete" | "in_progress" | "consult";
+const FILTER_VALUES: Filter[] = ["all", "complete", "in_progress", "consult"];
 
 export default function AdminSubmissionsPage() {
+  const searchParams = useSearchParams();
+  // The dashboard's "Worth a closer look" tile links here with ?filter=consult
+  // — this is what turns that number into somewhere to actually land, rather
+  // than a dead-end count the admin then has to re-filter for by hand.
+  const initialFilter = searchParams.get("filter");
   const [submissions, setSubmissions] = useState<AdminSubmission[] | null>(null);
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>(
+    FILTER_VALUES.includes(initialFilter as Filter) ? (initialFilter as Filter) : "all",
+  );
   const [query, setQuery] = useState("");
 
   useEffect(() => {

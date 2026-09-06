@@ -20,7 +20,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { DOMAINS } from "@/content/domains";
 import { STATUSES } from "@/lib/scoring";
 import type { DomainCode, StatusCode } from "@/lib/types";
-import { Badge, Button, Card, IconPlus, domainName } from "@/components/ui";
+import { Badge, Button, Card, ConfirmDeleteButton, IconPlus, domainName } from "@/components/ui";
 
 const STATUS_OPTIONS = Object.values(STATUSES);
 
@@ -139,16 +139,12 @@ function CourseCatalog({
                   <Button size="sm" variant="ghost" onClick={() => setEditingId(course.id)}>
                     Edit
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
+                  <ConfirmDeleteButton
+                    onConfirm={() => {
                       adminDeleteCourse(course.id);
                       refresh();
                     }}
-                  >
-                    Delete
-                  </Button>
+                  />
                 </div>
               </Card>
             ),
@@ -391,9 +387,7 @@ function RuleRow({
         <Button size="sm" variant="ghost" onClick={onEdit}>
           Edit
         </Button>
-        <Button size="sm" variant="ghost" onClick={onDelete}>
-          Delete
-        </Button>
+        <ConfirmDeleteButton onConfirm={onDelete} />
       </div>
     </div>
   );

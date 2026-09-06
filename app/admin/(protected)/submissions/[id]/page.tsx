@@ -68,12 +68,22 @@ export default function AdminSubmissionDetailPage({
           <ButtonLink href={`/report/${assessment.id}`} variant="secondary" size="sm">
             View report
           </ButtonLink>
+          {/* Every completed assessment has a lead behind it — see
+              lib/admin/leads.ts — keyed by this same assessment id, whether
+              or not sales has actually logged a call against it yet. */}
+          {assessment.completedAt && (
+            <ButtonLink href={`/admin/leads/${assessment.id}`} size="sm">
+              Sales follow-up
+            </ButtonLink>
+          )}
         </div>
       </div>
 
       <Card className="!p-6">
         <h2 className="!text-[1rem]">Submission details</h2>
         <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <Field label="Phone" value={assessment.child.phone || "Not given"} />
+          <Field label="City" value={assessment.child.city || "—"} />
           <Field label="Assessment id" value={assessment.id} />
           <Field label="Item bank version" value={assessment.bankVersion} />
           {/* The adaptive walk means there is no fixed total to divide by —

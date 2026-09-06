@@ -167,6 +167,12 @@ export interface Child {
   gestationalWeeks?: number;
   /** City the family is based in. Optional, parent-entered free text. */
   city?: string;
+  /**
+   * Parent's phone number, optional and parent-entered. The one field the
+   * sales follow-up system (lib/admin/leads.ts) actually needs to be useful —
+   * a lead with no way to reach the family isn't one.
+   */
+  phone?: string;
   createdAt?: string;
   /** Optional profile photo, stored as a data: URL. */
   photoUrl?: string;

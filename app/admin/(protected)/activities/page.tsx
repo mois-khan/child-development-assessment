@@ -19,6 +19,7 @@ import {
   Badge,
   Button,
   Card,
+  ConfirmDeleteButton,
   IconPlay,
   IconPlus,
   IconRefresh,
@@ -264,7 +265,11 @@ function ActivityList({
             video={videos.find((v) => v.id === activity.videoId)}
             onEdit={() => onEdit(activity.id)}
             onDelete={() => onDelete(activity.id)}
-            onRevert={activity.status !== "base" ? () => onRevert(activity.id) : undefined}
+            // Only an *edited* base activity has something to revert to. A
+            // "new" draft has no shipped original — for it, Revert and
+            // Delete would be the same button doing the same irreversible
+            // thing twice, which is confusing rather than safe.
+            onRevert={activity.status === "edited" ? () => onRevert(activity.id) : undefined}
           />
         ),
       )}
@@ -315,9 +320,7 @@ function ActivityRow({
             Revert
           </Button>
         )}
-        <Button size="sm" variant="ghost" onClick={onDelete}>
-          Delete
-        </Button>
+        <ConfirmDeleteButton onConfirm={onDelete} />
       </div>
     </div>
   );

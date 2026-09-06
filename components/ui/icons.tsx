@@ -113,6 +113,14 @@ export function IconClose(p: IconProps) {
   );
 }
 
+export function IconMenu(p: IconProps) {
+  return (
+    <Svg {...p} strokeWidth={2.1}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </Svg>
+  );
+}
+
 export function IconArrowRight(p: IconProps) {
   return (
     <Svg {...p} strokeWidth={2.1}>
@@ -288,6 +296,15 @@ export function IconCalendar(p: IconProps) {
     <Svg {...p}>
       <rect x="3.8" y="5.4" width="16.4" height="15" rx="2.6" />
       <path d="M3.8 10h16.4M8.4 3.4v3.6M15.6 3.4v3.6" />
+    </Svg>
+  );
+}
+
+export function IconPhone(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="7" y="2.5" width="10" height="19" rx="2.4" />
+      <path d="M10.3 18.3h3.4" />
     </Svg>
   );
 }
