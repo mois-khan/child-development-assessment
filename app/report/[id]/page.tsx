@@ -57,7 +57,11 @@ export default function ReportPage({
   const [record, setRecord] = useState<StoredAssessment | null | undefined>(undefined);
 
   useEffect(() => {
-    setRecord(getAssessment(id));
+    let active = true;
+    getAssessment(id).then(found => {
+      if (active) setRecord(found);
+    });
+    return () => { active = false; };
   }, [id]);
 
   const result = useMemo<AssessmentResult | null>(() => {
@@ -762,7 +766,7 @@ function DomainCard({
   // for the ones that are already fine, so six full-length cards don't force
   // a long scroll past detail nobody needs yet. The status chip, score and
   // blurb stay visible either way, in the summary row.
-  const defaultOpen = score.status === "slow" || score.status === "consult";
+  const defaultOpen = score.status === "delay" || score.status === "significant";
 
   const levels = [
     {
@@ -978,10 +982,11 @@ function DefaultRecommendationCard({ stage }: { stage: BrainStage }) {
  * lib/narrative.ts.
  */
 const STAGES = [
-  { label: "Worth a closer look", max: 50 },
-  { label: "Needs focus", max: 100 },
-  { label: "On track", max: 200 },
-  { label: "Ahead of the chart", max: Infinity },
+  { label: "Significant developmental delay", max: 50 },
+  { label: "Developmental delay", max: 70 },
+  { label: "Mild developmental gaps", max: 85 },
+  { label: "Typically developing", max: 115 },
+  { label: "Advanced development", max: Infinity },
 ] as const;
 
 function stagePosition(value: number): { index: number; frac: number } {

@@ -156,15 +156,14 @@ function newId(): string {
   return `lead-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-/** The default, unsaved lead a completed assessment implies, until someone acts on it. */
-function syntheticLead(a: StoredAssessment): Lead {
-  const child = getChild(a.child.id ?? "");
+async function syntheticLead(a: StoredAssessment): Promise<Lead> {
+  const child = await getChild(a.child.id ?? "");
   return {
     id: a.id,
     childId: a.child.id,
     assessmentId: a.id,
     childName: a.child.name,
-    phone: child?.phone ?? a.child.phone,
+    phone: child?.phone ?? (a.child as any).phone,
     city: child?.city ?? a.child.city,
     source: "assessment",
     stage: "new",
@@ -181,7 +180,7 @@ function syntheticLead(a: StoredAssessment): Lead {
  * the worklist is useful on its own — overdue and due-today follow-ups
  * first, then untouched new leads, then everything else by recency.
  */
-export function adminListLeads(): Lead[] {
+export async function adminListLeads(): Promise<Lead[]> {
   if (isSupabaseConfigured()) {
     throw new Error("Supabase-backed leads are not wired up yet.");
   }
@@ -192,9 +191,10 @@ export function adminListLeads(): Lead[] {
       .filter((id): id is string => !!id),
   );
 
-  const synthetic = listAssessments()
+  const list = await listAssessments();
+  const synthetic = await Promise.all(list
     .filter((a) => a.completedAt && !savedByAssessment.has(a.id))
-    .map(syntheticLead);
+    .map(syntheticLead));
 
   const all = [...Object.values(saved), ...synthetic];
   const today = new Date().toISOString().slice(0, 10);
@@ -211,15 +211,16 @@ function rank(lead: Lead, today: string): number {
   return 3;
 }
 
-export function adminGetLead(id: string): Lead | null {
+export async function adminGetLead(id: string): Promise<Lead | null> {
   if (isSupabaseConfigured()) {
     throw new Error("Supabase-backed leads are not wired up yet.");
   }
   const saved = read()[id];
   if (saved) return saved;
 
-  const assessment = listAssessments().find((a) => a.id === id && a.completedAt);
-  return assessment ? syntheticLead(assessment) : null;
+  const list = await listAssessments();
+  const assessment = list.find((a) => a.id === id && a.completedAt);
+  return assessment ? await syntheticLead(assessment) : null;
 }
 
 /** A lead sales starts by hand — a referral, a walk-in, an inbound call with no assessment yet. */
@@ -249,13 +250,12 @@ export function adminCreateLead(input: LeadInput): Lead {
   return lead;
 }
 
-/** Field edits (assigned rep, corrected phone number, tags) — never touches follow-up history. */
-export function adminUpdateLead(id: string, patch: Partial<LeadInput> & { tags?: string[] }): Lead {
+export async function adminUpdateLead(id: string, patch: Partial<LeadInput> & { tags?: string[] }): Promise<Lead> {
   if (isSupabaseConfigured()) {
     throw new Error("Supabase-backed leads are not wired up yet.");
   }
   const table = read();
-  const existing = table[id] ?? adminGetLead(id);
+  const existing = table[id] ?? await adminGetLead(id);
   if (!existing) throw new Error(`No lead ${id}`);
   const updated: Lead = { ...existing, ...patch, isSaved: true };
   table[id] = updated;
@@ -268,12 +268,12 @@ export function adminUpdateLead(id: string, patch: Partial<LeadInput> & { tags?:
  * the lead's stage and whether it needs a next date. Materialises a synthetic
  * lead into a real record on first use.
  */
-export function adminLogFollowUp(id: string, input: FollowUpInput): Lead {
+export async function adminLogFollowUp(id: string, input: FollowUpInput): Promise<Lead> {
   if (isSupabaseConfigured()) {
     throw new Error("Supabase-backed leads are not wired up yet.");
   }
   const table = read();
-  const existing = table[id] ?? adminGetLead(id);
+  const existing = table[id] ?? await adminGetLead(id);
   if (!existing) throw new Error(`No lead ${id}`);
 
   const verdictMeta = FOLLOW_UP_VERDICTS.find((v) => v.value === input.verdict)!;
@@ -320,8 +320,8 @@ export interface LeadStats {
   open: number; // stage new or contacted
 }
 
-export function adminLeadStats(): LeadStats {
-  const leads = isSupabaseConfigured() ? [] : adminListLeads();
+export async function adminLeadStats(): Promise<LeadStats> {
+  const leads = isSupabaseConfigured() ? [] : await adminListLeads();
   const today = new Date().toISOString().slice(0, 10);
   return {
     overdue: leads.filter((l) => l.nextFollowUpAt && l.nextFollowUpAt < today).length,
@@ -335,7 +335,7 @@ export function useAdminLeads(): { leads: Lead[]; refresh: () => void } {
 
   const refresh = useCallback(() => {
     if (isSupabaseConfigured()) return;
-    setLeads(adminListLeads());
+    adminListLeads().then(setLeads);
   }, []);
 
   useEffect(() => {

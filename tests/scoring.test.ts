@@ -305,14 +305,6 @@ describe("neurological age", () => {
 });
 
 describe("what the chart says about the result", () => {
-  test("reaching a stage early is superior, on time is average, late is slow", () => {
-    const s4 = BRAIN_STAGES[3]; // superior 6, average 12, slow 24
-    assert.equal(classifyAgainstStage(s4, 6), "superior");
-    assert.equal(classifyAgainstStage(s4, 12), "average");
-    assert.equal(classifyAgainstStage(s4, 24), "slow");
-    assert.equal(classifyAgainstStage(s4, 25), "consult");
-  });
-
   test("a child on the average line scores a quotient of 100", () => {
     const child = childAged(12);
     const result = scoreAssessment({
@@ -321,18 +313,18 @@ describe("what the chart says about the result", () => {
       responses: fill({ s4: 1, s5: 0 }, 12),
       stagesByDomain: everyDomain(["s4", "s5"]),
     });
-    assert.equal(result.overallStatus, "average");
+    assert.equal(result.overallStatus, "typical");
     for (const d of result.domainScores) {
       assert.equal(d.achievedStage, "s4");
       assert.equal(d.dq, 100);
-      assert.equal(d.status, "average");
+      assert.equal(d.status, "typical");
     }
   });
 
   test("a child a stage ahead of their age is on track, with the quotient showing how far", () => {
     // Twelve months old, reached stage V — whose average age is 18 months.
     // The chart's superior column for stage V is 9 months, so this child is
-    // ahead but not superior. The band says on track; the number says 150.
+    // ahead but not superior. The band says typical; the number says 150.
     const child = childAged(12);
     const result = scoreAssessment({
       child,
@@ -342,10 +334,10 @@ describe("what the chart says about the result", () => {
     });
     for (const d of result.domainScores) {
       assert.equal(d.achievedStage, "s5");
-      assert.equal(d.status, "average");
+      assert.equal(d.status, "advanced"); // 150 > 115
       assert.equal(d.dq, 150);
     }
-    assert.equal(result.overallStatus, "average");
+    assert.equal(result.overallStatus, "advanced");
   });
 
   test("a child at twice the chart's pace is superior", () => {
@@ -358,7 +350,7 @@ describe("what the chart says about the result", () => {
       stagesByDomain: everyDomain(["s5", "s6"]),
     });
     for (const d of result.domainScores) {
-      assert.equal(d.status, "superior");
+      assert.equal(d.status, "advanced");
       assert.equal(d.dq, 200);
     }
   });
@@ -372,7 +364,7 @@ describe("what the chart says about the result", () => {
       stagesByDomain: everyDomain(["s4", "s5"]),
     });
     for (const d of result.domainScores) {
-      assert.equal(d.status, "slow"); // stage IV slow column is 24 months
+      assert.equal(d.status, "significant"); // 50 <= 50
       assert.equal(d.dq, 50);
     }
   });
@@ -420,10 +412,10 @@ describe("the overall verdict", () => {
     const language = result.domainScores.find((d) => d.domain === "language")!;
     assert.equal(language.achievedStage, "s2");
     assert.ok(
-      ["slow", "consult"].includes(language.status),
+      ["mild", "delay", "significant"].includes(language.status),
       `language came out ${language.status}`,
     );
-    assert.notEqual(result.overallStatus, "average");
+    assert.notEqual(result.overallStatus, "typical");
     assert.equal(result.overallRaisedBy, "language");
     assert.ok(result.focusAreas.includes("language"));
   });

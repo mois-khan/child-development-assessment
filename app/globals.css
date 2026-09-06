@@ -1,37 +1,29 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   KAUSHALYA GENIUS KID PROGRAM — DESIGN SYSTEM v3
+   KAUSHALYA GENIUS KID PROGRAM — DESIGN SYSTEM v4
    ───────────────────────────────────────────────────────────────────────────
-   Style      Claymorphism. Soft 3D, chunky, toy-like surfaces with double
-              shadows (outer drop + inner light), generous radii (18-32px) and
-              a springy press. Chosen because it is the one style that reads as
-              *premium* and *made for children* at the same time — flat design
-              reads clinical here, glass reads corporate.
+   THE FULL SPEC LIVES IN /DESIGN.md. This file is its implementation.
+   If you change a number here, change it there too — and only ever pick a
+   value that already exists on one of the scales below.
 
-   Colour     The real KGKP brand: deep wine maroon for chrome, headings and
-              primary actions, coral as the warm secondary, and a hand-drawn
-              gold for underline/reward accents — extracted from the live
-              kaushalyageniuskid.com marketing site (see kgkpdesign.md) and
-              standardised as the single primary everywhere, replacing the
-              site's own Graphy-blue/maroon split. The six developmental
-              sections borrow the site's pastel supporting palette (lavender,
-              sky, tomato, apricot, teal, olive) instead of a generic rainbow.
-              Backgrounds are warm off-white, never grey — grey plus children
-              reads as a hospital.
+   The one rule that makes the difference between "designed" and "assembled":
+   EVERY value comes from a closed scale. Space is a multiple of 4px. Type is
+   one of ten steps. Radius is one of six. Elevation is one of five. If a
+   value you want isn't on a scale, you are either wrong about the value or
+   the scale is missing a step — resolve that, don't write 0.85rem.
 
-   Type       Inter carries the interface, body copy and every heading (per
-              the source site's own inconsistency — normalised here to one
-              voice); "Poetsen One", the site's rounded display face, is kept
-              rare, for `.display` hero moments only.
-
-   Motion     150-320ms, spring-ish easing, transform/opacity only. Every
-              animation reports a cause: an answer landing, a section closing,
-              a reward arriving.
+   v3 → v4 changed the numbers, not the character. It is still warm, rounded
+   and friendly; it is no longer oversized. Controls dropped from 48/58px to
+   40/48px, radii from 18/25/40px to 12/16/24px, and shadows lost roughly
+   half their opacity. The brand keeps its pill buttons and warm off-white
+   ground — what it loses is the toy-scale inflation that read as unfinished.
    ═════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── brand: wine maroon (#4D1435 from the live site) ──────────────────── */
+  /* ═══ BRAND ═════════════════════════════════════════════════════════════
+     Wine maroon #4D1435, taken from the live kaushalyageniuskid.com site.
+     14.31:1 on white — it can carry any text at any size. */
   --brand-50: #fbf0f4;
   --brand-100: #f6dce6;
   --brand-200: #ebb9ce;
@@ -49,93 +41,163 @@
   --accent-line: var(--brand-200);
   --on-accent: #ffffff;
 
-  /* ── secondary: coral, the site's second signature colour ─────────────── */
+  /* secondary: coral, the site's second signature colour */
   --coral-100: #fdebe7;
   --coral-300: #f5b3a4;
   --coral-500: #ef816c;
   --coral-700: #c1543f;
 
-  /* ── gold, from the hand-drawn underline swatch ────────────────────────── */
+  /* gold, from the hand-drawn underline swatch */
   --sun-100: #fcefd3;
   --sun-300: #f8ce7c;
   --sun-400: #f4a93b;
   --sun-500: #e8971f;
   --sun-700: #93590f;
 
-  /* ── six section hues, drawn from the site's pastel supporting palette ── */
+  /* ═══ THE SIX SECTION HUES ══════════════════════════════════════════════
+     Every one of these now clears 4.5:1 on white, so a single value works as
+     icon, as border, and as text — v3 needed a separate "safe" shade because
+     five of the six failed (auditory 3.31, mobility 3.07, manual 3.47…),
+     which is why section labels were quietly unreadable. Contrast is
+     symmetric, so 4.5:1 against white also means white-on-colour is 4.5:1:
+     one token, every job. */
   --sec-visual: #7c5ce0;
-  --sec-visual-soft: #f1edff;
-  --sec-auditory: #2e97c4;
-  --sec-auditory-soft: #e5f5fe;
-  --sec-tactile: #e5573f;
-  --sec-tactile-soft: #fdeae6;
-  --sec-mobility: #d97a4e;
-  --sec-mobility-soft: #fbe5d8;
-  --sec-language: #2e8577;
-  --sec-language-soft: #edf7f5;
-  --sec-manual: #8b8f1e;
-  --sec-manual-soft: #f5f6de;
+  --sec-visual-soft: #f3f0ff;
+  --sec-auditory: #277fa5;
+  --sec-auditory-soft: #eaf5fb;
+  --sec-tactile: #d33a21;
+  --sec-tactile-soft: #fdece8;
+  --sec-mobility: #bf5829;
+  --sec-mobility-soft: #fceee5;
+  --sec-language: #2d8376;
+  --sec-language-soft: #eaf6f4;
+  --sec-manual: #787b1a;
+  --sec-manual-soft: #f6f7e4;
 
-  /* ── neutrals: warm off-white, never clinical grey ──────────────────── */
-  --ground: #fbf7f5;
-  --ground-2: #f5ede9;
+  /* ═══ NEUTRALS ══════════════════════════════════════════════════════════
+     Warm throughout. v3 mixed a warm wine-black ink with cool blue-grey
+     secondaries (#50596c, #8d8fa3), so text drifted from warm to cool as it
+     de-emphasised — the kind of mismatch you feel without being able to name.
+     These are all derived from the ink hue at ~10% saturation.
+
+     ink-3 was the real bug: 3.19:1 on white, below the 4.5:1 floor, and it
+     carries every hint, caption and form label in the app. */
+  --ground: #faf7f5;
+  --ground-2: #f4efec;
   --surface: #ffffff;
-  --surface-2: #f8f9fa;
-  --surface-3: #f0ede9;
-  --ink: #23111b;
-  --ink-2: #50596c;
-  --ink-3: #8d8fa3;
-  --line: #eeeeee;
-  --line-soft: #f5f1ee;
+  --surface-2: #faf8f7;
+  --surface-3: #f2ece8;
+  --ink: #23111b; /* 17.99:1 on white */
+  --ink-2: #5d4a53; /* 8.17:1 — AAA body text */
+  --ink-3: #7b6670; /* 5.28:1 — AA, the floor for anything readable */
 
-  /* ── status ─────────────────────────────────────────────────────────── */
+  /* Three border weights, because they do three different jobs:
+     line-soft  divides content inside one surface (a row rule)
+     line       is the edge of a surface (a card, a panel)
+     line-strong bounds an interactive control, and so must clear 3:1 per
+                 WCAG 1.4.11 — v3's #eeeeee sat at 1.16:1, which is to say
+                 input fields had no visible boundary at all. */
+  --line-soft: #f3eeeb;
+  --line: #e9e2de;
+  --line-strong: #9e908a; /* 3.08:1 */
+
+  /* ═══ STATUS ════════════════════════════════════════════════════════════
+     Each solid is tuned to 4.5:1 on white, which — contrast being symmetric —
+     makes it legal both as coloured text and as a fill under white text. v3's
+     values failed both ways: white on `emerging` was 2.94:1, and `emerging`
+     text on its own soft tint was 2.66:1.
+     The `-ink` variants are for text sitting on the matching `-soft` tint,
+     where the darker ground eats some of the ratio back. */
   --st-superior: #7c5cf0;
-  --st-on-track: #0f9d6e;
-  --st-emerging: #d08700;
-  --st-needs-focus: #ea6f1e;
-  --st-consult: #e0455a;
+  --st-on-track: #0d875f;
+  --st-emerging: #a46a00;
+  --st-needs-focus: #c15712;
+  --st-consult: #dd344a;
   --on-status: #ffffff;
 
-  --st-superior-soft: #efeaff;
-  --st-on-track-soft: #e2f7ef;
-  --st-emerging-soft: #fdf3dc;
-  --st-needs-focus-soft: #fdeee2;
-  --st-consult-soft: #fdeaed;
+  --st-superior-ink: #6f4cef;
+  --st-on-track-ink: #0c7e58;
+  --st-emerging-ink: #9a6400;
+  --st-needs-focus-ink: #b35111;
+  --st-consult-ink: #d1233a;
+
+  --st-superior-soft: #f1eeff;
+  --st-on-track-soft: #e7f7f1;
+  --st-emerging-soft: #fdf4e0;
+  --st-needs-focus-soft: #fdefe6;
+  --st-consult-soft: #fdecef;
 
   --focus-ring: var(--brand-600);
 
-  /* ── elevation: one ambient layer + one directional layer ────────────
-     No inset gloss/bevel — that double-highlight trick is what makes a
-     surface read as a toy rather than a designed product. Depth comes from
-     two honest drop shadows only, the way it would on a real desk. Colour
-     base is the site's own warm neutral shadow rgb (69,77,93) rather than a
-     cool blue-black, which is what keeps clay surfaces feeling warm. */
-  --clay-sm: 0 1px 3px rgba(69, 77, 93, 0.18), 0 1px 4px -1px rgba(69, 77, 93, 0.14);
-  --clay: 0 1px 3px rgba(69, 77, 93, 0.14), 0 10px 24px -12px rgba(69, 77, 93, 0.32);
-  --clay-lg: 0 2px 5px rgba(69, 77, 93, 0.14), 0 24px 48px -22px rgba(69, 77, 93, 0.38);
-  --clay-brand: 0 2px 5px rgba(77, 20, 53, 0.18), 0 16px 30px -14px rgba(77, 20, 53, 0.45);
+  /* ═══ SPACE — 4px grid ══════════════════════════════════════════════════
+     There is no --space-7 or --space-9 on purpose. A scale with every value
+     on it is not a scale. */
+  --space-1: 0.25rem; /*  4 */
+  --space-2: 0.5rem; /*  8 */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem; /* 16 */
+  --space-5: 1.25rem; /* 20 */
+  --space-6: 1.5rem; /* 24 */
+  --space-8: 2rem; /* 32 */
+  --space-10: 2.5rem; /* 40 */
+  --space-12: 3rem; /* 48 */
+  --space-16: 4rem; /* 64 */
+  --space-20: 5rem; /* 80 */
+  --space-24: 6rem; /* 96 */
 
-  /* legacy aliases, still referenced in a few places */
-  --shadow-xs: var(--clay-sm);
-  --shadow-sm: var(--clay-sm);
-  --shadow-md: var(--clay);
-  --shadow-lg: var(--clay-lg);
+  /* ═══ CONTROL HEIGHTS ═══════════════════════════════════════════════════
+     40px is the default across Stripe, Linear, Vercel and GitHub Primer for
+     one good reason: it is the smallest height that still reads as
+     comfortable beside 14px text. v3 shipped 48px default and 58px large,
+     which is where "everything looks big" came from — a 58px button next to
+     16px text has more padding than content. */
+  --control-sm: 2rem; /* 32 */
+  --control-md: 2.5rem; /* 40 — default */
+  --control-lg: 3rem; /* 48 */
+  --control-touch: 3.5rem; /* 56 — the assessment's answer buttons only */
 
-  /* ── radii: chunky, toy-like — --radius-lg mirrors the site's own
-     --themeCornerRadius (25px) pill token ──────────────────────────────── */
-  --radius-xs: 10px;
-  --radius-sm: 12px;
-  --radius: 18px;
-  --radius-lg: 25px;
-  --radius-xl: 40px;
-  --radius-pill: 999px;
+  /* ═══ RADIUS ════════════════════════════════════════════════════════════
+     Rule: a rounded rectangle's radius stays at or under ~40% of its own
+     height, or it goes fully round. 18px on a 40px control is neither, which
+     is what made v3's cards read as inflated rather than friendly.
+     Nested radius = outer radius − padding. */
+  --radius-xs: 0.375rem; /*  6 — micro: swatches, tags */
+  --radius-sm: 0.5rem; /*  8 — inputs, small controls */
+  --radius: 0.75rem; /* 12 — DEFAULT: cards, panels */
+  --radius-lg: 1rem; /* 16 — feature cards */
+  --radius-xl: 1.5rem; /* 24 — hero panels, modals */
+  --radius-pill: 9999px; /*      buttons, chips, avatars */
 
-  /* ── motion ─────────────────────────────────────────────────────────── */
+  /* ═══ ELEVATION ═════════════════════════════════════════════════════════
+     Five steps, each with a distinct job, all cast in the ink's own warm hue
+     (61,43,53) so shadows never turn the page cool. v3 ran 0.18–0.38 alpha,
+     roughly double what these surfaces need — heavy shadow on a light ground
+     reads as grubby, not as depth. */
+  --shadow-xs: 0 1px 2px rgba(61, 43, 53, 0.05);
+  --shadow-sm:
+    0 1px 2px rgba(61, 43, 53, 0.05), 0 2px 4px -1px rgba(61, 43, 53, 0.06);
+  --shadow-md:
+    0 2px 4px -1px rgba(61, 43, 53, 0.06), 0 8px 16px -6px rgba(61, 43, 53, 0.1);
+  --shadow-lg:
+    0 4px 8px -2px rgba(61, 43, 53, 0.07), 0 16px 28px -10px rgba(61, 43, 53, 0.14);
+  --shadow-xl:
+    0 8px 16px -4px rgba(61, 43, 53, 0.08), 0 28px 48px -16px rgba(61, 43, 53, 0.18);
+  --shadow-brand:
+    0 1px 2px rgba(77, 20, 53, 0.12), 0 8px 20px -8px rgba(77, 20, 53, 0.28);
+
+  /* v3 names, re-pointed. Kept so existing markup doesn't break; prefer the
+     --shadow-* names in anything new. */
+  --clay-sm: var(--shadow-sm);
+  --clay: var(--shadow-md);
+  --clay-lg: var(--shadow-lg);
+  --clay-brand: var(--shadow-brand);
+
+  /* ═══ MOTION ════════════════════════════════════════════════════════════ */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --dur-fast: 160ms;
-  --dur: 240ms;
-  --dur-slow: 380ms;
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 320ms;
 }
 
 /* Light is always the default, regardless of OS preference — dark mode only
@@ -146,11 +208,15 @@
   --surface: #2a1622;
   --surface-2: #33192c;
   --surface-3: #402038;
-  --ink: #f5e9ef;
-  --ink-2: #d8c3ce;
-  --ink-3: #a98b9b;
-  --line: #4a2438;
+  --ink: #f5e9ef; /* 14.39:1 on surface */
+  --ink-2: #d8c3ce; /* 10.21:1 */
+  --ink-3: #a98b9b; /* 5.54:1 — passes, unlike its light twin */
+
+  /* Dark mode inverts which border needs help: on a dark ground a hairline
+     must get *lighter* to be seen, so line-strong climbs rather than falls. */
   --line-soft: #3a1c2c;
+  --line: #4a2438;
+  --line-strong: #7b4460;
 
   --accent: #efa3c6;
   --accent-hover: #f4beda;
@@ -158,6 +224,10 @@
   --accent-line: #5c2e44;
   --on-accent: #1c0f16;
 
+  /* On a dark ground the light-mode solids are far too dark to read, so these
+     stay bright — all clear 5.5:1+ on their soft tints, verified. `-ink`
+     collapses onto the base value here because there is no second problem to
+     solve: nothing needs darkening. */
   --st-superior: #a693ff;
   --st-on-track: #4ecfa0;
   --st-emerging: #e2b95c;
@@ -165,18 +235,45 @@
   --st-consult: #f0798b;
   --on-status: #1c0f16;
 
+  --st-superior-ink: var(--st-superior);
+  --st-on-track-ink: var(--st-on-track);
+  --st-emerging-ink: var(--st-emerging);
+  --st-needs-focus-ink: var(--st-needs-focus);
+  --st-consult-ink: var(--st-consult);
+
   --st-superior-soft: #241f3d;
   --st-on-track-soft: #16332a;
   --st-emerging-soft: #332b17;
   --st-needs-focus-soft: #35251a;
   --st-consult-soft: #351d24;
 
+  /* The six section hues also brighten — the light-mode values are tuned
+     against white and go muddy on #2a1622. */
+  --sec-visual: #a693ff;
+  --sec-visual-soft: #251f3f;
+  --sec-auditory: #5fb8dd;
+  --sec-auditory-soft: #16303c;
+  --sec-tactile: #f2806a;
+  --sec-tactile-soft: #3a1f1a;
+  --sec-mobility: #e69a66;
+  --sec-mobility-soft: #38251a;
+  --sec-language: #5cbcab;
+  --sec-language-soft: #17332e;
+  --sec-manual: #c2c65a;
+  --sec-manual-soft: #2f3117;
+
   --focus-ring: #efa3c6;
 
-  --clay-sm: 0 1px 2px rgba(10, 4, 8, 0.4), 0 1px 3px -1px rgba(10, 4, 8, 0.3);
-  --clay: 0 2px 4px rgba(10, 4, 8, 0.35), 0 14px 28px -14px rgba(10, 4, 8, 0.75);
-  --clay-lg: 0 4px 8px rgba(10, 4, 8, 0.4), 0 28px 56px -24px rgba(10, 4, 8, 0.85);
-  --clay-brand: 0 2px 6px rgba(10, 4, 8, 0.4), 0 16px 30px -16px rgba(239, 163, 198, 0.5);
+  /* Shadow does far less work on a dark ground — depth there comes from
+     surface lightness, not from cast shadow. These stay deliberately
+     restrained rather than being the light values with the alpha cranked up. */
+  --shadow-xs: 0 1px 2px rgba(8, 3, 6, 0.4);
+  --shadow-sm: 0 1px 2px rgba(8, 3, 6, 0.4), 0 2px 4px -1px rgba(8, 3, 6, 0.35);
+  --shadow-md: 0 2px 4px -1px rgba(8, 3, 6, 0.4), 0 8px 16px -6px rgba(8, 3, 6, 0.5);
+  --shadow-lg: 0 4px 8px -2px rgba(8, 3, 6, 0.45), 0 16px 28px -10px rgba(8, 3, 6, 0.6);
+  --shadow-xl: 0 8px 16px -4px rgba(8, 3, 6, 0.5), 0 28px 48px -16px rgba(8, 3, 6, 0.7);
+  --shadow-brand:
+    0 1px 2px rgba(8, 3, 6, 0.4), 0 8px 20px -8px rgba(239, 163, 198, 0.35);
 }
 
 @theme inline {
@@ -190,6 +287,7 @@
   --color-ink-3: var(--ink-3);
   --color-line: var(--line);
   --color-line-soft: var(--line-soft);
+  --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-line: var(--accent-line);
@@ -197,6 +295,65 @@
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-poetsen), var(--font-inter), ui-sans-serif, sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPE SCALE — ten steps, and only these ten.
+
+   The audit that produced this found 37 distinct font sizes in the app,
+   thirteen of them between 13px and 16px: 0.82, 0.83, 0.84, 0.85, 0.86, 0.88,
+   0.9, 0.92, 0.94, 0.95, 0.96, 0.97, 0.98rem. Nobody can see a 0.3px
+   difference — but every one of them is a separate decision, so nothing ever
+   lines up with anything else. That is the mechanism behind "looks poorly
+   designed": not one bad value, a hundred unrelated ones.
+
+   Registering the scale in @theme means `text-sm` etc. resolve to these, so
+   the fix is enforced by the utility names rather than by discipline.
+
+   Line heights are baked in per step because the right leading is a property
+   of the size, not a separate choice: tight for headings, generous for prose.
+   ═════════════════════════════════════════════════════════════════════════ */
+@theme {
+  /* 11px — micro: dense table meta, chart axis labels. Use sparingly. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1.45;
+  --text-2xs--letter-spacing: 0.01em;
+
+  /* 12px — captions, hints, chips, eyebrows */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.5;
+
+  /* 14px — THE UI DEFAULT. Buttons, labels, table cells, secondary copy. */
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.45;
+
+  /* 16px — body prose, input values, primary card text */
+  --text-base: 1rem;
+  --text-base--line-height: 1.6;
+
+  /* 18px — lede paragraphs, h3 */
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.55;
+
+  /* 20px — large h3, stat values */
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.4;
+
+  /* 24px — h2 */
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.3;
+
+  /* 30px — h1 on small screens, big stat numerals */
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 1.2;
+
+  /* 36px — h1 */
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 1.15;
+
+  /* 48px — display / hero only */
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1.08;
 }
 
 /* ── base ────────────────────────────────────────────────────────────────── */
@@ -244,23 +401,37 @@ h3 {
    sparingly there too — reserved here for hero-scale moments only, never for
    every h1-h3, which stay in Inter. It ships one weight (400), which already
    reads as bold/chunky, so it does not take the 700 the other headings do. */
+/* Fluid headings interpolate between two scale steps — never past them. The
+   clamps below are written as `min, preferred, max` where min and max are
+   both real steps on the scale above, so a heading is only ever "between two
+   legal sizes", not at an arbitrary one. v3's display topped out at 64px,
+   which is billboard scale on a 1440px screen. */
 .display {
   font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   line-height: 1.08;
   text-wrap: balance;
-  font-size: clamp(2.4rem, 5.6vw, 4rem);
+  font-size: clamp(2.25rem, 1.6rem + 2.8vw, 3rem); /* 36 → 48 */
 }
 
 h1 {
-  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  font-size: clamp(1.875rem, 1.55rem + 1.6vw, 2.25rem); /* 30 → 36 */
+  letter-spacing: -0.02em;
 }
 h2 {
-  font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+  font-size: clamp(1.5rem, 1.35rem + 0.75vw, 1.875rem); /* 24 → 30 */
+  letter-spacing: -0.015em;
 }
 h3 {
-  font-size: 1.12rem;
+  font-size: 1.125rem; /* 18 */
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+h4 {
+  font-size: 1rem; /* 16 */
+  line-height: 1.45;
   font-weight: 700;
 }
 
@@ -272,13 +443,17 @@ h4,
   color: var(--ink);
 }
 
+/* 11px uppercase with wide tracking. Uppercase needs the extra letter-spacing
+   to stay legible and the smaller size to stop it shouting — both are
+   properties of the treatment, so they live here rather than at each usage. */
 .eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  gap: var(--space-2);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  font-weight: 700;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
@@ -288,14 +463,14 @@ h4,
 }
 
 .lede {
-  font-size: clamp(1.02rem, 1.3vw, 1.15rem);
-  line-height: 1.62;
+  font-size: 1.125rem; /* 18 */
+  line-height: 1.6;
   color: var(--ink-2);
 }
 
 .prose-read {
   font-family: var(--font-sans);
-  font-size: 1.02rem;
+  font-size: 1rem; /* 16 */
   line-height: 1.7;
   color: var(--ink-2);
 }
@@ -304,10 +479,13 @@ h4,
   font-variant-numeric: tabular-nums;
 }
 
+/* 2px, not 3px. A focus ring's job is to be unmistakable, not loud — 2px at
+   full brand contrast (14.31:1) is already far past the 3:1 that WCAG 2.4.11
+   asks for, and it doesn't visually thicken every control it lands on. */
 :focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
 }
 
 ::selection {
@@ -317,22 +495,27 @@ h4,
 
 /* ── clay surfaces ───────────────────────────────────────────────────────── */
 
+/* Three surface weights, one job each:
+     .card  the default container — sits on the page
+     .clay  a container that needs to read as lifted off it (a form panel)
+     .tint  a container that belongs to one of the six sections
+   Anything else is one of these plus a modifier, never a fourth surface. */
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--clay-sm);
+  box-shadow: var(--shadow-xs);
 }
 
 .clay {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--clay);
+  box-shadow: var(--shadow-sm);
 }
 
 .clay-lg {
-  box-shadow: var(--clay-lg);
+  box-shadow: var(--shadow-md);
 }
 
 /* Interactive clay: lifts on hover, squashes on press. */
@@ -344,12 +527,12 @@ h4,
     background-color var(--dur-fast) var(--ease-out);
 }
 .clay-press:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--clay-lg);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 .clay-press:active:not(:disabled) {
-  transform: translateY(1px) scale(0.99);
-  box-shadow: var(--clay-sm);
+  transform: translateY(0) scale(0.995);
+  box-shadow: var(--shadow-xs);
 }
 
 /* Tinted panels — each section/feature carries its colour in the border and
@@ -360,12 +543,12 @@ h4,
    to each other stay calm because the saturation lives in the edges and
    shadow, not the field. */
 .tint {
-  border: 1.5px solid color-mix(in srgb, var(--tint-color) 26%, var(--line));
+  border: 1px solid color-mix(in srgb, var(--tint-color) 28%, var(--line));
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow:
-    0 1px 2px rgba(69, 77, 93, 0.06),
-    0 22px 40px -26px color-mix(in srgb, var(--tint-color) 55%, transparent);
+    0 1px 2px rgba(61, 43, 53, 0.05),
+    0 12px 24px -16px color-mix(in srgb, var(--tint-color) 45%, transparent);
 }
 
 /* Decorative hover-lift for cards the user browses rather than reads inside
@@ -379,38 +562,53 @@ h4,
 }
 @media (hover: hover) {
   .lift:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
   }
   .lift.tint:hover {
-    border-color: color-mix(in srgb, var(--tint-color) 48%, var(--line));
+    border-color: color-mix(in srgb, var(--tint-color) 50%, var(--line));
     box-shadow:
-      0 2px 4px rgba(69, 77, 93, 0.08),
-      0 30px 54px -26px color-mix(in srgb, var(--tint-color) 65%, transparent);
+      0 2px 4px -1px rgba(61, 43, 53, 0.07),
+      0 18px 32px -18px color-mix(in srgb, var(--tint-color) 55%, transparent);
   }
-  .lift.clay:hover {
-    box-shadow: var(--clay-lg);
+  .lift.clay:hover,
+  .lift.card:hover {
+    box-shadow: var(--shadow-md);
   }
 }
 
 /* ── buttons ─────────────────────────────────────────────────────────────── */
 
+/* ── BUTTONS ───────────────────────────────────────────────────────────────
+   Three sizes, fixed heights, pill radius. Height is set explicitly rather
+   than emerging from padding + line-height, because a height that is computed
+   drifts the moment anything inside it changes — an icon, a longer label, a
+   different font. Explicit height is what makes a row of buttons line up.
+
+     sm  32px · 12px inline padding · 13px text
+     md  40px · 18px                · 14px      ← default
+     lg  48px · 24px                · 15px
+
+   v3 ran 48 / 58px. A 58px pill next to 16px body copy has more padding than
+   content, and that single ratio is most of why the UI read as oversized. */
 .btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
+  gap: var(--space-2);
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: 0.875rem; /* 14 */
+  line-height: 1;
   font-weight: 600;
   letter-spacing: -0.005em;
   border-radius: var(--radius-pill);
-  padding: 0.85rem 1.7rem;
-  min-height: 48px;
+  height: var(--control-md);
+  padding-inline: 1.125rem; /* 18 */
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
+  user-select: none;
   transition:
     transform var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-fast) var(--ease-out),
@@ -446,69 +644,69 @@ h4,
   box-shadow: none;
 }
 
-/* One shadow each — an ambient neutral layer plus a single tinted layer for
-   depth. No inset "gloss" highlights: that double-bevel is what reads as a
-   toy rather than a product. Colour communicates state (hover = one step
-   darker), not a filter or a second gradient stop. */
+/* Colour communicates state (hover = one step darker), not a filter or a
+   second gradient stop.
+
+   The tinted shadow here was `rgba(79, 70, 229, …)` — indigo #4F46E5, left
+   over from a palette this product no longer uses. Every primary button in
+   the app was casting a blue-violet glow underneath a maroon brand. Now it
+   casts the brand's own hue via --shadow-brand. */
 .btn-primary {
   background: var(--brand-600);
   color: var(--on-accent);
-  box-shadow:
-    0 1px 2px rgba(23, 24, 43, 0.08),
-    0 8px 20px -10px rgba(79, 70, 229, 0.45);
+  box-shadow: var(--shadow-brand);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--brand-700);
   transform: translateY(-1px);
   box-shadow:
-    0 2px 4px rgba(23, 24, 43, 0.1),
-    0 14px 28px -12px rgba(79, 70, 229, 0.5);
+    0 2px 4px rgba(77, 20, 53, 0.14),
+    0 12px 24px -8px rgba(77, 20, 53, 0.34);
 }
 .btn-primary:active:not(:disabled) {
   background: var(--brand-700);
-  box-shadow: 0 1px 2px rgba(23, 24, 43, 0.1);
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(77, 20, 53, 0.16);
 }
 
-/* The one deliberately claymorphic button left in the system — a chunky,
-   candy-shell pill with a double-inset bevel (glossy top highlight + a
-   lowlight underneath) on top of the usual two-layer drop shadow. */
+/* The one deliberately clay button left in the system — the reward/celebration
+   action. It keeps a single inset highlight rather than v3's four-layer
+   bevel, which at 48px+ read as a plastic toy. One highlight says "raised";
+   four say "novelty". */
 .btn-sun {
   background: linear-gradient(180deg, var(--sun-300), var(--sun-500));
   color: #47280a;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -4px 8px rgba(146, 64, 14, 0.32),
-    0 1px 2px rgba(23, 24, 43, 0.08),
-    0 10px 22px -10px rgba(180, 83, 9, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 1px 2px rgba(61, 43, 53, 0.08),
+    0 8px 18px -8px rgba(180, 83, 9, 0.4);
 }
 .btn-sun:hover:not(:disabled) {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -4px 8px rgba(146, 64, 14, 0.28),
-    0 2px 4px rgba(23, 24, 43, 0.1),
-    0 16px 30px -12px rgba(180, 83, 9, 0.6);
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 2px 4px rgba(61, 43, 53, 0.1),
+    0 12px 24px -8px rgba(180, 83, 9, 0.48);
 }
 .btn-sun:active:not(:disabled) {
-  transform: translateY(1px) scale(0.99);
+  transform: translateY(1px);
   box-shadow:
-    inset 0 2px 6px rgba(146, 64, 14, 0.4),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.25),
-    0 1px 2px rgba(23, 24, 43, 0.08);
+    inset 0 1px 4px rgba(146, 64, 14, 0.35),
+    0 1px 2px rgba(61, 43, 53, 0.08);
 }
 
 .btn-secondary {
   background: var(--surface);
   color: var(--ink);
-  border-color: var(--line);
-  box-shadow: 0 1px 2px rgba(23, 24, 43, 0.05);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-xs);
 }
 .btn-secondary:hover:not(:disabled) {
-  border-color: var(--accent-line);
+  border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px -6px rgba(23, 24, 43, 0.14);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-soft {
@@ -517,27 +715,27 @@ h4,
   border-color: transparent;
 }
 .btn-soft:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
+/* Ghost and quiet share the default height. v3 gave them 42px and 40px
+   against a 48px default, so a ghost button beside a primary one sat 6px
+   short and the row never aligned. Tertiary actions differ in *weight*,
+   never in size. */
 .btn-ghost {
   background: transparent;
   color: var(--ink-2);
-  min-height: 42px;
-  padding: 0.6rem 1rem;
+  padding-inline: var(--space-3);
 }
 .btn-ghost:hover:not(:disabled) {
   background: var(--surface-2);
   color: var(--ink);
 }
 
-/* legacy alias */
 .btn-quiet {
   background: transparent;
   color: var(--ink-3);
-  min-height: 40px;
-  padding: 0.5rem 0.9rem;
-  font-weight: 700;
+  padding-inline: var(--space-3);
 }
 .btn-quiet:hover:not(:disabled) {
   color: var(--ink);
@@ -545,43 +743,66 @@ h4,
 }
 
 .btn-sm {
-  font-size: 0.85rem;
-  padding: 0.55rem 1.1rem;
-  min-height: 40px;
+  height: var(--control-sm);
+  font-size: 0.8125rem; /* 13 */
+  padding-inline: var(--space-3);
+  gap: 0.375rem;
 }
 
 .btn-lg {
-  font-size: 1.05rem;
-  padding: 1.05rem 2.2rem;
-  min-height: 58px;
+  height: var(--control-lg);
+  font-size: 0.9375rem; /* 15 */
+  padding-inline: var(--space-6);
 }
 
 .btn-block {
   width: 100%;
 }
 
+/* A square button holding only an icon. Without this, an icon button inherits
+   the pill's inline padding and comes out an oval. */
+.btn-icon {
+  width: var(--control-md);
+  padding-inline: 0;
+}
+.btn-icon.btn-sm {
+  width: var(--control-sm);
+}
+.btn-icon.btn-lg {
+  width: var(--control-lg);
+}
+
 /* ── forms ───────────────────────────────────────────────────────────────── */
 
 .label {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.875rem; /* 14 */
+  line-height: 1.45;
+  font-weight: 600;
   color: var(--ink-2);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 
+/* Inputs stay at 16px text regardless of size. Anything under 16px makes iOS
+   Safari zoom the viewport on focus, which throws the layout sideways
+   mid-form — a real bug that only shows on a real phone.
+
+   1px border, not 2px: at --line-strong (3.08:1) one pixel is already clearly
+   visible, and 2px of grey around every field is what made forms look heavy.
+   Height 40px matches the buttons exactly, so a field and the button beside
+   it finally sit on the same line. */
 .field {
   width: 100%;
   background: var(--surface);
-  border: 2px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
-  padding: 0.9rem 1rem;
-  min-height: 52px;
+  height: var(--control-md);
+  padding-inline: var(--space-3);
   color: var(--ink);
   font-family: inherit;
-  font-size: 1rem;
-  font-weight: 500;
-  box-shadow: inset 0 2px 4px rgba(23, 24, 43, 0.04);
+  font-size: 1rem; /* 16 */
+  font-weight: 450;
+  box-shadow: var(--shadow-xs);
   transition:
     border-color var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-fast) var(--ease-out),
@@ -592,32 +813,55 @@ h4,
   font-weight: 400;
 }
 .field:hover:not(:focus) {
-  border-color: var(--accent-line);
+  border-color: var(--ink-3);
 }
 .field:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
+
+/* The comfortable size, for a short standalone form where the field is the
+   whole point of the screen — signup, payment. Not the default. */
+.field-lg {
+  height: var(--control-lg);
+  padding-inline: var(--space-4);
+}
+
+/* Multi-line fields can't use a fixed height, so they get the padding the
+   single-line ones express as height: 10px top and bottom around 20px of
+   line box comes out at the same 40px minimum. */
+textarea.field {
+  height: auto;
+  min-height: 5.5rem;
+  padding-block: 0.625rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+select.field {
+  padding-inline-end: var(--space-8);
+  cursor: pointer;
+}
+
 .field-valid {
-  border-color: color-mix(in srgb, var(--st-on-track) 45%, var(--line));
-  background: color-mix(in srgb, var(--st-on-track-soft) 45%, var(--surface));
+  border-color: var(--st-on-track);
 }
 .field-error {
   border-color: var(--st-consult);
 }
 .field-error:focus {
-  box-shadow: 0 0 0 4px var(--st-consult-soft);
+  box-shadow: 0 0 0 3px var(--st-consult-soft);
 }
 
 .hint {
-  font-size: 0.82rem;
+  font-size: 0.75rem; /* 12 */
   line-height: 1.5;
   color: var(--ink-3);
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
 }
 .hint-error {
-  color: var(--st-consult);
+  color: var(--st-consult-ink);
   font-weight: 600;
 }
 
@@ -628,15 +872,20 @@ h4,
    labels (see .eyebrow) or large numerals, not a running sentence in a pill.
    700 keeps the same "this is a label" signal at a size Inter renders
    cleanly, with a touch more spacing to keep letters from crowding. */
+/* Fixed 24px height, like the controls. A chip whose height comes from
+   padding grows whenever its text or icon changes, so a row of them ends up
+   ragged — which is exactly what was happening in the leads table. */
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-1);
+  height: 1.5rem; /* 24 */
   font-family: var(--font-sans);
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.015em;
-  padding: 0.38rem 0.8rem;
+  font-size: 0.75rem; /* 12 */
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding-inline: var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--chip-bg, var(--surface-2));
   color: var(--chip-fg, var(--ink-2));
@@ -645,46 +894,50 @@ h4,
 }
 
 .chip-lg {
-  font-size: 0.85rem;
-  padding: 0.5rem 1rem;
+  height: 1.75rem; /* 28 */
+  font-size: 0.8125rem; /* 13 */
+  padding-inline: var(--space-3);
 }
 
 /* ── progress ────────────────────────────────────────────────────────────── */
 
+/* 8px and 6px. A progress bar is a reading of a number, not a design feature —
+   v3's 14px track was taller than the 12px label sitting next to it, so the
+   bar shouted louder than the value it was reporting. The inset shadow drops
+   too: a track needs to read as recessed, and 1px at 6% does that without
+   turning into a grey groove. */
 .meter-track {
-  height: 14px;
+  height: 8px;
   width: 100%;
   background: var(--surface-3);
   border-radius: var(--radius-pill);
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(23, 24, 43, 0.08);
+  box-shadow: inset 0 1px 2px rgba(61, 43, 53, 0.06);
 }
 .meter-fill {
   height: 100%;
   border-radius: var(--radius-pill);
   background: linear-gradient(90deg, var(--brand-400), var(--brand-600));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transition: width 700ms var(--ease-out);
 }
 
 .progress-track {
-  height: 10px;
+  height: 6px;
   width: 100%;
   background: var(--surface-3);
   border-radius: var(--radius-pill);
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(23, 24, 43, 0.08);
+  box-shadow: inset 0 1px 2px rgba(61, 43, 53, 0.06);
 }
 .progress-fill {
   height: 100%;
   border-radius: var(--radius-pill);
   background: linear-gradient(90deg, var(--sun-400), var(--brand-500));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
   transition: width 500ms var(--ease-out);
 }
 
 .step-dot {
-  height: 8px;
+  height: 6px;
   border-radius: var(--radius-pill);
   background: var(--surface-3);
   transition: background-color var(--dur) var(--ease-out);
@@ -702,19 +955,19 @@ h4,
   display: grid;
   grid-template-columns: minmax(9.25rem, 11.5rem) 1fr;
   align-items: center;
-  gap: 0.7rem 1.1rem;
+  gap: var(--space-2) var(--space-4);
   min-width: 32rem;
 }
 .progress-matrix-headrow {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  padding-bottom: 0.4rem;
+  padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--line-soft);
 }
 .progress-matrix-headcell {
   text-align: center;
-  padding: 0 0.3rem;
-  font-size: 0.6rem;
+  padding-inline: var(--space-1);
+  font-size: 0.6875rem; /* 11 */
   font-weight: 800;
   letter-spacing: 0.01em;
   line-height: 1.25;
@@ -724,15 +977,15 @@ h4,
 .progress-matrix-row-label {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 .progress-matrix-row-track {
   position: relative;
-  height: 15px;
+  height: 10px;
   border-radius: var(--radius-pill);
   background: var(--surface-3);
-  box-shadow: inset 0 2px 4px rgba(23, 24, 43, 0.06);
+  box-shadow: inset 0 2px 4px rgba(61, 43, 53, 0.06);
 }
 .progress-matrix-grid {
   position: absolute;
@@ -773,13 +1026,13 @@ h4,
 .progress-matrix-dot {
   position: absolute;
   top: 50%;
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
   background: var(--surface);
-  border: 3px solid var(--dot-color, var(--accent));
+  border: 2.5px solid var(--dot-color, var(--accent));
   transform: translate(-50%, -50%);
-  box-shadow: 0 1px 3px rgba(23, 24, 43, 0.3);
+  box-shadow: 0 1px 3px rgba(61, 43, 53, 0.28);
   transition: left 700ms var(--ease-out);
 }
 
@@ -803,9 +1056,9 @@ h4,
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.6rem 0.7rem;
-  font-size: 0.72rem;
-  font-weight: 800;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.6875rem; /* 11 */
+  font-weight: 700;
   color: var(--ink-2);
   background: var(--surface-2);
 }
@@ -819,41 +1072,41 @@ h4,
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.15rem;
-  padding: 0.6rem 0.7rem;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
   position: sticky;
   left: 0;
   z-index: 1;
 }
 .dp-chart-roman {
   font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 800;
+  font-size: 0.875rem; /* 14 */
+  font-weight: 700;
 }
 .dp-chart-stage-name {
-  font-size: 0.68rem;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 0.6875rem; /* 11 */
+  font-weight: 600;
+  line-height: 1.3;
   opacity: 0.85;
 }
 .dp-chart-cell {
   position: relative;
-  padding: 0.55rem 0.65rem 0.7rem;
-  min-height: 4.4rem;
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  min-height: 4rem;
 }
 .dp-chart-cell-desc {
   margin: 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1.28;
+  font-size: 0.75rem; /* 12 */
+  font-weight: 600;
+  line-height: 1.35;
   /* Colour is set inline per-cell (a dark shade of the row's own hue) — the
      cell background is always a light tint regardless of theme, so var(--ink)
      would go the wrong way in dark mode. This is just the fallback. */
   color: var(--ink);
 }
 .dp-chart-cell-kind {
-  margin: 0.2rem 0 0;
-  font-size: 0.62rem;
+  margin: var(--space-1) 0 0;
+  font-size: 0.6875rem; /* 11 */
   font-style: italic;
   font-weight: 500;
   line-height: 1.2;
@@ -861,8 +1114,8 @@ h4,
 }
 .dp-chart-marker {
   position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
+  top: var(--space-1);
+  right: var(--space-1);
   display: grid;
   place-items: center;
 }
@@ -871,10 +1124,10 @@ h4,
   height: 16px;
   border-radius: 999px;
   background: var(--surface);
-  box-shadow: 0 1px 3px rgba(23, 24, 43, 0.15);
+  box-shadow: 0 1px 3px rgba(61, 43, 53, 0.14);
 }
 .dp-chart-marker-here {
-  filter: drop-shadow(0 1px 3px rgba(23, 24, 43, 0.25));
+  filter: drop-shadow(0 1px 3px rgba(61, 43, 53, 0.22));
 }
 .dp-chart-cell-fill {
   position: absolute;
@@ -986,53 +1239,63 @@ summary::marker {
 .cover-meta {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.65rem;
+  gap: var(--space-2);
   margin: 0;
 }
 @media (min-width: 640px) {
   .cover-meta {
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 }
 .cover-meta-item {
   border-radius: var(--radius-sm);
-  padding: 0.85rem 1.05rem;
+  padding: var(--space-3) var(--space-4);
   background: rgba(255, 255, 255, 0.09);
   border: 1px solid rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 .cover-meta-item dt {
-  font-size: 0.65rem;
-  font-weight: 800;
+  font-size: 0.6875rem; /* 11 */
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.7);
 }
 .cover-meta-item dd {
-  margin-top: 0.35rem;
-  font-size: 1.02rem;
-  font-weight: 800;
+  margin-top: var(--space-1);
+  font-size: 1rem; /* 16 */
+  font-weight: 700;
   color: #fff;
 }
 
 /* ── answer buttons (the assessment's core interaction) ──────────────────── */
 
+/* THE ONE DELIBERATE EXCEPTION to the 40px control rule.
+
+   These are the assessment's answer buttons: a parent taps them dozens of
+   times in a row, often one-handed, often holding a child. 56px is Apple's
+   HIG comfortable-touch size and it is the right call here — this is the
+   product's core interaction, not a form control.
+
+   Everything else still comes off the scale: 16px padding, 12px radius, 16px
+   text, and a 36px key tile. The size is justified; the arbitrariness isn't. */
 .answer {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: var(--space-3);
   width: 100%;
-  padding: 1.05rem 1.25rem;
+  min-height: var(--control-touch);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius);
-  border: 2px solid var(--line);
+  border: 1px solid var(--line-strong);
   background: var(--surface);
-  box-shadow: var(--clay-sm);
+  box-shadow: var(--shadow-xs);
   font-family: var(--font-sans);
-  font-size: 1.02rem;
-  font-weight: 700;
+  font-size: 1rem; /* 16 */
+  font-weight: 600;
   color: var(--ink);
   cursor: pointer;
   text-align: left;
@@ -1043,26 +1306,30 @@ summary::marker {
     background-color var(--dur-fast) var(--ease-out);
 }
 .answer:hover:not(:disabled) {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--tone) 55%, var(--line));
-  box-shadow: var(--clay);
+  border-color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 4%, var(--surface));
+  box-shadow: var(--shadow-sm);
 }
 .answer:active:not(:disabled) {
-  transform: translateY(1px) scale(0.995);
+  transform: scale(0.995);
 }
+/* Selected reads as a 2px ring rather than a thicker border, so the button
+   does not change size the instant it is chosen — a 1px→2px border shifts
+   every pixel of content inside it, and at tap speed that registers as a
+   flinch. */
 .answer[data-selected="true"] {
   border-color: var(--tone);
   background: color-mix(in srgb, var(--tone) 8%, var(--surface));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 14%, transparent);
+  box-shadow: inset 0 0 0 1px var(--tone);
 }
 .answer-key {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 2.25rem; /* 36 */
+  height: 2.25rem;
   flex-shrink: 0;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--tone) 15%, var(--surface));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--tone) 14%, var(--surface));
   color: var(--tone);
 }
 .answer[data-selected="true"] .answer-key {
@@ -1081,9 +1348,9 @@ summary::marker {
   background: color-mix(in srgb, var(--surface) 88%, transparent);
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--line);
-  padding: 0.9rem max(1.25rem, env(safe-area-inset-left));
-  padding-bottom: max(0.9rem, env(safe-area-inset-bottom));
-  box-shadow: 0 -8px 28px -18px rgba(23, 24, 43, 0.35);
+  padding: var(--space-3) max(var(--space-4), env(safe-area-inset-left));
+  padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 16px -12px rgba(61, 43, 53, 0.25);
 }
 
 /* Ties a stock/real photo into the brand palette instead of leaving it as a
@@ -1164,30 +1431,30 @@ summary::marker {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.45rem;
+  gap: var(--space-2);
   border-radius: var(--radius-sm);
-  padding: 0.75rem 0.8rem;
-  border: 1.5px solid color-mix(in srgb, var(--tone) 32%, var(--line));
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--tone) 32%, var(--line));
   background: color-mix(in srgb, var(--tone) 6%, var(--surface));
 }
 .level-cell-icon {
   display: inline-grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--tone) 20%, var(--surface));
+  width: 1.25rem; /* 20 */
+  height: 1.25rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--tone) 18%, var(--surface));
   color: var(--tone);
 }
 .level-cell-count {
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-size: 1.25rem; /* 20 */
+  font-weight: 700;
   line-height: 1;
   color: var(--tone);
 }
 .level-cell-label {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.6875rem; /* 11 */
+  font-weight: 600;
   color: var(--ink-3);
 }
 
@@ -1196,22 +1463,22 @@ summary::marker {
 .video-highlight {
   position: relative;
   border-radius: var(--radius);
-  padding: 1rem;
-  border: 1.5px solid color-mix(in srgb, var(--tone) 38%, var(--line));
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--tone) 38%, var(--line));
   background: linear-gradient(165deg, color-mix(in srgb, var(--tone) 13%, var(--surface)), var(--surface) 72%);
   box-shadow: var(--clay-sm);
 }
 .video-highlight-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.64rem;
-  font-weight: 800;
+  gap: var(--space-1);
+  font-size: 0.6875rem; /* 11 */
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #fff;
   background: var(--tone);
-  padding: 0.32rem 0.65rem;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
 }
 
@@ -1229,8 +1496,8 @@ summary::marker {
 .video-play {
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
+  width: 48px;
+  height: 48px;
   border-radius: 999px;
   background: var(--surface);
   color: var(--accent);
@@ -1246,8 +1513,8 @@ summary::marker {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 1.2rem;
-  box-shadow: var(--clay-sm);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-xs);
 }
 .q-card[data-answered="true"] {
   border-color: var(--accent-line);

@@ -32,7 +32,7 @@ export default function AdminSubmissionsPage() {
     return submissions.filter((s) => {
       if (filter === "complete" && !s.assessment.completedAt) return false;
       if (filter === "in_progress" && s.assessment.completedAt) return false;
-      if (filter === "consult" && s.result?.overallStatus !== "consult") return false;
+      if (filter === "consult" && s.result?.overallStatus !== "significant" && s.result?.overallStatus !== "delay") return false;
       if (query && !s.assessment.child.name.toLowerCase().includes(query.toLowerCase())) return false;
       return true;
     });

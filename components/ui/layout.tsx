@@ -3,11 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NavLink } from "@/components/nav-link";
+import { AuthNav } from "@/components/auth-nav";
 import { cx } from "./primitives";
 
 /* ══ brand ═════════════════════════════════════════════════════════════════ */
 
-export function Wordmark({ height = 46 }: { height?: number }) {
+export function Wordmark({ height = 34 }: { height?: number }) {
   return (
     <span className="brand-plate">
       <Image
@@ -25,13 +26,22 @@ export function Wordmark({ height = 46 }: { height?: number }) {
 
 /* ══ containers ════════════════════════════════════════════════════════════ */
 
+/* Four measures, each chosen for what it has to hold rather than by eye:
+     narrow  40rem / 640px — a single form column; ~60 characters of prose,
+             which is the readable line length everyone converges on
+     reading 56rem / 896px — prose plus a supporting figure
+     wide    72rem / 1152px — the standard app/marketing frame
+     full    90rem / 1440px — dense tables only (the leads list) */
 const WIDTHS = {
-  narrow: "max-w-[46rem]",
-  reading: "max-w-[58rem]",
-  wide: "max-w-[78rem]",
-  full: "max-w-[92rem]",
+  narrow: "max-w-[40rem]",
+  reading: "max-w-[56rem]",
+  wide: "max-w-[72rem]",
+  full: "max-w-[90rem]",
 } as const;
 
+/* Gutters step 16 → 24 → 32 with the breakpoint. v3 opened at 20px and ran to
+   48px, which on a large screen pushed content into a narrow band and left
+   the page feeling emptier the bigger the display got. */
 export function Shell({
   children,
   width = "reading",
@@ -42,7 +52,7 @@ export function Shell({
   className?: string;
 }) {
   return (
-    <div className={cx("mx-auto w-full px-5 sm:px-8 lg:px-12", WIDTHS[width], className)}>
+    <div className={cx("mx-auto w-full px-4 sm:px-6 lg:px-8", WIDTHS[width], className)}>
       {children}
     </div>
   );
@@ -60,7 +70,11 @@ export function Section({
   size?: "sm" | "md" | "lg";
   id?: string;
 }) {
-  const pad = size === "sm" ? "py-10 sm:py-14" : size === "lg" ? "py-20 sm:py-28" : "py-14 sm:py-20";
+  // 32/48 · 48/64 · 64/96, all on the 4px grid. v3's lg was 80/112 — hero
+  // spacing applied to ordinary sections, which is a large part of why pages
+  // felt like they were scrolling forever without saying much.
+  const pad =
+    size === "sm" ? "py-8 sm:py-12" : size === "lg" ? "py-16 sm:py-24" : "py-12 sm:py-16";
   return (
     <section id={id} className={cx(pad, className)}>
       {children}
@@ -129,6 +143,7 @@ export function TopBar({
         </div>
         <div className="flex items-center gap-2">
           {right}
+          <AuthNav />
           <ThemeToggle />
         </div>
       </div>

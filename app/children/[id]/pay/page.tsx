@@ -56,7 +56,11 @@ export default function PayPage({
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
-    setChild(getChild(id));
+    let active = true;
+    getChild(id).then(c => {
+      if (active) setChild(c);
+    });
+    return () => { active = false; };
   }, [id]);
 
   const today = todayISO();
@@ -90,7 +94,7 @@ export default function PayPage({
     }
   }
 
-  function startAssessment() {
+  async function startAssessment() {
     if (!child || !age || !startStage) return;
     setStarting(true);
     markUnlocked(child.id, ASSESSMENT_SLUG);
@@ -99,7 +103,7 @@ export default function PayPage({
     const stagesByDomain = Object.fromEntries(
       DOMAINS.map((d) => [d.code, [startStage.id]]),
     ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
-    const record = createAssessment(child, today, stagesByDomain);
+    const record = await createAssessment(child, today, stagesByDomain);
     router.push(`/assessment/${record.id}`);
   }
 

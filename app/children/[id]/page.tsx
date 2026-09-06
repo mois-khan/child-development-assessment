@@ -8,7 +8,6 @@ import { STATUSES, scoreAssessment } from "@/lib/scoring";
 import {
   assessmentsForChild,
   getChild,
-  latestAssessmentForChild,
   type SavedChild,
   type StoredAssessment,
 } from "@/lib/store";
@@ -48,14 +47,21 @@ export default function ChildProfilePage({
   const [assessments, setAssessments] = useState<StoredAssessment[]>([]);
 
   useEffect(() => {
-    setChild(getChild(id));
-    setAssessments(assessmentsForChild(id));
+    let active = true;
+    Promise.all([
+      getChild(id),
+      assessmentsForChild(id)
+    ]).then(([c, a]) => {
+      if (!active) return;
+      setChild(c);
+      setAssessments(a);
+    });
+    return () => { active = false; };
   }, [id]);
 
   const latest = useMemo(
-    () => (child ? latestAssessmentForChild(child.id) : null),
-    // assessments is in the dep list so the card refreshes after a new check
-    [child, assessments],
+    () => assessments.find(a => a.completedAt) ?? assessments[0] ?? null,
+    [assessments],
   );
 
   const result = useMemo<AssessmentResult | null>(() => {

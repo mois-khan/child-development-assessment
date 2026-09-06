@@ -23,7 +23,7 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     adminDashboardCounts().then(setCounts);
-    if (!isSupabaseConfigured()) setLeadStats(adminLeadStats());
+    if (!isSupabaseConfigured()) adminLeadStats().then(setLeadStats);
   }, []);
 
   return (

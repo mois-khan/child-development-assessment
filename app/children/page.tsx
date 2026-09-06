@@ -36,9 +36,13 @@ export default function ChildrenPage() {
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    const list = listChildren();
-    setChildren(list);
-    setShowForm(list.length === 0);
+    let active = true;
+    listChildren().then(list => {
+      if (!active) return;
+      setChildren(list);
+      setShowForm(list.length === 0);
+    });
+    return () => { active = false; };
   }, []);
 
   const empty = children !== null && children.length === 0;
@@ -124,9 +128,17 @@ export default function ChildrenPage() {
 
 function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
   const router = useRouter();
+  const [checks, setChecks] = useState<number | null>(null);
   const age = summariseAge(child.dob, todayISO(), child.gestationalWeeks);
   const stage = stageForAge(age.assessedMonths);
-  const checks = assessmentsForChild(child.id).length;
+
+  useEffect(() => {
+    let active = true;
+    assessmentsForChild(child.id).then(list => {
+      if (active) setChecks(list.length);
+    });
+    return () => { active = false; };
+  }, [child.id]);
 
   return (
     <button
@@ -154,8 +166,8 @@ function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
         <Badge tone="accent">
           Stage {stage.roman} · {stage.name}
         </Badge>
-        <Badge tone={checks > 0 ? "success" : "neutral"}>
-          {checks === 0 ? "No checks yet" : `${checks} check${checks === 1 ? "" : "s"}`}
+        <Badge tone={checks === null || checks === 0 ? "neutral" : "success"}>
+          {checks === null ? "Loading…" : checks === 0 ? "No checks yet" : `${checks} check${checks === 1 ? "" : "s"}`}
         </Badge>
       </div>
     </button>
@@ -201,21 +213,20 @@ function NewChildForm({
     reader.readAsDataURL(file);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setDobTouched(true);
     if (!canSubmit) return;
     setSubmitting(true);
-    onCreated(
-      createChild({
-        name: name.trim(),
-        dob,
-        gender: gender as Gender,
-        photoUrl,
-        city: city.trim() || undefined,
-        phone: phone.trim() || undefined,
-      }),
-    );
+    const child = await createChild({
+      name: name.trim(),
+      dob,
+      gender: gender as Gender,
+      photoUrl,
+      city: city.trim() || undefined,
+      phone: phone.trim() || undefined,
+    });
+    onCreated(child);
   }
 
   return (

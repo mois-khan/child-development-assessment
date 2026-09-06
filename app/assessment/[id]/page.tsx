@@ -135,13 +135,17 @@ export default function AssessmentPage({
   const [resumed, setResumed] = useState(false);
 
   useEffect(() => {
-    const found = getAssessment(id);
-    setRecord(found);
-    if (found) {
-      setResponses(found.responses);
-      setDetails(found.details ?? {});
-      setStages(found.stagesByDomain);
-    }
+    let active = true;
+    getAssessment(id).then(found => {
+      if (!active) return;
+      setRecord(found);
+      if (found) {
+        setResponses(found.responses);
+        setDetails(found.details ?? {});
+        setStages(found.stagesByDomain);
+      }
+    });
+    return () => { active = false; };
   }, [id]);
 
   const months = record ? monthsFor(record) : 0;

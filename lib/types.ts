@@ -189,7 +189,7 @@ export interface Child {
  * These are not thresholds anyone chose — they are read straight off the
  * TIME FRAME column of whichever stage the child reached.
  */
-export type StatusCode = "superior" | "average" | "slow" | "consult";
+export type StatusCode = "significant" | "delay" | "mild" | "typical" | "advanced";
 
 export interface Status {
   code: StatusCode;

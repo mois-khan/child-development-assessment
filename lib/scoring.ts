@@ -79,50 +79,42 @@ export const PASS_THRESHOLD = 0.75;
 export const MIN_AGE_FOR_DQ = 1;
 
 export const STATUSES: Record<StatusCode, Status> = {
-  superior: {
-    code: "superior",
-    label: "Superior",
+  advanced: {
+    code: "advanced",
+    label: "Advanced development",
     meaning: "Ahead of the chart's average for this age — this is a real strength.",
   },
-  average: {
-    code: "average",
-    /* The chart's own word for this column is "Average", but a child who
-       reached the stage a good deal earlier than average also lands here —
-       the next column up asks for twice the pace, not a little more. Calling
-       the band "Average" would then sit oddly beside a quotient of 150, so the
-       label says what the band actually means and the number says how far
-       ahead. */
-    label: "On track",
-    meaning:
-      "Reached this stage at the age the chart expects, or earlier. Nothing to act on.",
+  typical: {
+    code: "typical",
+    label: "Typically developing",
+    meaning: "Reached this stage at the age the chart expects, or earlier. Nothing to act on.",
   },
-  slow: {
-    code: "slow",
-    /* The chart's own word for this column is "Slow". That is the right word
-       on a clinician's wall chart and the wrong one on a report a parent reads
-       alone, at home, about their own child — so the code keeps the chart's
-       term and the label does not. See the wording rules at the top of
-       lib/narrative.ts. */
-    label: "Needs focus",
-    meaning:
-      "Behind the age the chart expects for this stage, but within its range — the chart calls this band “slow”. Worth daily focused activity, and worth mentioning at the next visit to your doctor.",
+  mild: {
+    code: "mild",
+    label: "Mild developmental gaps",
+    meaning: "Slightly behind the age the chart expects. Worth daily focused activity.",
   },
-  consult: {
-    code: "consult",
-    label: "Worth a closer look",
-    meaning:
-      "We suggest an assessment by a developmental paediatrician or therapist. This is a screening result, not a diagnosis.",
+  delay: {
+    code: "delay",
+    label: "Developmental delay",
+    meaning: "Noticeably behind the expected stage. We recommend targeted practice.",
+  },
+  significant: {
+    code: "significant",
+    label: "Significant developmental delay",
+    meaning: "We suggest an assessment by a developmental paediatrician or therapist. This is a screening result, not a diagnosis.",
   },
 };
 
 const STATUS_SEVERITY: Record<StatusCode, number> = {
-  superior: 0,
-  average: 1,
-  slow: 2,
-  consult: 3,
+  advanced: 0,
+  typical: 1,
+  mild: 2,
+  delay: 3,
+  significant: 4,
 };
 
-const SEVERITY_STATUS: StatusCode[] = ["superior", "average", "slow", "consult"];
+const SEVERITY_STATUS: StatusCode[] = ["advanced", "typical", "mild", "delay", "significant"];
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Reading one cell of the chart
@@ -353,15 +345,18 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
       months,
     );
 
-    // The chart classifies by the stage reached, not by the interpolation —
-    // a child either has a stage or is still working towards it.
-    const status: StatusCode = stage
-      ? classifyAgainstStage(stage, months)
-      : "consult";
-
     const dq = suppressDq
       ? null
       : Math.round((neurologicalMonths / Math.max(age.assessedExact, 0.5)) * 100);
+
+    const valueForStatus = dq === null ? (answered === 0 ? 0 : raw / answered) * 100 : dq;
+    
+    let status: StatusCode;
+    if (valueForStatus <= 50) status = "significant";
+    else if (valueForStatus <= 70) status = "delay";
+    else if (valueForStatus <= 85) status = "mild";
+    else if (valueForStatus <= 115) status = "typical";
+    else status = "advanced";
 
     return {
       domain: domain.code,
@@ -401,10 +396,13 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
 
   const statusFromMedian = overallStatus;
   const worstDomain = worstOf(domainScores.map((d) => d.status));
-  if (worstDomain === "consult" && STATUS_SEVERITY[overallStatus] < 2) {
-    overallStatus = "slow";
-  } else if (worstDomain === "slow" && STATUS_SEVERITY[overallStatus] < 1) {
-    overallStatus = "average";
+  
+  if (worstDomain === "significant" && STATUS_SEVERITY[overallStatus] < 3) {
+    overallStatus = "delay";
+  } else if (worstDomain === "delay" && STATUS_SEVERITY[overallStatus] < 2) {
+    overallStatus = "mild";
+  } else if (worstDomain === "mild" && STATUS_SEVERITY[overallStatus] < 1) {
+    overallStatus = "typical";
   }
 
   // If the median alone would have read better, name the competence
@@ -441,7 +439,7 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
 function worstOf(codes: StatusCode[]): StatusCode {
   return codes.reduce(
     (worst, c) => (STATUS_SEVERITY[c] > STATUS_SEVERITY[worst] ? c : worst),
-    "superior" as StatusCode,
+    "advanced" as StatusCode,
   );
 }
 
@@ -472,7 +470,7 @@ function pickHighlights(scores: DomainScore[]): {
     .reverse()
     .filter(
       (d) =>
-        STATUS_SEVERITY[d.status] >= STATUS_SEVERITY.slow || metric(d) <= mean - SPREAD,
+        STATUS_SEVERITY[d.status] >= STATUS_SEVERITY.mild || metric(d) <= mean - SPREAD,
     )
     .slice(0, 2)
     .map((d) => d.domain);

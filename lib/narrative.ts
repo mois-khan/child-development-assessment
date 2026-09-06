@@ -22,13 +22,15 @@ import { formatAge } from "./age";
 export function headline(result: AssessmentResult, child: Child): string {
   const name = child.name;
   switch (result.overallStatus) {
-    case "superior":
+    case "advanced":
       return `${name} is ahead of the chart across the board.`;
-    case "average":
+    case "typical":
       return `${name} is developing well across all six areas.`;
-    case "slow":
+    case "mild":
       return `${name} is growing steadily, and some areas would benefit from focused support.`;
-    case "consult":
+    case "delay":
+      return `${name} would benefit from targeted practice in some areas.`;
+    case "significant":
       return `${name} would benefit from a closer look by a specialist.`;
   }
 }
@@ -59,7 +61,7 @@ export function summary(result: AssessmentResult, child: Child): string[] {
     .join(" and ");
 
   switch (result.overallStatus) {
-    case "superior":
+    case "advanced":
       paras.push(
         strong
           ? `${name} has reached every stage we looked at earlier than the chart expects, and is furthest ahead in ${strong}.`
@@ -70,7 +72,7 @@ export function summary(result: AssessmentResult, child: Child): string[] {
       );
       break;
 
-    case "average":
+    case "typical":
       paras.push(
         strong
           ? `Across the six areas, ${name} is reaching each stage at or before the age the chart expects, and is particularly strong in ${strong}.`
@@ -81,18 +83,29 @@ export function summary(result: AssessmentResult, child: Child): string[] {
       );
       break;
 
-    case "slow":
+    case "mild":
       paras.push(
         strong
           ? `It is worth saying first that ${name} is doing genuinely well in ${strong}.`
           : `${name} has real strengths to build on, and this report is a starting point rather than a verdict.`,
       );
       paras.push(
-        `${capitalise(focus)} ${result.focusAreas.length > 1 ? "are" : "is"} behind the age the chart expects for the stage ${name} has reached. That is worth working on rather than waiting on. We would suggest the activities below every day, and mentioning this report at your next visit to your doctor.`,
+        `${capitalise(focus)} ${result.focusAreas.length > 1 ? "are" : "is"} behind the age the chart expects for the stage ${name} has reached. That is worth working on rather than waiting on. We would suggest the activities below every day.`,
       );
       break;
 
-    case "consult":
+    case "delay":
+      paras.push(
+        strong
+          ? `It is worth saying first that ${name} is doing genuinely well in ${strong}.`
+          : `${name} has real strengths to build on, and this report is a starting point rather than a verdict.`,
+      );
+      paras.push(
+        `${capitalise(focus)} ${result.focusAreas.length > 1 ? "are" : "is"} noticeably behind the age the chart expects. That is worth working on rather than waiting on. We would suggest the activities below every day, and mentioning this report at your next visit to your doctor.`,
+      );
+      break;
+
+    case "significant":
       paras.push(
         strong
           ? `${name} is doing well in ${strong}, and that is a genuine strength to build on.`
@@ -123,13 +136,15 @@ export function domainNote(score: DomainScore, child: Child): string {
   const expected = `The chart expects this stage at about ${months(stage.averageMonths)}`;
 
   switch (score.status) {
-    case "superior":
+    case "advanced":
       return `${reached}. ${expected}, and ${name} is there well ahead of that. ${score.notYet.length > 0 ? "The things listed as not yet are from the stage above, and are the natural next steps." : "This is a real strength."}`;
-    case "average":
+    case "typical":
       return `${reached}. ${expected}, which is where ${name} is. ${score.notYet.length > 0 ? "The things listed as not yet are the natural next steps." : "Everything we looked for is in place."}`;
-    case "slow":
-      return `${reached}. ${expected}, so this is an area to concentrate on. The things listed as not yet are exactly what to practise.`;
-    case "consult":
+    case "mild":
+      return `${reached}. ${expected}, so this is an area to focus on. The things listed as not yet are exactly what to practise.`;
+    case "delay":
+      return `${reached}. ${expected}, and ${name} has taken longer to reach it. This is an area to concentrate on. The things listed as not yet are exactly what to practise.`;
+    case "significant":
       return `${reached}. ${expected}, and ${name} has taken longer than the chart's range allows. This is the area we would most want a professional to look at properly.`;
   }
 }
@@ -147,13 +162,13 @@ export function nextSteps(result: AssessmentResult, child: Child): string[] {
     );
   }
 
-  if (result.overallStatus === "slow") {
+  if (result.overallStatus === "delay") {
     steps.push(
       `Take this report to your next appointment with your doctor and ask about a developmental screening.`,
     );
   }
 
-  if (result.overallStatus === "consult") {
+  if (result.overallStatus === "significant") {
     steps.push(
       `Ask your doctor to refer you to a developmental paediatrician, or contact a child development centre directly. You do not need to wait for a referral to ask.`,
     );

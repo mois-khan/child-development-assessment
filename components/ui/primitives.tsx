@@ -153,12 +153,16 @@ export function Card({
 
 type BadgeTone = "neutral" | "accent" | "success" | "warn" | "danger" | "sun";
 
+/* Text on a tinted pill uses the `-ink` shade, not the base one. The base is
+ * tuned to 4.5:1 against *white*; a chip's ground is the soft tint, which is
+ * darker, so the base value lands under the floor there. Two tokens because
+ * there are genuinely two backgrounds. */
 const TONE_VARS: Record<BadgeTone, { fg: string; bg: string }> = {
   neutral: { fg: "var(--ink-2)", bg: "var(--surface-2)" },
   accent: { fg: "var(--accent-hover)", bg: "var(--accent-soft)" },
-  success: { fg: "var(--st-on-track)", bg: "var(--st-on-track-soft)" },
-  warn: { fg: "var(--st-emerging)", bg: "var(--st-emerging-soft)" },
-  danger: { fg: "var(--st-consult)", bg: "var(--st-consult-soft)" },
+  success: { fg: "var(--st-on-track-ink)", bg: "var(--st-on-track-soft)" },
+  warn: { fg: "var(--st-emerging-ink)", bg: "var(--st-emerging-soft)" },
+  danger: { fg: "var(--st-consult-ink)", bg: "var(--st-consult-soft)" },
   sun: { fg: "var(--sun-700)", bg: "var(--sun-100)" },
 };
 
@@ -198,17 +202,19 @@ export function Badge({
 }
 
 const STATUS_TONE: Record<StatusCode, BadgeTone> = {
-  superior: "success",
-  average: "success",
-  slow: "warn",
-  consult: "danger",
+  advanced: "success",
+  typical: "success",
+  mild: "warn",
+  delay: "danger",
+  significant: "danger",
 };
 
 const STATUS_VAR: Record<StatusCode, string> = {
-  superior: "--st-superior",
-  average: "--st-on-track",
-  slow: "--st-needs-focus",
-  consult: "--st-consult",
+  advanced: "--st-superior",
+  typical: "--st-on-track",
+  mild: "--st-needs-focus",
+  delay: "--st-consult",
+  significant: "--st-consult",
 };
 
 export function statusColor(status: StatusCode): string {
@@ -300,8 +306,8 @@ export function Meter({
 
 export function ProgressRing({
   value,
-  size = 56,
-  stroke = 6,
+  size = 48,
+  stroke = 5,
   color = "var(--accent)",
   track = "var(--surface-3)",
   children,
@@ -350,7 +356,7 @@ export function initials(name: string): string {
 export function Avatar({
   name,
   photoUrl,
-  size = 44,
+  size = 40,
   ring = false,
   className = "",
   style,
@@ -363,7 +369,7 @@ export function Avatar({
   style?: CSSProperties;
 }) {
   const ringStyle: CSSProperties = ring
-    ? { boxShadow: "0 0 0 3px var(--surface), 0 0 0 6px var(--accent-line)" }
+    ? { boxShadow: "0 0 0 2px var(--surface), 0 0 0 4px var(--accent-line)" }
     : {};
 
   if (photoUrl) {
@@ -414,12 +420,12 @@ export function ChildCard({
         className,
       )}
     >
-      <Avatar name={name} photoUrl={photoUrl} size={compact ? 38 : 46} />
+      <Avatar name={name} photoUrl={photoUrl} size={compact ? 32 : 40} />
       <div className="min-w-0 leading-tight">
-        <p className={cx("truncate font-bold text-ink", compact ? "text-[0.9rem]" : "text-[1rem]")}>
+        <p className={cx("truncate font-semibold text-ink", compact ? "text-sm" : "text-base")}>
           {name}
         </p>
-        <p className="text-[0.76rem] font-medium text-ink-3">
+        <p className="text-xs font-medium text-ink-3">
           {ageLabel}
           {dobLabel && <span className="opacity-75"> · born {dobLabel}</span>}
         </p>
@@ -454,7 +460,7 @@ export function domainColor(code: DomainCode): string {
 
 export function SectionIcon({
   code,
-  size = 22,
+  size = 20,
   className = "",
 }: {
   code: DomainCode;
@@ -468,7 +474,7 @@ export function SectionIcon({
 /** Icon in a soft, section-coloured clay tile. The product's visual signature. */
 export function SectionTile({
   code,
-  size = 56,
+  size = 44,
   className = "",
 }: {
   code: DomainCode;
@@ -485,17 +491,17 @@ export function SectionTile({
       style={{
         width: size,
         height: size,
-        borderRadius: size * 0.32,
+        borderRadius: size * 0.28,
         color,
-        background: `color-mix(in srgb, ${color} 14%, var(--surface))`,
+        background: `color-mix(in srgb, ${color} 12%, var(--surface))`,
         boxShadow: [
-          `0 1px 2px rgba(69, 77, 93, 0.08)`,
-          `0 8px 18px -8px color-mix(in srgb, ${color} 60%, transparent)`,
+          `0 1px 2px rgba(61, 43, 53, 0.05)`,
+          `0 6px 12px -6px color-mix(in srgb, ${color} 45%, transparent)`,
         ].join(", "),
       }}
       aria-hidden="true"
     >
-      <SectionIcon code={code} size={size * 0.46} />
+      <SectionIcon code={code} size={Math.round(size * 0.48)} />
     </span>
   );
 }
@@ -535,14 +541,14 @@ export function Tick({
 export function DoneBanner({ children }: { children: ReactNode }) {
   return (
     <div
-      className="animate-rise flex items-center gap-3 rounded-[var(--radius)] border px-4 py-3.5"
+      className="animate-rise flex items-center gap-3 rounded-[var(--radius)] border px-4 py-3"
       style={{ borderColor: "var(--accent-line)", background: "var(--accent-soft)" }}
       role="status"
     >
-      <span className="animate-pop grid size-8 shrink-0 place-items-center rounded-full bg-[var(--accent)] text-white">
-        <IconCheck size={17} />
+      <span className="animate-pop grid size-7 shrink-0 place-items-center rounded-full bg-[var(--accent)] text-white">
+        <IconCheck size={16} />
       </span>
-      <p className="text-[0.92rem] font-bold leading-snug text-ink">{children}</p>
+      <p className="text-sm font-semibold leading-snug text-ink">{children}</p>
     </div>
   );
 }
@@ -561,14 +567,14 @@ export function Stat({
   return (
     <div className="text-center">
       {icon && (
-        <span className="mb-2 inline-grid size-10 place-items-center rounded-2xl" style={{ color, background: `color-mix(in srgb, ${color} 12%, var(--surface))` }}>
+        <span className="mb-2 inline-grid size-9 place-items-center rounded-[var(--radius-sm)]" style={{ color, background: `color-mix(in srgb, ${color} 12%, var(--surface))` }}>
           {icon}
         </span>
       )}
-      <p className="tnum text-[1.75rem] font-extrabold leading-none" style={{ fontFamily: "var(--font-sans)", color }}>
+      <p className="tnum text-3xl font-bold leading-none" style={{ fontFamily: "var(--font-sans)", color }}>
         {value}
       </p>
-      <p className="mt-1.5 text-[0.82rem] font-semibold text-ink-3">{label}</p>
+      <p className="mt-1.5 text-xs font-medium text-ink-3">{label}</p>
     </div>
   );
 }

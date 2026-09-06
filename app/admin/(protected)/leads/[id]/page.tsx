@@ -53,7 +53,7 @@ export default function AdminLeadDetailPage({
   const [lead, setLead] = useState<Lead | null | undefined>(undefined);
   const [editingDetails, setEditingDetails] = useState(false);
 
-  const refresh = () => setLead(adminGetLead(id));
+  const refresh = () => { adminGetLead(id).then(setLead); };
   useEffect(refresh, [id]);
 
   if (lead === undefined) return <p className="text-[0.9rem] text-ink-3">Loading…</p>;
@@ -229,8 +229,8 @@ function LeadDetailsForm({ lead, onSaved }: { lead: Lead; onSaved: () => void })
   const [city, setCity] = useState(lead.city ?? "");
   const [assignedTo, setAssignedTo] = useState(lead.assignedTo ?? "");
 
-  function save() {
-    adminUpdateLead(lead.id, {
+  async function save() {
+    await adminUpdateLead(lead.id, {
       childName: lead.childName,
       parentName: parentName.trim() || undefined,
       phone: phone.trim() || undefined,
@@ -291,9 +291,9 @@ function LogFollowUpForm({
   const needsNextDate = !meta.closes;
   const canSave = date !== "" && (!needsNextDate || nextDate !== "");
 
-  function save() {
+  async function save() {
     if (!canSave) return;
-    adminLogFollowUp(leadId, {
+    await adminLogFollowUp(leadId, {
       date,
       verdict,
       note: note.trim(),

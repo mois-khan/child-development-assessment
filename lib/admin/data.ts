@@ -45,14 +45,15 @@ export async function adminListSubmissions(): Promise<AdminSubmission[]> {
     // one to test against, would just be code no one has run.
     throw new Error("Supabase-backed submissions are not wired up yet.");
   }
-  return listAssessments().map(toSubmission);
+  const list = await listAssessments();
+  return list.map(toSubmission);
 }
 
 export async function adminGetSubmission(id: string): Promise<AdminSubmission | null> {
   if (isSupabaseConfigured()) {
     throw new Error("Supabase-backed submissions are not wired up yet.");
   }
-  const a = getAssessment(id);
+  const a = await getAssessment(id);
   return a ? toSubmission(a) : null;
 }
 
@@ -68,13 +69,17 @@ export async function adminDashboardCounts(): Promise<AdminDashboardCounts> {
   if (isSupabaseConfigured()) {
     throw new Error("Supabase-backed dashboard is not wired up yet.");
   }
-  const children: SavedChild[] = listChildren();
-  const submissions = listAssessments().map(toSubmission);
+  const children = await listChildren();
+  const list = await listAssessments();
+  const submissions = list.map(toSubmission);
   return {
     totalChildren: children.length,
     totalAssessments: submissions.length,
     completedAssessments: submissions.filter((s) => s.assessment.completedAt).length,
     inProgressAssessments: submissions.filter((s) => !s.assessment.completedAt).length,
-    needsFollowUp: submissions.filter((s) => s.result?.overallStatus === "consult").length,
+    needsFollowUp: submissions.filter((s) => {
+      const st = s.result?.overallStatus;
+      return st === "significant" || st === "delay";
+    }).length,
   };
 }
