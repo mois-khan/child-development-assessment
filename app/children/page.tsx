@@ -174,6 +174,7 @@ function NewChildForm({
   const today = todayISO();
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
+  const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [gender, setGender] = useState<Gender | "">("");
   const [photoUrl, setPhotoUrl] = useState<string | undefined>();
@@ -212,6 +213,7 @@ function NewChildForm({
         gender: gender as Gender,
         photoUrl,
         city: city.trim() || undefined,
+        phone: phone.trim() || undefined,
       }),
     );
   }
@@ -286,6 +288,25 @@ function NewChildForm({
           ) : (
             <p className="hint">We work out their age and stage from this — nothing else needed.</p>
           )}
+        </div>
+
+        <div>
+          <label className="label" htmlFor="phone">
+            Phone number <span className="font-normal text-ink-3">(optional)</span>
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            className="field"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="98765 43210"
+            autoComplete="tel"
+          />
+          <p className="hint">
+            So our team can reach you about {name.trim() || "your child"}&rsquo;s results — we
+            never share it.
+          </p>
         </div>
 
         <div>
