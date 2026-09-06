@@ -1,19 +1,17 @@
 "use client";
 
 import { Fragment, use, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE } from "@/content/domains";
 import { BRAIN_STAGES, STAGE_BY_ID, cellFor } from "@/content/stages";
-import { liveActivitiesFor, type AdminActivity } from "@/lib/admin/activities";
-import { liveGetVideo, type AdminVideo } from "@/lib/admin/videos";
-import { resolveRecommendedCourse, type AdminCourse } from "@/lib/admin/recommendations";
+import { activitiesFor } from "@/content/activities";
 import { formatAge, summariseAge } from "@/lib/age";
 import { DISCLAIMER, domainNote, headline, nextSteps, summary } from "@/lib/narrative";
 import { STATUSES, scoreAssessment } from "@/lib/scoring";
 import { stageForAge } from "@/lib/stage";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
 import type {
+  Activity,
   AssessmentResult,
   BrainStage,
   Child,
@@ -35,7 +33,6 @@ import {
   IconClock,
   IconDownload,
   IconHeart,
-  IconPlay,
   IconSparkle,
   Mascot,
   Meter,
@@ -49,16 +46,6 @@ import {
   domainColor,
   statusColor,
 } from "@/components/ui";
-
-/** A still for each section's suggested video. Real clips drop in later. */
-const VIDEO_STILL: Record<DomainCode, string> = {
-  vision: "/images/play-blocks.jpg",
-  auditory: "/images/baby-laughing.jpg",
-  tactile: "/images/child-smile.jpg",
-  mobility: "/images/outdoor-play.jpg",
-  language: "/images/parent-reading.jpg",
-  hand: "/images/playful-child.jpg",
-};
 
 export default function ReportPage({
   params,
@@ -137,10 +124,7 @@ export default function ReportPage({
       ? result.focusAreas
       : [...result.domainScores].sort((a, b) => metric(a) - metric(b)).slice(0, 2).map((d) => d.domain);
 
-  // Admin-authored recommendation rules (lib/admin/recommendations.ts) win
-  // when one matches; otherwise the report falls back to the fixed default
-  // below, same as it always has.
-  const recommendation = resolveRecommendedCourse(result);
+
 
   return (
     <>
@@ -373,27 +357,19 @@ export default function ReportPage({
           <Section size="sm" className="print-break">
             <h2>Area by area</h2>
             <p className="mt-2 max-w-[58ch] text-[0.95rem] leading-relaxed text-ink-2">
-              What {child.name} is already doing, what is arriving, and — where it would help —
-              a short video to watch together.
+              What {child.name} is already doing, what is not yet in place, and what to
+              practise at home this week.
             </p>
 
             <div className="mt-6 space-y-5">
-              {ordered.map((score) => {
-                const activities = pickActivities(score);
-                const video = activities
-                  .map((a) => (a.videoId ? liveGetVideo(a.videoId) : null))
-                  .find((v): v is AdminVideo => v !== null);
-                return (
-                  <DomainCard
-                    key={score.domain}
-                    score={score}
-                    note={domainNote(score, child)}
-                    suggestVideo={focus.includes(score.domain)}
-                    activities={activities}
-                    video={video ?? null}
-                  />
-                );
-              })}
+              {ordered.map((score) => (
+                <DomainCard
+                  key={score.domain}
+                  score={score}
+                  note={domainNote(score, child)}
+                  activities={pickActivities(score)}
+                />
+              ))}
             </div>
           </Section>
 
@@ -420,14 +396,7 @@ export default function ReportPage({
                 </div>
               </Card>
 
-              {/* the course recommendation — an admin rule match (see
-                  lib/admin/recommendations.ts) if one exists, else the fixed
-                  default this report has always shown. */}
-              {recommendation ? (
-                <RecommendedCourseCard course={recommendation.course} />
-              ) : (
-                <DefaultRecommendationCard stage={startStage} />
-              )}
+              <DefaultRecommendationCard stage={startStage} />
             </div>
           </Section>
 
@@ -780,15 +749,11 @@ function escapeRegExp(s: string): string {
 function DomainCard({
   score,
   note,
-  suggestVideo,
   activities,
-  video,
 }: {
   score: DomainScore;
   note: string;
-  suggestVideo: boolean;
-  activities: AdminActivity[];
-  video: AdminVideo | null;
+  activities: Activity[];
 }) {
   const domain = DOMAIN_BY_CODE[score.domain];
   const color = domainColor(score.domain);
@@ -853,7 +818,7 @@ function DomainCard({
         </summary>
 
         <div
-          className={`border-t border-line-soft p-6 sm:p-7 grid gap-6 ${suggestVideo ? "lg:grid-cols-[1fr_17rem]" : ""}`}
+          className="border-t border-line-soft p-6 sm:p-7"
         >
           <div>
             <p className="prose-read !text-[0.97rem]">{note}</p>
@@ -896,63 +861,6 @@ function DomainCard({
               </div>
             )}
           </div>
-
-          {suggestVideo && (
-            <div
-              className="video-highlight no-print"
-              style={{ "--tone": color } as React.CSSProperties}
-            >
-              <span className="video-highlight-badge">
-                <IconPlay size={10} /> Suggested watch
-              </span>
-              {video ? (
-                <a
-                  href={video.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="video-thumb mt-3 block"
-                  aria-label={`Watch: ${video.title}`}
-                >
-                  {video.thumbnailUrl ? (
-                    // Admin-supplied thumbnail URL, not a local /public asset —
-                    // next/image can't optimise an arbitrary remote host here.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={video.thumbnailUrl}
-                      alt=""
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="absolute inset-0" style={{ background: "var(--surface-3)" }} />
-                  )}
-                  <span className="absolute inset-0" style={{ background: "rgba(23,24,43,0.28)" }} />
-                  <span className="video-play relative">
-                    <IconPlay size={22} />
-                  </span>
-                </a>
-              ) : (
-                <div className="video-thumb mt-3">
-                  <Image
-                    src={VIDEO_STILL[score.domain]}
-                    alt=""
-                    width={480}
-                    height={300}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                  <span className="absolute inset-0" style={{ background: "rgba(23,24,43,0.28)" }} />
-                  <span className="video-play relative">
-                    <IconPlay size={22} />
-                  </span>
-                </div>
-              )}
-              <p className="mt-2.5 text-[0.82rem] font-semibold leading-snug text-ink-2">
-                {video
-                  ? video.title
-                  : `${domain.short} practice for ${formatMonths(score.neurologicalMonths)}`}
-              </p>
-              {!video && <Badge className="mt-2">Video coming soon</Badge>}
-            </div>
-          )}
         </div>
       </details>
     </Card>
@@ -960,11 +868,10 @@ function DomainCard({
 }
 
 /* ══ recommendation ═══════════════════════════════════════════════════════
- * Two versions of the same card shell: the fixed default this report always
- * showed, and one filled from an admin-authored course + rule match (see
- * lib/admin/recommendations.ts). Kept as separate components rather than one
- * branchy one, since the default's copy is written for it specifically and
- * a course's fields (price, checkout link) don't all have a default analogue. */
+ * A single fixed card pointing at the programme. The admin-authored course +
+ * rule engine that used to feed an alternative version of this was removed
+ * along with the Courses admin section — it produced nothing a hardcoded CTA
+ * doesn't, and every deployment had zero courses in it. */
 
 function RecommendationShell({
   eyebrow,
@@ -1053,21 +960,6 @@ function DefaultRecommendationCard({ stage }: { stage: BrainStage }) {
   );
 }
 
-function RecommendedCourseCard({ course }: { course: AdminCourse }) {
-  return (
-    <RecommendationShell
-      eyebrow="Recommended next"
-      title={course.title}
-      description={course.description}
-      bullets={course.price != null ? [`${course.currency} ${course.price}`] : []}
-      primaryHref={course.checkoutUrl}
-      primaryLabel="Explore the programme"
-      secondaryHref="mailto:support@kaushalyageniuskid.com"
-      secondaryLabel="Talk to our team"
-    />
-  );
-}
-
 /* ══ helpers ═══════════════════════════════════════════════════════════════ */
 
 /**
@@ -1111,8 +1003,8 @@ function stagePosition(value: number): { index: number; frac: number } {
  * their age points at. A child working at stage III needs stage III play, and
  * handing them their age's activities is how a report becomes discouraging.
  */
-function pickActivities(score: DomainScore): AdminActivity[] {
-  return liveActivitiesFor(score.domain, score.achievedStage || "s1").slice(0, 4);
+function pickActivities(score: DomainScore): Activity[] {
+  return activitiesFor(score.domain, score.achievedStage || "s1").slice(0, 4);
 }
 
 function formatDate(iso: string): string {

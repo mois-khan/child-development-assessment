@@ -9,24 +9,25 @@ import {
   Button,
   IconBolt,
   IconChart,
-  IconClock,
   IconClose,
   IconLock,
   IconMenu,
   IconPhone,
-  IconShield,
-  IconUsers,
   Wordmark,
   cx,
 } from "@/components/ui";
 
+/**
+ * Three sections, deliberately. Courses, Activities and Videos were removed:
+ * they were content-management surfaces competing for attention with the two
+ * things this panel exists to do — manage the question bank, and work the
+ * lead pipeline. Submissions folded into Leads, because a submission with no
+ * parent attached to it isn't something anyone acts on.
+ */
 const NAV: { href: string; label: string; icon: ReactNode; soon?: boolean }[] = [
   { href: "/admin", label: "Dashboard", icon: <IconChart size={18} /> },
-  { href: "/admin/submissions", label: "Submissions", icon: <IconUsers size={18} /> },
   { href: "/admin/leads", label: "Leads", icon: <IconPhone size={18} /> },
-  { href: "/admin/item-bank", label: "Item bank", icon: <IconBolt size={18} /> },
-  { href: "/admin/activities", label: "Activities & videos", icon: <IconClock size={18} /> },
-  { href: "/admin/courses", label: "Courses", icon: <IconShield size={18} /> },
+  { href: "/admin/item-bank", label: "Question bank", icon: <IconBolt size={18} /> },
 ];
 
 export default function AdminProtectedLayout({ children }: { children: ReactNode }) {
@@ -51,8 +52,7 @@ export default function AdminProtectedLayout({ children }: { children: ReactNode
   const isActive = (href: string) =>
     href === "/admin"
       ? pathname === "/admin"
-      : pathname?.startsWith(href) ||
-        (href === "/admin/activities" && pathname?.startsWith("/admin/videos"));
+      : (pathname?.startsWith(href) ?? false);
 
   return (
     <div className="flex min-h-screen bg-[var(--ground-2)]">
