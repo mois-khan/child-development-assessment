@@ -2,8 +2,9 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import { isSupabaseConfigured } from "./env";
+import type { Database } from "./database.types";
 
-let cached: ReturnType<typeof createBrowserClient> | null = null;
+let cached: ReturnType<typeof createBrowserClient<Database>> | null = null;
 
 /**
  * Browser-side Supabase client. Only call this behind an
@@ -19,7 +20,7 @@ export function getSupabaseBrowserClient() {
     );
   }
   if (!cached) {
-    cached = createBrowserClient(
+    cached = createBrowserClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );

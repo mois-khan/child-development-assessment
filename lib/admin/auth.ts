@@ -23,7 +23,7 @@ const DEV_ADMIN_EMAIL = "dev-admin@local";
 
 export interface AdminSession {
   email: string;
-  role: "super_admin" | "content_editor" | "support";
+  role: "super_admin" | "sales" | "content_editor";
   /** True when this is the local dev-mode bypass, not a real signed-in admin. */
   isDevSession: boolean;
 }

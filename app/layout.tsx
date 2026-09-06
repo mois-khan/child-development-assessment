@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Poetsen_One } from "next/font/google";
 import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@/components/theme-toggle";
+import { AuthProvider } from "@/lib/auth/provider";
 
 /**
  * The KGKP brand's own two voices (see kgkpdesign.md).
@@ -39,7 +40,9 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className={`${inter.variable} ${poetsen.variable}`}>{children}</body>
+      <body className={`${inter.variable} ${poetsen.variable}`}>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
