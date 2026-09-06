@@ -1,9 +1,10 @@
 /**
- * Database types, mirroring supabase/migrations/0001_core.sql.
+ * Database types, mirroring supabase/migrations/0001_core.sql and
+ * 0002_recommendations.sql.
  *
  * Hand-written rather than generated: `supabase gen types` runs through the
  * management API, which is currently refusing requests for this org. Keep
- * this file in step with the migration by hand until that's restored, then
+ * this file in step with the migrations by hand until that's restored, then
  * regenerate and delete this note.
  */
 
@@ -37,8 +38,12 @@ export type InteractionOutcome =
 
 export type AssessmentStatus = "in_progress" | "complete";
 export type PaymentStatus = "created" | "paid" | "failed" | "cancelled";
-export type AdminRole = "super_admin" | "sales" | "content_editor";
+/** Updated in 0002: added admin, manager; removed content_editor. */
+export type AdminRole = "super_admin" | "admin" | "manager" | "sales";
 export type ChildGender = "girl" | "boy" | "other";
+export type MilestoneVideoDomain =
+  | "vision" | "auditory" | "tactile" | "mobility" | "language" | "hand";
+
 
 export interface Database {
   public: {
@@ -226,10 +231,127 @@ export interface Database {
         };
         Relationships: [];
       };
+      milestone_videos: {
+        Row: {
+          id: string;
+          stage_id: string;
+          domain: MilestoneVideoDomain;
+          title: string;
+          description: string;
+          thumbnail_url: string;
+          redirect_url: string;
+          sort_order: number;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          stage_id: string;
+          domain: MilestoneVideoDomain;
+          title: string;
+          description?: string;
+          thumbnail_url?: string;
+          redirect_url: string;
+          sort_order?: number;
+          is_active?: boolean;
+          created_by?: string | null;
+        };
+        Update: {
+          stage_id?: string;
+          domain?: MilestoneVideoDomain;
+          title?: string;
+          description?: string;
+          thumbnail_url?: string;
+          redirect_url?: string;
+          sort_order?: number;
+          is_active?: boolean;
+        };
+        Relationships: [];
+      };
+      course_recommendations: {
+        Row: {
+          id: string;
+          stage_id: string;
+          title: string;
+          subtitle: string;
+          description: string;
+          thumbnail_url: string;
+          redirect_url: string;
+          age_label: string;
+          sort_order: number;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          stage_id: string;
+          title: string;
+          subtitle?: string;
+          description?: string;
+          thumbnail_url?: string;
+          redirect_url: string;
+          age_label?: string;
+          sort_order?: number;
+          is_active?: boolean;
+          created_by?: string | null;
+        };
+        Update: {
+          stage_id?: string;
+          title?: string;
+          subtitle?: string;
+          description?: string;
+          thumbnail_url?: string;
+          redirect_url?: string;
+          age_label?: string;
+          sort_order?: number;
+          is_active?: boolean;
+        };
+        Relationships: [];
+      };
+      admin_pages: {
+        Row: {
+          id: string;
+          label: string;
+          description: string;
+          sort_order: number;
+        };
+        Insert: {
+          id: string;
+          label: string;
+          description?: string;
+          sort_order?: number;
+        };
+        Update: {
+          label?: string;
+          description?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      admin_page_access: {
+        Row: {
+          admin_user_id: string;
+          page_id: string;
+          granted_at: string;
+          granted_by: string | null;
+        };
+        Insert: {
+          admin_user_id: string;
+          page_id: string;
+          granted_by?: string | null;
+        };
+        Update: {
+          granted_by?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<never, never>;
     Functions: {
       is_admin: { Args: Record<never, never>; Returns: boolean };
+      has_page_access: { Args: { page: string }; Returns: boolean };
     };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;

@@ -143,11 +143,11 @@ export default function ChildProfilePage({
                 <Avatar name={child.name} photoUrl={child.photoUrl} size={88} ring />
                 <div>
                   <h1 className="text-white">{child.name}</h1>
-                  <p className="mt-1.5 text-[0.95rem] font-semibold text-white/80">
+                  <p className="mt-1.5 text-base font-semibold text-white/80">
                     Born {formatDate(child.dob)} ({age.chronologicalMonths} month{age.chronologicalMonths === 1 ? "" : "s"}) ·{" "}
                     {child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"}
                   </p>
-                  <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-[0.82rem] font-bold text-white backdrop-blur">
+                  <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-bold text-white backdrop-blur">
                     <IconSparkle size={15} />
                     Stage {stage.roman} of VII · {stage.name}
                   </span>
@@ -157,12 +157,12 @@ export default function ChildProfilePage({
               <div className="flex gap-3">
                 <div className="min-w-[100px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur">
                   <p
-                    className="tnum text-[1.65rem] font-extrabold text-white"
+                    className="tnum text-2xl font-extrabold text-white"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {completed}
                   </p>
-                  <p className="text-[0.74rem] font-bold text-white/70">
+                  <p className="text-xs font-bold text-white/70">
                     {completed === 1 ? "Report" : "Reports"}
                   </p>
                 </div>
@@ -191,8 +191,8 @@ export default function ChildProfilePage({
             {assessments.length === 0 ? (
               <Card variant="clay" className="mt-6 p-8 text-center sm:p-12">
                 <Mascot size={88} mood="wave" className="mx-auto" />
-                <h3 className="mt-5 text-[1.25rem]">No assessments done yet</h3>
-                <p className="mx-auto mt-2 max-w-[40ch] text-[0.95rem] leading-relaxed text-ink-2">
+                <h3 className="mt-5 text-xl">No assessments done yet</h3>
+                <p className="mx-auto mt-2 max-w-[40ch] text-base leading-relaxed text-ink-2">
                   Run {child.name}&rsquo;s first milestone check — about ten minutes, and their
                   report will live right here.
                 </p>
@@ -211,16 +211,16 @@ export default function ChildProfilePage({
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-line bg-[var(--surface-2)]">
-                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-ink-3">
                           Assessment Name
                         </th>
-                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-ink-3">
                           Time
                         </th>
-                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-ink-3">
                           Status
                         </th>
-                        <th className="px-6 py-4 text-right text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                        <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-ink-3">
                           Actions
                         </th>
                       </tr>
@@ -240,16 +240,16 @@ export default function ChildProfilePage({
                                 {a.completedAt ? <IconStarFilled size={18} /> : <IconRefresh size={18} />}
                               </span>
                               <div>
-                                <p className="font-extrabold text-ink text-[0.95rem]">
+                                <p className="font-extrabold text-ink text-base">
                                   Genius Milestone Check
                                 </p>
-                                <p className="text-[0.78rem] font-semibold text-ink-3">
+                                <p className="text-xs font-semibold text-ink-3">
                                   Stage {stage.roman} · {stage.name}
                                 </p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-[0.88rem] font-semibold text-ink-2 whitespace-nowrap">
+                          <td className="px-6 py-4 text-sm font-semibold text-ink-2 whitespace-nowrap">
                             {formatDateTime(a.completedAt || (a as any).createdAt || a.assessedOn)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -321,16 +321,16 @@ export default function ChildProfilePage({
                       solid
                       size="lg"
                     />
-                    <span className="flex items-center gap-1.5 text-[0.85rem] font-semibold text-ink-3">
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-3">
                       <IconCalendar size={15} />
                       {formatDate(latest.assessedOn)}
                     </span>
                   </div>
                   {!result.suppressDq && result.overallDq !== null && (
-                    <span className="flex items-center gap-2 text-[0.85rem] font-semibold text-ink-3">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-ink-3">
                       <IconChart size={16} />
                       Average{" "}
-                      <strong className="tnum text-[1.05rem] font-extrabold text-ink">
+                      <strong className="tnum text-base font-extrabold text-ink">
                         {result.overallDq}
                       </strong>
                       <span className="text-ink-3">/ 100</span>
@@ -347,10 +347,10 @@ export default function ChildProfilePage({
                         <SectionTile code={s.domain} size={40} />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline justify-between gap-2">
-                            <span className="truncate text-[0.88rem] font-bold text-ink">
+                            <span className="truncate text-sm font-bold text-ink">
                               {d.name}
                             </span>
-                            <span className="tnum text-[0.82rem] font-extrabold text-ink-3">
+                            <span className="tnum text-sm font-extrabold text-ink-3">
                               {Math.round(value)}
                             </span>
                           </div>

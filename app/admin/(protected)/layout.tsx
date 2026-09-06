@@ -19,21 +19,34 @@ import {
   cx,
 } from "@/components/ui";
 
+/** A nav section divider with a label — sits between groups of links. */
+type NavDivider = { divider: true; label: string };
+type NavItem = { href: string; label: string; icon: ReactNode; soon?: boolean };
+type NavEntry = NavItem | NavDivider;
+
+function isDivider(e: NavEntry): e is NavDivider {
+  return "divider" in e && e.divider;
+}
+
 /**
- * Three sections, deliberately. Courses, Activities and Videos were removed:
- * they were content-management surfaces competing for attention with the two
- * things this panel exists to do — manage the question bank, and work the
- * lead pipeline. Submissions folded into Leads, because a submission with no
- * parent attached to it isn't something anyone acts on.
+ * Navigation organised into three sections:
+ *  Core     — the day-to-day pipeline pages
+ *  CMS      — admin-authored content (videos, courses)
+ *  Settings — user and permission management (super_admin)
  */
-const NAV: { href: string; label: string; icon: ReactNode; soon?: boolean }[] = [
+const NAV: NavEntry[] = [
   { href: "/admin",              label: "Dashboard",      icon: <IconChart size={18} /> },
   { href: "/admin/parents",      label: "Parents",        icon: <IconUsers size={18} /> },
   { href: "/admin/children",     label: "Children",       icon: <IconUsers size={18} /> },
   { href: "/admin/assessments",  label: "Assessments",    icon: <IconTrophy size={18} /> },
   { href: "/admin/purchases",    label: "Purchases",      icon: <IconBolt size={18} /> },
   { href: "/admin/leads",        label: "Leads",          icon: <IconPhone size={18} /> },
-  { href: "/admin/item-bank",    label: "Question bank",  icon: <IconBolt size={18} /> },
+  { href: "/admin/item-bank",    label: "Question Bank",  icon: <IconBolt size={18} /> },
+  { divider: true,               label: "CMS" },
+  { href: "/admin/milestone-videos", label: "Milestone Videos",  icon: <IconTrophy size={18} /> },
+  { href: "/admin/courses",          label: "Course Recs",       icon: <IconBolt size={18} /> },
+  { divider: true,               label: "Settings" },
+  { href: "/admin/users",            label: "User Management",   icon: <IconUsers size={18} /> },
 ];
 
 export default function AdminProtectedLayout({ children }: { children: ReactNode }) {
@@ -129,22 +142,32 @@ function AdminNav({
   nav,
   isActive,
 }: {
-  nav: typeof NAV;
+  nav: NavEntry[];
   isActive: (href: string) => boolean;
 }) {
   return (
     <nav className="flex flex-col gap-1">
-      {nav.map((item) => {
-        const active = isActive(item.href);
-        if (item.soon) {
+      {nav.map((entry, i) => {
+        if (isDivider(entry)) {
+          return (
+            <p
+              key={`divider-${i}`}
+              className="mt-3 mb-0.5 px-3 text-2xs font-extrabold uppercase tracking-widest text-ink-3"
+            >
+              {entry.label}
+            </p>
+          );
+        }
+        const active = isActive(entry.href);
+        if (entry.soon) {
           return (
             <span
-              key={item.href}
-              className="flex items-center justify-between gap-2 rounded-2xl px-3 py-2.5 text-[0.9rem] font-semibold text-ink-3 opacity-60"
+              key={entry.href}
+              className="flex items-center justify-between gap-2 rounded-2xl px-3 py-2.5 text-sm font-semibold text-ink-3 opacity-60"
             >
               <span className="flex items-center gap-2.5">
-                {item.icon}
-                {item.label}
+                {entry.icon}
+                {entry.label}
               </span>
               <Badge size="sm">Soon</Badge>
             </span>
@@ -152,15 +175,15 @@ function AdminNav({
         }
         return (
           <Link
-            key={item.href}
-            href={item.href}
+            key={entry.href}
+            href={entry.href}
             className={cx(
-              "flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-[0.9rem] font-semibold transition-colors",
+              "flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-colors",
               active ? "bg-[var(--accent-soft)] text-[var(--accent-hover)]" : "text-ink-2 hover:bg-surface-2",
             )}
           >
-            {item.icon}
-            {item.label}
+            {entry.icon}
+            {entry.label}
           </Link>
         );
       })}
@@ -184,8 +207,8 @@ function AdminSessionFooter({
         </Badge>
       )}
       <div className="px-1">
-        <p className="truncate text-[0.82rem] font-semibold text-ink">{session.email}</p>
-        <p className="text-[0.72rem] uppercase tracking-wide text-ink-3">{session.role}</p>
+        <p className="truncate text-sm font-semibold text-ink">{session.email}</p>
+        <p className="text-xs uppercase tracking-wide text-ink-3">{session.role}</p>
       </div>
       <Button variant="ghost" size="sm" block onClick={onSignOut}>
         Sign out

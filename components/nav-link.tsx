@@ -17,7 +17,7 @@ export function NavLink({ href, label }: { href: string; label: string }) {
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className="relative rounded-full px-4 py-2 text-[0.92rem] font-bold transition-colors"
+      className="relative rounded-full px-4 py-2 text-sm font-bold transition-colors"
       style={{
         color: active ? "var(--accent)" : "var(--ink-2)",
         background: active ? "var(--accent-soft)" : "transparent",

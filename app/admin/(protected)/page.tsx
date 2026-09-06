@@ -59,23 +59,23 @@ export default function AdminDashboardPage() {
         />
 
         <div className="relative">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-white/60">
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-white/60">
             {new Date().toLocaleDateString("en-IN", {
               weekday: "long",
               day: "numeric",
               month: "long",
             })}
           </p>
-          <h1 className="mt-1 !text-[1.5rem] font-extrabold text-white sm:!text-[1.75rem]">
+          <h1 className="mt-1 !text-2xl font-extrabold text-white sm:!text-3xl">
             {greeting}
           </h1>
-          <p className="mt-1 text-[0.82rem] text-white/65">
+          <p className="mt-1 text-sm text-white/65">
             Here's what's happening across the programme.
           </p>
 
           <Link
             href="/admin/leads"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2 text-[0.82rem] font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/25"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/25"
           >
             View Leads
             <span className="opacity-70">→</span>
@@ -84,7 +84,7 @@ export default function AdminDashboardPage() {
           {urgentCount > 0 && (
             <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-white/10 px-4 py-3 backdrop-blur-sm">
               <IconShield size={16} className="mt-px shrink-0 text-white/80" />
-              <p className="text-[0.82rem] font-semibold text-white">
+              <p className="text-sm font-semibold text-white">
                 {urgentCount} item{urgentCount !== 1 ? "s" : ""} need attention today —{" "}
                 <Link href="/admin/leads" className="underline underline-offset-2 opacity-80 hover:opacity-100">
                   view leads
@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {error && (
-        <p className="rounded-xl bg-[var(--st-consult-soft)] px-4 py-3 text-[0.85rem] font-semibold text-[var(--st-consult-ink)]">
+        <p className="rounded-xl bg-[var(--st-consult-soft)] px-4 py-3 text-sm font-semibold text-[var(--st-consult-ink)]">
           {error}
         </p>
       )}
@@ -177,7 +177,7 @@ export default function AdminDashboardPage() {
           {/* ── Pipeline row ── */}
           {leadStats && (
             <div>
-              <p className="mb-2.5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-ink-3">
+              <p className="mb-2.5 text-2xs font-bold uppercase tracking-[0.14em] text-ink-3">
                 Sales Pipeline
               </p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -238,10 +238,10 @@ function PrimaryCard({
       <span className="flex size-9 items-center justify-center rounded-xl bg-white/20 text-white">
         {icon}
       </span>
-      <p className="tnum mt-4 text-[1.75rem] font-extrabold leading-none text-white sm:text-[2rem]">
+      <p className="tnum mt-4 text-3xl font-extrabold leading-none text-white sm:text-3xl">
         {value}
       </p>
-      <p className="mt-1 text-[0.75rem] font-semibold text-white/75">{label}</p>
+      <p className="mt-1 text-xs font-semibold text-white/75">{label}</p>
     </Link>
   );
 }
@@ -281,11 +281,11 @@ function ActionCard({
         {icon}
       </span>
       <div className="min-w-0">
-        <p className="tnum text-[1.6rem] font-extrabold leading-none" style={{ color }}>
+        <p className="tnum text-2xl font-extrabold leading-none" style={{ color }}>
           {value}
         </p>
-        <p className="mt-1 text-[0.88rem] font-bold text-ink">{label}</p>
-        <p className="mt-0.5 text-[0.73rem] leading-relaxed text-ink-3">{note}</p>
+        <p className="mt-1 text-sm font-bold text-ink">{label}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-ink-3">{note}</p>
       </div>
     </Link>
   );
@@ -312,7 +312,7 @@ function MicroCard({
     >
       <div className="flex items-center gap-2.5">
         <span style={{ color }}>{icon}</span>
-        <p className="text-[0.83rem] font-semibold text-ink-2">{label}</p>
+        <p className="text-sm font-semibold text-ink-2">{label}</p>
       </div>
       <p className="tnum font-extrabold" style={{ color }}>
         {value}

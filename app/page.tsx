@@ -87,7 +87,7 @@ export default function Home() {
           <Shell width="full" className="relative">
             <div className="grid items-center gap-12 pb-8 pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:pb-20 lg:pt-20">
               <div>
-                <span className="animate-rise inline-flex items-center gap-2 rounded-full border border-[var(--accent-line)] bg-[var(--surface)] px-4 py-2 text-[0.8rem] font-bold text-accent shadow-[var(--clay-sm)]">
+                <span className="animate-rise inline-flex items-center gap-2 rounded-full border border-[var(--accent-line)] bg-[var(--surface)] px-4 py-2 text-xs font-bold text-accent shadow-[var(--clay-sm)]">
                   <IconSparkle size={16} />
                   Ages 0–6 · 7 modules · 6 areas
                 </span>
@@ -123,7 +123,7 @@ export default function Home() {
                 </div>
 
                 <ul
-                  className="animate-rise mt-8 flex list-none flex-wrap items-center gap-x-6 gap-y-2 p-0 text-[0.88rem] font-semibold text-ink-2"
+                  className="animate-rise mt-8 flex list-none flex-wrap items-center gap-x-6 gap-y-2 p-0 text-sm font-semibold text-ink-2"
                   style={{ animationDelay: "240ms" }}
                 >
                   {[
@@ -206,7 +206,7 @@ export default function Home() {
                 >
                   <SectionTile code={d.code} size={54} />
                   <h3 className="mt-4">{d.name}</h3>
-                  <p className="mt-2 text-[0.9rem] leading-relaxed text-ink-2">{d.blurb}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-2">{d.blurb}</p>
                 </Card>
               ))}
             </div>
@@ -233,7 +233,7 @@ export default function Home() {
                   className="h-auto w-full min-w-[720px]"
                 />
               </div>
-              <p className="mt-3 text-center text-[0.86rem] font-semibold text-ink-3">
+              <p className="mt-3 text-center text-sm font-semibold text-ink-3">
                 Example: a 9-month-old starts at stage III, Mid-Brain
               </p>
             </Card>
@@ -284,7 +284,7 @@ export default function Home() {
                       className="h-full w-full object-cover"
                     />
                     <span
-                      className="absolute left-4 top-4 grid size-11 place-items-center rounded-2xl text-[1.05rem] font-extrabold text-white shadow-[var(--clay)]"
+                      className="absolute left-4 top-4 grid size-11 place-items-center rounded-2xl text-base font-extrabold text-white shadow-[var(--clay)]"
                       style={{ background: s.tint, fontFamily: "var(--font-display)" }}
                     >
                       {i + 1}
@@ -292,7 +292,7 @@ export default function Home() {
                   </div>
                   <div className="p-6">
                     <h3>{s.title}</h3>
-                    <p className="mt-2 text-[0.92rem] leading-relaxed text-ink-2">{s.body}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-ink-2">{s.body}</p>
                   </div>
                 </Card>
               ))}
@@ -327,7 +327,7 @@ export default function Home() {
                       />
                     </div>
                   </div>
-                  <span className="tnum text-[1.05rem] font-extrabold text-ink">78</span>
+                  <span className="tnum text-base font-extrabold text-ink">78</span>
                 </div>
               </div>
 
@@ -348,7 +348,7 @@ export default function Home() {
                       <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--st-on-track-soft)] text-[var(--st-on-track)]">
                         <IconCheck size={14} />
                       </span>
-                      <span className="text-[0.96rem] font-medium leading-relaxed text-ink-2">
+                      <span className="text-base font-medium leading-relaxed text-ink-2">
                         {line}
                       </span>
                     </li>
@@ -380,7 +380,7 @@ export default function Home() {
               <div className="relative">
                 <Mascot size={78} mood="wave" className="mx-auto" />
                 <h2 className="mt-5 text-white">Ready when you are.</h2>
-                <p className="mx-auto mt-3 max-w-[46ch] text-[1rem] leading-relaxed text-white/80">
+                <p className="mx-auto mt-3 max-w-[46ch] text-base leading-relaxed text-white/80">
                   Find a calm ten minutes with your child nearby — some questions ask you to
                   try something fun together.
                 </p>
@@ -388,7 +388,7 @@ export default function Home() {
                   <ButtonLink href="/children" variant="sun" size="lg" iconRight={<IconArrowRight size={18} />}>
                     Start for ₹99
                   </ButtonLink>
-                  <span className="text-[0.85rem] font-semibold text-white/70">
+                  <span className="text-sm font-semibold text-white/70">
                     Free during launch with code GENIUS99
                   </span>
                 </div>
@@ -397,7 +397,7 @@ export default function Home() {
 
             <div className="mt-10">
               <Disclaimer text={DISCLAIMER} />
-              <p className="mt-4 text-center text-[0.76rem] leading-relaxed text-ink-3">
+              <p className="mt-4 text-center text-xs leading-relaxed text-ink-3">
                 Built on a bank of {ITEMS.length} milestones drawn from the CDC&rsquo;s{" "}
                 <em>Learn the Signs. Act Early.</em> checklists, the NIDCD hearing and
                 communication checklist, and WHO motor milestone data.

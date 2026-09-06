@@ -16,7 +16,7 @@ export default function AdminReportPage({
     <div className="space-y-6">
       <Link
         href="/admin/leads"
-        className="inline-flex items-center gap-1.5 text-[0.85rem] font-semibold text-ink-3 hover:text-ink"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-3 hover:text-ink"
       >
         <IconArrowLeft size={16} /> Back to Leads
       </Link>

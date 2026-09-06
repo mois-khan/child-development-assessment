@@ -45,7 +45,16 @@ child is never the lead.**
 | Auth provider + middleware + join page | Written, **not yet runtime-verified** (blocked, see §3) |
 | Database TypeScript types | Hand-written in `lib/supabase/database.types.ts` |
 
-### Still mock / not real
+### Resolved Blocker
+- **Supabase credentials have been updated and verified.** The project is linked and migrations `0001_core.sql` and `0002_recommendations.sql` have been applied.
+
+### Recently Completed (Phase H - Recommendation & RBAC)
+- Built `milestone_videos` and `course_recommendations` CMS and injected them into the assessment report.
+- Built `admin_users` RBAC page with page-level access control enforced in `middleware.ts`.
+- Implemented `lib/data/milestone-videos.ts`, `lib/data/course-recommendations.ts`, and `lib/data/rbac.ts` connected directly to Supabase.
+- These features are fully wired to the backend and ready for use.
+
+### Still mock / not real (To be done in upcoming phases)
 
 - **All parent-side data is still localStorage** (`lib/store.ts`). Children,
   assessments and responses do not persist beyond one browser.
@@ -58,59 +67,6 @@ child is never the lead.**
   be rebuilt against the new schema.
 - **`/admin/submissions` still exists** but is out of the nav. Its content
   (assessment progress) must move inside the lead profile, then delete it.
-
----
-
-## 3. ⚠️ THE BLOCKER — read this first
-
-**Supabase's Auth and REST APIs are suspended across the whole organisation.**
-
-```
-Service for this project is restricted due to the following violations:
-exceed_storage_size_quota. The project owner must upgrade their plan or
-remove spend caps to restore service.
-```
-
-Tested on 6 Sep 2026:
-
-| Surface | Status |
-|---|---|
-| Direct Postgres (via MCP) | ✅ works — this is how the schema was applied and tested |
-| Auth API `/auth/v1` | ❌ restricted — no signup, no login |
-| PostgREST `/rest/v1` | ❌ restricted — no reads, no writes |
-
-This is **org-wide** (`mois-khan's Org`, `aaremhpgcylyncgoqtce`), not caused by
-the new project — that database is only 11 MB. The other four projects
-(Activity Tracker, DealLens, SIRsimplified, OneSpace) are over the free-tier
-allowance.
-
-**Nothing in Phases 1–4 can be runtime-verified until this is cleared.**
-
-### Decision taken: move to a different Supabase account
-
-To resume, provide credentials for an account/org with headroom. The schema is
-one file — recreating it takes about a minute.
-
-**What is needed:**
-
-```
-NEXT_PUBLIC_SUPABASE_URL=          # Project Settings → API → Project URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY=     # Project Settings → API → anon / publishable
-SUPABASE_SERVICE_ROLE_KEY=         # Project Settings → API → service_role (SECRET)
-```
-
-Then: apply `supabase/migrations/0001_core.sql` to the new project, and in
-**Authentication → Providers → Email**, turn **"Confirm email" OFF** so signup
-logs a parent straight in instead of bouncing them to their inbox. (The join
-page handles both paths, but the frictionless one is much better here.)
-
-### Also still needed
-
-```
-NEXT_PUBLIC_RAZORPAY_KEY_ID=       # Razorpay dashboard → Settings → API Keys (TEST mode)
-RAZORPAY_KEY_SECRET=               # server-only, never NEXT_PUBLIC_
-RAZORPAY_WEBHOOK_SECRET=           # set when creating the webhook
-```
 
 ---
 

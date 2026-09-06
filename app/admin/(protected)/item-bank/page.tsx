@@ -76,9 +76,9 @@ export default function AdminItemBankPage() {
   if (configured) {
     return (
       <div className="space-y-6">
-        <h1 className="!text-[1.6rem]">Item bank</h1>
+        <h1 className="!text-2xl">Item bank</h1>
         <Card className="!p-8 text-center">
-          <p className="text-[0.92rem] text-ink-3">
+          <p className="text-sm text-ink-3">
             Supabase-backed item bank editing isn't wired up yet — see lib/admin/content.ts.
           </p>
         </Card>
@@ -90,12 +90,12 @@ export default function AdminItemBankPage() {
     <div className="space-y-6">
       <div>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="!text-[1.6rem]">Item bank</h1>
+          <h1 className="!text-2xl">Item bank</h1>
           <Badge tone="warn">Dev mode — edits save to this browser only</Badge>
         </div>
-        <p className="mt-1.5 max-w-[62ch] text-[0.88rem] text-ink-3">
+        <p className="mt-1.5 max-w-[62ch] text-sm text-ink-3">
           The item bank, grouped by competence and brain stage. Editing here doesn't touch{" "}
-          <code className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.8rem]">content/items.ts</code>{" "}
+          <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">content/items.ts</code>{" "}
           — it overlays your changes on top of it. A parent taking the check in this browser sees
           these edits immediately. It's saved here only, not shared across devices, until Supabase
           is connected.
@@ -161,7 +161,7 @@ export default function AdminItemBankPage() {
 
       {items.length === 0 ? (
         <Card className="!p-8 text-center">
-          <p className="text-[0.9rem] text-ink-3">No items for this filter yet.</p>
+          <p className="text-sm text-ink-3">No items for this filter yet.</p>
         </Card>
       ) : band ? (
         <Card className="!p-0 overflow-hidden">
@@ -191,7 +191,7 @@ export default function AdminItemBankPage() {
             .map(({ band: b, count }) => (
               <details key={b.id} className="group card !p-0 overflow-hidden">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 select-none">
-                  <span className="text-[0.92rem] font-bold text-ink">
+                  <span className="text-sm font-bold text-ink">
                     {b.roman} · {b.name}
                   </span>
                   <span className="flex items-center gap-2">
@@ -288,8 +288,8 @@ function ItemRow({
           {badge && <Badge tone={badge.tone} size="sm">{badge.label}</Badge>}
           <Badge size="sm">{item.source}</Badge>
         </div>
-        <p className="mt-1 text-[0.82rem] text-ink-3">{item.how}</p>
-        <p className="mt-1 font-mono text-[0.72rem] text-ink-3">{item.id}</p>
+        <p className="mt-1 text-sm text-ink-3">{item.how}</p>
+        <p className="mt-1 font-mono text-xs text-ink-3">{item.id}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <Button size="sm" variant="ghost" onClick={onEdit}>

@@ -91,9 +91,9 @@ export default function AdminLeadsPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="!text-[1.6rem]">Leads</h1>
+            <h1 className="!text-2xl">Leads</h1>
           </div>
-          <p className="mt-1.5 max-w-[62ch] text-[0.88rem] text-ink-3">
+          <p className="mt-1.5 max-w-[62ch] text-sm text-ink-3">
             Every completed assessment shows up here automatically as a lead worth calling.
             Log what happens on each call — the date and the verdict decide when it needs
             following up again.
@@ -149,7 +149,7 @@ export default function AdminLeadsPage() {
 
       {filtered.length === 0 ? (
         <Card className="!p-8 text-center">
-          <p className="text-[0.92rem] text-ink-3">
+          <p className="text-sm text-ink-3">
             {leads.length === 0
               ? "No leads yet. They'll appear here the moment a parent completes the milestone check."
               : "Nothing matches that search or filter."}
@@ -180,8 +180,8 @@ function QuickStat({
 }) {
   return (
     <Card variant="tint" tint={color} className="!p-4">
-      <p className="tnum text-[1.4rem] font-extrabold leading-none text-ink">{value}</p>
-      <p className="mt-1 text-[0.78rem] font-semibold text-ink-3">{label}</p>
+      <p className="tnum text-2xl font-extrabold leading-none text-ink">{value}</p>
+      <p className="mt-1 text-xs font-semibold text-ink-3">{label}</p>
     </Card>
   );
 }
@@ -198,11 +198,11 @@ function LeadRow({ lead, today }: { lead: Lead; today: string }) {
     >
       <Avatar name={lead.parentName || "Unknown"} size={40} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[0.94rem] font-bold text-ink">
+        <p className="truncate text-base font-bold text-ink">
           {lead.parentName || "Unnamed Parent"}
           <span className="ml-1.5 font-medium text-ink-3">· {childText}</span>
         </p>
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.78rem] text-ink-3">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-3">
           {lead.phone ? (
             <span className="flex items-center gap-1">
               <IconPhone size={12} /> {lead.phone}
@@ -216,7 +216,7 @@ function LeadRow({ lead, today }: { lead: Lead; today: string }) {
       <div className="flex items-center gap-2.5">
         {lead.nextFollowUpAt && (lead.status === "new" || lead.status === "contacted" || lead.status === "follow_up" || lead.status === "interested") && (
           <span
-            className="flex items-center gap-1.5 text-[0.8rem] font-bold"
+            className="flex items-center gap-1.5 text-xs font-bold"
             style={{ color: overdue ? "var(--st-consult)" : dueToday ? "var(--st-emerging)" : "var(--ink-3)" }}
           >
             <IconCalendar size={13} />

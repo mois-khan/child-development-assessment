@@ -54,15 +54,15 @@ export default function AdminAssessmentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="!text-[1.6rem]">Assessments</h1>
-        <p className="mt-1 text-[0.88rem] text-ink-3">
+        <h1 className="!text-2xl">Assessments</h1>
+        <p className="mt-1 text-sm text-ink-3">
           All assessments across the programme.
         </p>
       </div>
 
       {error && (
         <Card className="!p-4 border-[var(--st-consult)]">
-          <p className="text-[0.88rem] text-[var(--st-consult-ink)]">⚠ {error}</p>
+          <p className="text-sm text-[var(--st-consult-ink)]">⚠ {error}</p>
         </Card>
       )}
 
@@ -72,7 +72,7 @@ export default function AdminAssessmentsPage() {
           <button
             key={key}
             onClick={() => setFilter(key)}
-            className={`rounded-full px-5 py-2 text-[0.85rem] font-bold transition-all ${
+            className={`rounded-full px-5 py-2 text-sm font-bold transition-all ${
               filter === key
                 ? "bg-[var(--accent)] text-white shadow-md"
                 : "bg-surface-2 text-ink-3 hover:bg-surface-3 hover:text-ink"
@@ -84,12 +84,12 @@ export default function AdminAssessmentsPage() {
       </div>
 
       {assessments === null && !error && (
-        <p className="text-[0.9rem] text-ink-3">Loading…</p>
+        <p className="text-sm text-ink-3">Loading…</p>
       )}
 
       {filtered !== undefined && filtered.length === 0 && (
         <Card className="!p-8 text-center">
-          <p className="text-[0.92rem] text-ink-3">No assessments found.</p>
+          <p className="text-sm text-ink-3">No assessments found.</p>
         </Card>
       )}
 
@@ -104,10 +104,10 @@ export default function AdminAssessmentsPage() {
                 <Avatar name={child?.name ?? "?"} size={40} />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-ink">{child?.name ?? "Unknown child"}</p>
-                  <p className="mt-0.5 text-[0.8rem] text-ink-3">
+                  <p className="mt-0.5 text-xs text-ink-3">
                     Parent: {profiles?.full_name || profiles?.email || "—"}
                   </p>
-                  <p className="mt-0.5 text-[0.78rem] text-ink-3">
+                  <p className="mt-0.5 text-xs text-ink-3">
                     Assessed on {a.assessed_on}
                   </p>
                 </div>
@@ -117,7 +117,7 @@ export default function AdminAssessmentsPage() {
                       <Badge tone="success">Completed</Badge>
                       <Link
                         href={`/admin/report/${a.id}`}
-                        className="text-[0.85rem] font-semibold text-accent hover:underline"
+                        className="text-sm font-semibold text-accent hover:underline"
                       >
                         View Report →
                       </Link>

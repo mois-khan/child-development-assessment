@@ -104,7 +104,7 @@ export default function AdminLeadDetailPage({
 
   if (lead === undefined) {
     return (
-      <div className="flex items-center gap-2 text-[0.9rem] font-semibold text-ink-3">
+      <div className="flex items-center gap-2 text-sm font-semibold text-ink-3">
         <IconRefresh size={16} className="animate-spin text-accent" /> Loading lead…
       </div>
     );
@@ -114,7 +114,7 @@ export default function AdminLeadDetailPage({
       <div className="space-y-4">
         <BackLink />
         <Card className="!p-8 text-center">
-          <p className="text-[0.92rem] text-ink-3">No lead found with that ID.</p>
+          <p className="text-sm text-ink-3">No lead found with that ID.</p>
         </Card>
       </div>
     );
@@ -135,8 +135,8 @@ export default function AdminLeadDetailPage({
           <div className="flex items-center gap-4">
             <Avatar name={lead.parentName || "?"} size={60} />
             <div>
-              <h1 className="!text-[1.5rem] font-bold">{lead.parentName || "Unnamed Parent"}</h1>
-              <div className="mt-1 flex flex-wrap items-center gap-3 text-[0.85rem] font-semibold text-ink-3">
+              <h1 className="!text-2xl font-bold">{lead.parentName || "Unnamed Parent"}</h1>
+              <div className="mt-1 flex flex-wrap items-center gap-3 text-sm font-semibold text-ink-3">
                 {lead.phone && (
                   <a href={`tel:${lead.phone}`} className="flex items-center gap-1.5 hover:text-accent">
                     <IconPhone size={14} /> {lead.phone}
@@ -148,7 +148,7 @@ export default function AdminLeadDetailPage({
                   </a>
                 )}
               </div>
-              <p className="mt-1 text-[0.75rem] text-ink-3">
+              <p className="mt-1 text-xs text-ink-3">
                 Lead created {new Date(lead.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
                 {lead.source && ` · via ${lead.source}`}
               </p>
@@ -159,12 +159,12 @@ export default function AdminLeadDetailPage({
               {STATUS_LABEL[lead.status]}
             </Badge>
             {isOverdue && (
-              <span className="flex items-center gap-1.5 rounded-full bg-[var(--st-consult-soft)] px-3 py-1.5 text-[0.72rem] font-bold text-[var(--st-consult-ink)] shadow-sm border border-[var(--st-consult-soft)]">
+              <span className="flex items-center gap-1.5 rounded-full bg-[var(--st-consult-soft)] px-3 py-1.5 text-xs font-bold text-[var(--st-consult-ink)] shadow-sm border border-[var(--st-consult-soft)]">
                 <IconShield size={14} /> Follow-up overdue · {lead.nextFollowUpAt}
               </span>
             )}
             {isDueToday && (
-              <span className="flex items-center gap-1.5 rounded-full bg-[var(--st-emerging-soft)] px-3 py-1.5 text-[0.72rem] font-bold text-[var(--st-emerging-ink)] shadow-sm border border-[var(--st-emerging-soft)]">
+              <span className="flex items-center gap-1.5 rounded-full bg-[var(--st-emerging-soft)] px-3 py-1.5 text-xs font-bold text-[var(--st-emerging-ink)] shadow-sm border border-[var(--st-emerging-soft)]">
                 <IconCalendar size={14} /> Follow-up scheduled today
               </span>
             )}
@@ -178,7 +178,7 @@ export default function AdminLeadDetailPage({
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`rounded-full px-5 py-2 text-[0.85rem] font-bold transition-all ${
+            className={`rounded-full px-5 py-2 text-sm font-bold transition-all ${
               activeTab === tab
                 ? "bg-[var(--accent)] text-white shadow-md scale-100"
                 : "bg-surface-2 text-ink-3 hover:bg-surface-3 hover:text-ink scale-95 origin-left"
@@ -197,9 +197,9 @@ export default function AdminLeadDetailPage({
 
           {/* Children & assessments */}
           <Card className="!p-6">
-            <h2 className="!text-[1rem] font-bold text-ink">Children & Assessments</h2>
+            <h2 className="!text-base font-bold text-ink">Children & Assessments</h2>
             {lead.children.length === 0 ? (
-              <p className="mt-4 text-[0.88rem] text-ink-3">No children registered under this account yet.</p>
+              <p className="mt-4 text-sm text-ink-3">No children registered under this account yet.</p>
             ) : (
               <div className="mt-4 space-y-4">
                 {lead.children.map((c) => {
@@ -210,20 +210,20 @@ export default function AdminLeadDetailPage({
                         <Avatar name={c.name} size={36} />
                         <div>
                           <p className="font-bold text-ink">{c.name}</p>
-                          <p className="text-[0.78rem] text-ink-3">
+                          <p className="text-xs text-ink-3">
                             {formatAge(ageMonths)} · Born {c.dob}
                           </p>
                         </div>
                       </div>
                       {c.assessments.length > 0 ? (
                         <div className="mt-3 space-y-2">
-                          <p className="text-[0.7rem] font-bold uppercase tracking-wider text-ink-3">
+                          <p className="text-2xs font-bold uppercase tracking-wider text-ink-3">
                             Assessments
                           </p>
                           {c.assessments.map((a) => (
                             <div
                               key={a.id}
-                              className="flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-[0.83rem]"
+                              className="flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-sm"
                             >
                               <div>
                                 <span className="font-semibold text-ink">{a.assessedOn}</span>
@@ -245,7 +245,7 @@ export default function AdminLeadDetailPage({
                           ))}
                         </div>
                       ) : (
-                        <p className="mt-3 text-[0.82rem] text-ink-3 italic">No assessments started yet.</p>
+                        <p className="mt-3 text-sm text-ink-3 italic">No assessments started yet.</p>
                       )}
                     </div>
                   );
@@ -261,11 +261,11 @@ export default function AdminLeadDetailPage({
         <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
           {/* History timeline */}
           <Card className="!p-6">
-            <h2 className="!text-[1rem] font-bold text-ink">Contact History</h2>
+            <h2 className="!text-base font-bold text-ink">Contact History</h2>
             {lead.interactions.length === 0 ? (
               <div className="mt-6 rounded-xl border-2 border-dashed border-line-soft p-8 text-center">
-                <p className="text-[0.88rem] text-ink-3">No interactions logged yet.</p>
-                <p className="mt-1 text-[0.8rem] text-ink-3">
+                <p className="text-sm text-ink-3">No interactions logged yet.</p>
+                <p className="mt-1 text-xs text-ink-3">
                   Use the form on the right to record your first contact.
                 </p>
               </div>
@@ -284,14 +284,14 @@ export default function AdminLeadDetailPage({
                     {/* Content */}
                     <div className="min-w-0 flex-1 pb-6">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-[0.9rem] text-ink">
+                        <span className="font-semibold text-sm text-ink">
                           {OUTCOME_LABEL[interaction.outcome]}
                         </span>
-                        <span className="text-[0.72rem] text-ink-3">
+                        <span className="text-xs text-ink-3">
                           via {CHANNEL_LABEL[interaction.channel]}
                         </span>
                       </div>
-                      <p className="mt-0.5 text-[0.75rem] text-ink-3">
+                      <p className="mt-0.5 text-xs text-ink-3">
                         {new Date(interaction.occurredAt).toLocaleString("en-IN", {
                           day: "numeric", month: "short", year: "numeric",
                           hour: "2-digit", minute: "2-digit",
@@ -299,12 +299,12 @@ export default function AdminLeadDetailPage({
                         {interaction.loggedByEmail && ` · by ${interaction.loggedByEmail}`}
                       </p>
                       {interaction.remarks && (
-                        <p className="mt-2 rounded-lg bg-surface-2 p-3 text-[0.85rem] text-ink-2 leading-relaxed whitespace-pre-wrap">
+                        <p className="mt-2 rounded-lg bg-surface-2 p-3 text-sm text-ink-2 leading-relaxed whitespace-pre-wrap">
                           {interaction.remarks}
                         </p>
                       )}
                       {interaction.nextFollowUpAt && (
-                        <p className="mt-2 flex items-center gap-1.5 text-[0.78rem] font-semibold text-[var(--st-emerging-ink)]">
+                        <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-[var(--st-emerging-ink)]">
                           <IconCalendar size={13} />
                           Next follow-up: {new Date(interaction.nextFollowUpAt).toLocaleDateString("en-IN", { day: "numeric", month: "long" })}
                         </p>
@@ -328,10 +328,10 @@ export default function AdminLeadDetailPage({
             </div>
           ) : (
             <Card className="!p-5 text-center">
-              <p className="text-[0.88rem] font-semibold text-ink-3">
+              <p className="text-sm font-semibold text-ink-3">
                 This lead is marked as <strong>{STATUS_LABEL[lead.status]}</strong>.
               </p>
-              <p className="mt-1 text-[0.8rem] text-ink-3">No further interactions can be logged.</p>
+              <p className="mt-1 text-xs text-ink-3">No further interactions can be logged.</p>
             </Card>
           )}
         </div>
@@ -364,7 +364,7 @@ function ProfileCard({ lead, onSaved }: { lead: Lead; onSaved: () => void }) {
   return (
     <Card className="!p-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="!text-[1rem] font-bold text-ink">Parent Profile</h2>
+        <h2 className="!text-base font-bold text-ink">Parent Profile</h2>
         <Button size="sm" variant="ghost" onClick={() => setEditing((s) => !s)}>
           {editing ? "Cancel" : "Edit"}
         </Button>
@@ -424,8 +424,8 @@ function ProfileCard({ lead, onSaved }: { lead: Lead; onSaved: () => void }) {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-line-soft pb-2.5 last:border-0 last:pb-0">
-      <dt className="shrink-0 text-[0.72rem] font-bold uppercase tracking-wider text-ink-3">{label}</dt>
-      <dd className="text-right text-[0.88rem] font-medium text-ink">{value}</dd>
+      <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-ink-3">{label}</dt>
+      <dd className="text-right text-sm font-medium text-ink">{value}</dd>
     </div>
   );
 }
@@ -480,8 +480,8 @@ function LogInteractionForm({
 
   return (
     <Card className="!p-6">
-      <h2 className="!text-[1rem] font-bold text-ink">Log New Interaction</h2>
-      <p className="mt-1 text-[0.78rem] text-ink-3">
+      <h2 className="!text-base font-bold text-ink">Log New Interaction</h2>
+      <p className="mt-1 text-xs text-ink-3">
         Record what happened. Everything is optional except the outcome.
       </p>
 
@@ -495,7 +495,7 @@ function LogInteractionForm({
                 key={v}
                 type="button"
                 onClick={() => setChannel(v)}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8rem] font-semibold transition-all ${
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
                   channel === v
                     ? "bg-[var(--accent)] text-white shadow-md scale-100"
                     : "bg-surface-2 text-ink-3 hover:bg-surface-3 hover:text-ink scale-95"
@@ -542,7 +542,7 @@ function LogInteractionForm({
               onChange={toggleFollowUp}
               className="h-4 w-4 accent-[var(--accent)]"
             />
-            <span className="text-[0.88rem] font-semibold text-ink">
+            <span className="text-sm font-semibold text-ink">
               Schedule a follow-up call
             </span>
           </label>
@@ -580,7 +580,7 @@ function BackLink() {
   return (
     <Link
       href="/admin/leads"
-      className="inline-flex items-center gap-1.5 text-[0.85rem] font-semibold text-ink-3 hover:text-ink"
+      className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-3 hover:text-ink"
     >
       <IconArrowLeft size={16} /> All Leads
     </Link>

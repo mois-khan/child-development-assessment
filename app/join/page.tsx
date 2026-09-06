@@ -208,7 +208,7 @@ function JoinInner() {
                 {error && (
                   <div
                     role="alert"
-                    className="rounded-[var(--radius-sm)] px-4 py-3 text-[0.88rem] font-semibold"
+                    className="rounded-[var(--radius-sm)] px-4 py-3 text-sm font-semibold"
                     style={{
                       background: "var(--st-consult-soft)",
                       color: "var(--st-consult)",
@@ -235,7 +235,7 @@ function JoinInner() {
                 </Button>
               </form>
 
-              <p className="mt-6 text-center text-[0.9rem] text-ink-2">
+              <p className="mt-6 text-center text-sm text-ink-2">
                 {mode === "signup" ? "Already have an account?" : "New here?"}{" "}
                 <button
                   type="button"
@@ -255,7 +255,7 @@ function JoinInner() {
               <span className="mt-0.5 text-accent">
                 <IconShield size={20} />
               </span>
-              <p className="text-[0.85rem] leading-relaxed text-ink-2">
+              <p className="text-sm leading-relaxed text-ink-2">
                 Your details are used to save your child&rsquo;s results and to contact you
                 about them. We never sell them or share them with anyone else.
               </p>

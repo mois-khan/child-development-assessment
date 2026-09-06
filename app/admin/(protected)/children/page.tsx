@@ -48,8 +48,8 @@ export default function AdminChildrenPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="!text-[1.6rem]">Children</h1>
-          <p className="mt-1 text-[0.88rem] text-ink-3">
+          <h1 className="!text-2xl">Children</h1>
+          <p className="mt-1 text-sm text-ink-3">
             {children === null
               ? "Loading…"
               : `${children.length} child${children.length !== 1 ? "ren" : ""} registered`}
@@ -65,17 +65,17 @@ export default function AdminChildrenPage() {
 
       {error && (
         <Card className="!p-4 border-[var(--st-consult)]">
-          <p className="text-[0.88rem] text-[var(--st-consult-ink)]">⚠ {error}</p>
+          <p className="text-sm text-[var(--st-consult-ink)]">⚠ {error}</p>
         </Card>
       )}
 
       {children === null && !error && (
-        <p className="text-[0.9rem] text-ink-3">Loading…</p>
+        <p className="text-sm text-ink-3">Loading…</p>
       )}
 
       {filtered !== undefined && filtered.length === 0 && (
         <Card className="!p-8 text-center">
-          <p className="text-[0.92rem] text-ink-3">
+          <p className="text-sm text-ink-3">
             {search ? "No children match your search." : "No children registered yet."}
           </p>
         </Card>
@@ -95,14 +95,14 @@ export default function AdminChildrenPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-ink">{c.name}</p>
-                    <span className="text-[0.75rem] text-ink-3 bg-surface-2 rounded px-1.5 py-0.5 capitalize">
+                    <span className="text-xs text-ink-3 bg-surface-2 rounded px-1.5 py-0.5 capitalize">
                       {c.gender}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[0.82rem] text-ink-3">
+                  <p className="mt-0.5 text-sm text-ink-3">
                     {formatAge(ageMonths)} · Born {c.dob}
                   </p>
-                  <p className="mt-0.5 text-[0.78rem] text-ink-3">
+                  <p className="mt-0.5 text-xs text-ink-3">
                     Parent: <span className="font-semibold text-ink-2">{c.profiles?.full_name || c.profiles?.email || "—"}</span>
                   </p>
                 </div>
@@ -119,7 +119,7 @@ export default function AdminChildrenPage() {
                     )}
                   </div>
                   {lastAssessment && (
-                    <p className="text-[0.75rem] text-ink-3">
+                    <p className="text-xs text-ink-3">
                       Last: {lastAssessment.assessed_on}
                       {lastAssessment.completed_at && (
                         <a

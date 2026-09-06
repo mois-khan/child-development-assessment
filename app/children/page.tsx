@@ -106,7 +106,7 @@ export default function ChildrenPage() {
                         <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-accent">
                           <IconCheck size={13} />
                         </span>
-                        <span className="text-[0.9rem] font-medium leading-relaxed text-ink-2">
+                        <span className="text-sm font-medium leading-relaxed text-ink-2">
                           {line}
                         </span>
                       </li>
@@ -150,10 +150,10 @@ function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
       <div className="flex items-center gap-4">
         <Avatar name={child.name} photoUrl={child.photoUrl} size={62} ring />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[1.15rem] font-extrabold text-ink" style={{ fontFamily: "var(--font-display)" }}>
+          <p className="truncate text-lg font-extrabold text-ink" style={{ fontFamily: "var(--font-display)" }}>
             {child.name}
           </p>
-          <p className="text-[0.85rem] font-semibold text-ink-3">
+          <p className="text-sm font-semibold text-ink-3">
             {formatDate(child.dob)} ({age.chronologicalMonths} month{age.chronologicalMonths === 1 ? "" : "s"})
           </p>
         </div>
@@ -249,7 +249,7 @@ function NewChildForm({
           <input id="photo" type="file" accept="image/*" className="sr-only" onChange={onPhoto} />
         </label>
         <div>
-          <p className="text-[0.98rem] font-extrabold text-ink">Add a photo</p>
+          <p className="text-base font-extrabold text-ink">Add a photo</p>
           <p className="hint !mt-1 max-w-[28ch]">
             Optional, and it never leaves this device. It makes the report feel like theirs.
           </p>
@@ -364,7 +364,7 @@ function NewChildForm({
           style={{ background: "var(--accent-soft)" }}
         >
           <Mascot size={54} mood="happy" />
-          <p className="text-[0.92rem] leading-relaxed text-ink-2">
+          <p className="text-sm leading-relaxed text-ink-2">
             <strong className="font-extrabold text-ink">
               {name.trim() || "Your child"} is {formatAge(age.chronologicalMonths)}
             </strong>{" "}
@@ -392,7 +392,7 @@ function NewChildForm({
           </Button>
         )}
         {!canSubmit && (
-          <span className="flex items-center gap-1.5 text-[0.84rem] font-semibold text-ink-3">
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-3">
             <IconSparkle size={15} /> Name, birthday and gender
           </span>
         )}

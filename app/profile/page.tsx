@@ -258,12 +258,12 @@ function ProfileInner() {
                 <Avatar name={parentName} size={84} ring />
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[0.75rem] font-bold text-white backdrop-blur">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur">
                       <IconShield size={13} /> Parent Account
                     </span>
                   </div>
                   <h1 className="mt-2 text-white">{parentName}</h1>
-                  <p className="mt-1 text-[0.92rem] font-semibold text-white/80">
+                  <p className="mt-1 text-sm font-semibold text-white/80">
                     {parentEmail} {parentPhone ? `· ${parentPhone}` : ""}
                   </p>
                 </div>
@@ -273,36 +273,36 @@ function ProfileInner() {
               <div className="flex flex-wrap gap-3">
                 <div className="min-w-[94px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur">
                   <p
-                    className="tnum text-[1.65rem] font-extrabold text-white"
+                    className="tnum text-2xl font-extrabold text-white"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {children ? children.length : "—"}
                   </p>
-                  <p className="text-[0.74rem] font-bold text-white/70">
+                  <p className="text-xs font-bold text-white/70">
                     {children?.length === 1 ? "Child" : "Children"}
                   </p>
                 </div>
 
                 <div className="min-w-[94px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur">
                   <p
-                    className="tnum text-[1.65rem] font-extrabold text-white"
+                    className="tnum text-2xl font-extrabold text-white"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {assessments ? assessments.length : "—"}
                   </p>
-                  <p className="text-[0.74rem] font-bold text-white/70">
+                  <p className="text-xs font-bold text-white/70">
                     {assessments?.length === 1 ? "Assessment" : "Assessments"}
                   </p>
                 </div>
 
                 <div className="min-w-[94px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur">
                   <p
-                    className="tnum text-[1.65rem] font-extrabold text-white"
+                    className="tnum text-2xl font-extrabold text-white"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {completedAssessmentsCount}
                   </p>
-                  <p className="text-[0.74rem] font-bold text-white/70">
+                  <p className="text-xs font-bold text-white/70">
                     {completedAssessmentsCount === 1 ? "Report" : "Reports"}
                   </p>
                 </div>
@@ -331,7 +331,7 @@ function ProfileInner() {
             {profileMsg && (
               <div
                 role="alert"
-                className="mt-4 rounded-[var(--radius)] px-4 py-3 text-[0.88rem] font-semibold"
+                className="mt-4 rounded-[var(--radius)] px-4 py-3 text-sm font-semibold"
                 style={{
                   background: profileMsg.includes("success")
                     ? "var(--st-on-track-soft)"
@@ -393,28 +393,28 @@ function ProfileInner() {
               ) : (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                   <div>
-                    <p className="text-[0.78rem] font-bold uppercase tracking-wider text-ink-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
                       Parent Name
                     </p>
-                    <p className="mt-1 text-[1.05rem] font-bold text-ink">{parentName}</p>
+                    <p className="mt-1 text-base font-bold text-ink">{parentName}</p>
                   </div>
                   <div>
-                    <p className="text-[0.78rem] font-bold uppercase tracking-wider text-ink-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
                       Email Address
                     </p>
-                    <p className="mt-1 text-[1.05rem] font-bold text-ink">{parentEmail || "—"}</p>
+                    <p className="mt-1 text-base font-bold text-ink">{parentEmail || "—"}</p>
                   </div>
                   <div>
-                    <p className="text-[0.78rem] font-bold uppercase tracking-wider text-ink-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
                       Mobile Phone
                     </p>
-                    <p className="mt-1 text-[1.05rem] font-bold text-ink">{parentPhone || "Not provided"}</p>
+                    <p className="mt-1 text-base font-bold text-ink">{parentPhone || "Not provided"}</p>
                   </div>
                   <div>
-                    <p className="text-[0.78rem] font-bold uppercase tracking-wider text-ink-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
                       Member Since
                     </p>
-                    <p className="mt-1 text-[1.05rem] font-bold text-ink">{joinedDate}</p>
+                    <p className="mt-1 text-base font-bold text-ink">{joinedDate}</p>
                   </div>
                 </div>
               )}
@@ -451,14 +451,14 @@ function ProfileInner() {
                         <div className="flex items-center gap-4">
                           <Avatar name={child.name} photoUrl={child.photoUrl} size={64} ring />
                           <div className="min-w-0 flex-1">
-                            <h3 className="truncate text-[1.15rem] font-extrabold text-ink">
+                            <h3 className="truncate text-lg font-extrabold text-ink">
                               {child.name}
                             </h3>
                             {/* Display DOB with age in months in brackets */}
-                            <p className="mt-1 text-[0.84rem] font-semibold text-ink-2">
+                            <p className="mt-1 text-sm font-semibold text-ink-2">
                               Born {formatDate(child.dob)} ({age.chronologicalMonths} month{age.chronologicalMonths === 1 ? "" : "s"})
                             </p>
-                            <p className="text-[0.78rem] font-semibold text-ink-3">
+                            <p className="text-xs font-semibold text-ink-3">
                               {child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"}
                             </p>
                           </div>
@@ -491,8 +491,8 @@ function ProfileInner() {
             ) : (
               <Card variant="clay" className="mt-6 p-8 text-center sm:p-12">
                 <Mascot size={80} mood="wave" className="mx-auto" />
-                <h3 className="mt-5 text-[1.25rem]">No children added yet</h3>
-                <p className="mx-auto mt-2 max-w-[40ch] text-[0.95rem] leading-relaxed text-ink-2">
+                <h3 className="mt-5 text-xl">No children added yet</h3>
+                <p className="mx-auto mt-2 max-w-[40ch] text-base leading-relaxed text-ink-2">
                   Add your child&rsquo;s details to start tracking their developmental milestones and unlock stage-based reports.
                 </p>
                 <ButtonLink href="/children" size="lg" className="mt-6" iconLeft={<IconPlus size={18} />}>
@@ -530,19 +530,19 @@ function ProfileInner() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-line bg-[var(--surface-2)]">
-                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-ink-3">
                           Child
                         </th>
-                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-ink-3">
                           Assessment Name
                         </th>
-                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-ink-3">
                           Date &amp; Time
                         </th>
-                        <th className="px-6 py-4 text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-ink-3">
                           Status
                         </th>
-                        <th className="px-6 py-4 text-right text-[0.8rem] font-bold uppercase tracking-wider text-ink-3">
+                        <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-ink-3">
                           Actions
                         </th>
                       </tr>
@@ -562,14 +562,14 @@ function ProfileInner() {
                             </Link>
                           </td>
                           <td className="px-6 py-4">
-                            <p className="font-bold text-ink text-[0.92rem]">
+                            <p className="font-bold text-ink text-sm">
                               Genius Milestone Check
                             </p>
-                            <p className="text-[0.78rem] text-ink-3">
+                            <p className="text-xs text-ink-3">
                               6 developmental areas
                             </p>
                           </td>
-                          <td className="px-6 py-4 text-[0.88rem] font-semibold text-ink-2 whitespace-nowrap">
+                          <td className="px-6 py-4 text-sm font-semibold text-ink-2 whitespace-nowrap">
                             {formatDateTime(a.completedAt || a.createdAt || a.assessedOn)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -639,23 +639,23 @@ function ProfileInner() {
             {/* Enrolled / Purchased passes */}
             {payments && payments.filter((p) => p.status === "paid").length > 0 && (
               <div className="mt-8">
-                <h3 className="text-[1.1rem]">Your enrolled purchases</h3>
+                <h3 className="text-lg">Your enrolled purchases</h3>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {payments
                     .filter((p) => p.status === "paid")
                     .map((p) => (
                       <Card key={p.id} variant="clay" className="p-5">
                         <div className="flex items-center justify-between gap-3">
-                          <span className="font-extrabold text-ink text-[1rem]">
+                          <span className="font-extrabold text-ink text-base">
                             Genius Milestone Assessment Access
                           </span>
                           <Badge tone="success">Active</Badge>
                         </div>
-                        <p className="mt-1.5 text-[0.82rem] text-ink-3">
+                        <p className="mt-1.5 text-sm text-ink-3">
                           Paid {formatRupees(p.amountPaise)} on {formatDateTime(p.paidAt || p.createdAt)}
                         </p>
                         {p.razorpayPaymentId && (
-                          <p className="mt-0.5 font-mono text-[0.74rem] text-ink-3">
+                          <p className="mt-0.5 font-mono text-xs text-ink-3">
                             Ref: {p.razorpayPaymentId}
                           </p>
                         )}
@@ -667,7 +667,7 @@ function ProfileInner() {
 
             {/* Recommended KGKP Programs */}
             <div className="mt-10">
-              <h3 className="text-[1.1rem]">Recommended programmes for your family</h3>
+              <h3 className="text-lg">Recommended programmes for your family</h3>
 
               <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {COURSES.map((course) => (
@@ -675,7 +675,7 @@ function ProfileInner() {
                     <div>
                       <div className="flex items-center justify-between gap-2">
                         <span
-                          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.75rem] font-bold"
+                          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold"
                           style={{
                             background: course.accentBg,
                             color: course.accentColor,
@@ -683,21 +683,21 @@ function ProfileInner() {
                         >
                           <IconSparkle size={12} /> {course.stageLabel}
                         </span>
-                        <span className="text-[0.8rem] font-bold text-ink-3">
+                        <span className="text-xs font-bold text-ink-3">
                           {course.ageRange}
                         </span>
                       </div>
 
-                      <h4 className="mt-3 text-[1.15rem] font-extrabold text-ink">
+                      <h4 className="mt-3 text-lg font-extrabold text-ink">
                         {course.title}
                       </h4>
-                      <p className="mt-2 text-[0.88rem] leading-relaxed text-ink-2">
+                      <p className="mt-2 text-sm leading-relaxed text-ink-2">
                         {course.description}
                       </p>
 
                       <ul className="mt-4 list-none space-y-2 p-0">
                         {course.highlights.map((h) => (
-                          <li key={h} className="flex items-center gap-2 text-[0.82rem] font-semibold text-ink-2">
+                          <li key={h} className="flex items-center gap-2 text-sm font-semibold text-ink-2">
                             <IconCheck size={14} className="text-[var(--st-on-track)] shrink-0" />
                             <span>{h}</span>
                           </li>

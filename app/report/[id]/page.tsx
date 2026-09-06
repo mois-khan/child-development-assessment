@@ -46,6 +46,9 @@ import {
   domainColor,
   statusColor,
 } from "@/components/ui";
+import { MilestoneVideoRow } from "@/components/report/MilestoneVideoRow";
+import { CourseRow } from "@/components/report/CourseRow";
+
 
 export default function ReportPage({
   params,
@@ -182,10 +185,10 @@ export default function ReportPage({
             <div className="relative flex flex-col gap-8 sm:gap-10">
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
                 <div className="min-w-0">
-                  <p className="text-[0.76rem] font-extrabold uppercase tracking-[0.18em] text-white/65 print:hidden">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/65 print:hidden">
                     Kaushalya Genius Kid Program
                   </p>
-                  <h1 className="display mt-3 !text-[2.1rem] leading-[1.08] text-white sm:!text-[2.75rem]">
+                  <h1 className="display mt-3 !text-3xl leading-[1.08] text-white sm:!text-4xl">
                     {child.name}&rsquo;s
                     <br className="hidden sm:block" /> Milestone Report
                   </h1>
@@ -243,7 +246,7 @@ export default function ReportPage({
                   bordered circle beside the identity block. */}
               <div className="hidden items-center gap-4 print:flex">
                 <Avatar name={child.name} photoUrl={child.photoUrl} size={64} ring />
-                <p className="text-[0.86rem] font-bold text-ink">{child.name}</p>
+                <p className="text-sm font-bold text-ink">{child.name}</p>
               </div>
             </div>
           </section>
@@ -258,9 +261,9 @@ export default function ReportPage({
                 size="lg"
               />
               {!result.suppressDq && result.overallDq !== null && (
-                <span className="text-[0.88rem] font-semibold text-ink-3">
+                <span className="text-sm font-semibold text-ink-3">
                   Average across the six areas{" "}
-                  <strong className="tnum text-[1.05rem] font-extrabold text-ink">
+                  <strong className="tnum text-base font-extrabold text-ink">
                     {result.overallDq}
                   </strong>{" "}
                   <span className="text-ink-3">(100 is on track for age)</span>
@@ -271,7 +274,7 @@ export default function ReportPage({
             <h2 className="mt-5 max-w-[24ch]">{headline(result, child)}</h2>
 
             {result.overallRaisedBy && (
-              <p className="mt-3 max-w-[62ch] text-[0.92rem] leading-relaxed text-ink-2">
+              <p className="mt-3 max-w-[62ch] text-sm leading-relaxed text-ink-2">
                 The average looks healthy because most areas are strong. We have still flagged this
                 report as{" "}
                 <strong className="font-bold">
@@ -287,7 +290,7 @@ export default function ReportPage({
 
             <Card variant="clay" className="mt-8 p-6 sm:p-8">
               <p className="eyebrow mb-2">Progress, area by area</p>
-              <p className="mb-6 text-[0.82rem] font-medium text-ink-3">
+              <p className="mb-6 text-sm font-medium text-ink-3">
                 Where each area sits against the expected stage for {child.name}&rsquo;s age.
               </p>
               <div className="overflow-x-auto">
@@ -310,7 +313,7 @@ export default function ReportPage({
                       <Fragment key={score.domain}>
                         <div className="progress-matrix-row-label">
                           <SectionTile code={score.domain} size={34} />
-                          <span className="truncate text-[0.86rem] font-extrabold text-ink">
+                          <span className="truncate text-sm font-extrabold text-ink">
                             {d.name}
                           </span>
                         </div>
@@ -347,7 +350,7 @@ export default function ReportPage({
           {/* ══ page 2b · the chart itself, filled in ═══════════════════════ */}
           <Section size="sm" className="print-break">
             <h2>{child.name}&rsquo;s Developmental Profile</h2>
-            <p className="mt-2 max-w-[58ch] text-[0.95rem] leading-relaxed text-ink-2">
+            <p className="mt-2 max-w-[58ch] text-base leading-relaxed text-ink-2">
               The same seven-stage chart the programme uses on paper, filled in with{" "}
               {child.name}&rsquo;s own answers — reflex stage at the bottom, sophisticated
               cortex at the top.
@@ -360,7 +363,7 @@ export default function ReportPage({
           {/* ══ page 3+ · area by area ═══════════════════════════════════ */}
           <Section size="sm" className="print-break">
             <h2>Area by area</h2>
-            <p className="mt-2 max-w-[58ch] text-[0.95rem] leading-relaxed text-ink-2">
+            <p className="mt-2 max-w-[58ch] text-base leading-relaxed text-ink-2">
               What {child.name} is already doing, what is not yet in place, and what to
               practise at home this week.
             </p>
@@ -385,7 +388,7 @@ export default function ReportPage({
               <Card variant="clay" className="p-6 sm:p-8">
                 <SummaryProse result={result} child={child} />
 
-                <div className="mt-7 border-t border-line-soft pt-6">
+                <div className="mt-7 border-t border-line pt-6">
                   <p className="eyebrow mb-4">What to do next</p>
                   <ul className="list-none space-y-3.5 p-0">
                     {nextSteps(result, child).map((s) => (
@@ -393,7 +396,7 @@ export default function ReportPage({
                         <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-accent">
                           <IconCheck size={13} />
                         </span>
-                        <span className="text-[0.94rem] leading-relaxed text-ink-2">{s}</span>
+                        <span className="text-base leading-relaxed text-ink-2">{s}</span>
                       </li>
                     ))}
                   </ul>
@@ -402,7 +405,16 @@ export default function ReportPage({
 
               <DefaultRecommendationCard stage={startStage} />
             </div>
+
+            {/* Admin-curated course recommendations for this child's overall stage.
+                CourseRow returns null when Supabase is not configured or no courses
+                exist, so DefaultRecommendationCard above always acts as the fallback. */}
+            <CourseRow
+              stageId={result.domainScores[0]?.achievedStage || startStage.id}
+              childName={child.name}
+            />
           </Section>
+
 
           {/* ══ footer of the document ═══════════════════════════════════ */}
           <Section size="sm">
@@ -412,8 +424,8 @@ export default function ReportPage({
                   <IconHeart size={20} />
                 </span>
                 <div>
-                  <p className="text-[0.98rem] font-extrabold text-ink">Keep this report</p>
-                  <p className="text-[0.84rem] font-semibold text-ink-3">
+                  <p className="text-base font-extrabold text-ink">Keep this report</p>
+                  <p className="text-sm font-semibold text-ink-3">
                     It stays on {child.name}&rsquo;s profile — download it any time.
                   </p>
                 </div>
@@ -436,7 +448,7 @@ export default function ReportPage({
 
             <div className="mt-8 print:mt-0">
               <Disclaimer text={DISCLAIMER} />
-              <p className="mt-4 text-[0.74rem] leading-relaxed text-ink-3">
+              <p className="mt-4 text-xs leading-relaxed text-ink-3">
                 Milestones adapted from the CDC <em>Learn the Signs. Act Early.</em> checklists, the
                 NIDCD hearing and communication checklist, and WHO motor milestone data. Item bank{" "}
                 {record.bankVersion}.
@@ -534,7 +546,7 @@ function DevelopmentalProfileChart({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line-soft px-5 py-3.5 text-[0.78rem] font-semibold text-ink-3 sm:px-7">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line-soft px-5 py-3.5 text-xs font-semibold text-ink-3 sm:px-7">
         <LegendItem swatch={<LegendCheck />} label="Already reached" />
         <LegendItem swatch={<LegendRing />} label={`${childName} is here`} />
         <LegendItem swatch={<LegendDash />} label="In progress" />
@@ -622,7 +634,7 @@ function DevelopmentalProfileChart({
         </div>
       </div>
 
-      <p className="border-t border-line-soft px-5 py-3.5 text-[0.78rem] leading-relaxed text-ink-3 sm:px-7">
+      <p className="border-t border-line-soft px-5 py-3.5 text-xs leading-relaxed text-ink-3 sm:px-7">
         Cells below where {childName} is marked are assumed in place, the same way the paper
         chart reads — reaching a later stage means the earlier ones are already there.
       </p>
@@ -701,7 +713,7 @@ function SummaryProse({ result, child }: { result: AssessmentResult; child: Chil
   return (
     <div>
       {context && (
-        <p className="flex items-start gap-2 text-[0.86rem] font-semibold leading-relaxed text-ink-3">
+        <p className="flex items-start gap-2 text-sm font-semibold leading-relaxed text-ink-3">
           <IconCalendar size={15} className="mt-0.5 shrink-0" />
           {context}
         </p>
@@ -712,7 +724,7 @@ function SummaryProse({ result, child }: { result: AssessmentResult; child: Chil
         style={{ borderLeft: `3px solid ${statusColor(result.overallStatus)}` }}
       >
         {verdict.map((p) => (
-          <p key={p.slice(0, 40)} className="text-[1.02rem] leading-[1.75] text-ink-2">
+          <p key={p.slice(0, 40)} className="text-base leading-[1.75] text-ink-2">
             <Highlight text={p} terms={terms} />
           </p>
         ))}
@@ -800,8 +812,8 @@ function DomainCard({
             <div className="flex items-center gap-4">
               <SectionTile code={score.domain} size={52} />
               <div>
-                <h3 className="text-[1.15rem]">{domain.name}</h3>
-                <p className="mt-0.5 text-[0.84rem] font-semibold text-ink-3">{domain.blurb}</p>
+                <h3 className="text-lg">{domain.name}</h3>
+                <p className="mt-0.5 text-sm font-semibold text-ink-3">{domain.blurb}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -817,7 +829,7 @@ function DomainCard({
 
           <div className="mt-5 flex items-center gap-4">
             <Meter value={Math.min(100, value)} color={color} className="flex-1" animate />
-            <span className="tnum text-[0.95rem] font-extrabold text-ink">{Math.round(value)}</span>
+            <span className="tnum text-base font-extrabold text-ink">{Math.round(value)}</span>
           </div>
         </summary>
 
@@ -825,7 +837,7 @@ function DomainCard({
           className="border-t border-line-soft p-6 sm:p-7"
         >
           <div>
-            <p className="prose-read !text-[0.97rem]">{note}</p>
+            <p className="prose-read !text-base">{note}</p>
 
             <p className="eyebrow mb-2.5 mt-6">Where they stand, item by item</p>
             <div className="grid grid-cols-3 gap-2.5">
@@ -851,11 +863,11 @@ function DomainCard({
                       key={a.id}
                       className="rounded-[var(--radius-sm)] bg-[var(--surface-2)] p-4"
                     >
-                      <p className="text-[0.9rem] font-extrabold text-ink">{a.title}</p>
-                      <p className="mt-1.5 text-[0.83rem] leading-relaxed text-ink-2">
+                      <p className="text-sm font-extrabold text-ink">{a.title}</p>
+                      <p className="mt-1.5 text-sm leading-relaxed text-ink-2">
                         {a.description}
                       </p>
-                      <p className="mt-2.5 flex items-center gap-1.5 text-[0.74rem] font-bold text-ink-3">
+                      <p className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-ink-3">
                         <IconSparkle size={13} />
                         {a.minutes === 0 ? "As you go" : `${a.minutes} min`} · {a.frequency}
                       </p>
@@ -864,6 +876,14 @@ function DomainCard({
                 </ul>
               </div>
             )}
+
+            {/* Milestone video cards for this domain — admin-curated, fetched from DB */}
+            <MilestoneVideoRow
+              stageId={score.achievedStage || "s1"}
+              domain={score.domain}
+              domainName={DOMAIN_BY_CODE[score.domain].name}
+            />
+
           </div>
         </div>
       </details>
@@ -905,13 +925,13 @@ function RecommendationShell({
       <div className="p-6">
         <Mascot size={68} mood="wave" className="no-print" />
         <p className="eyebrow mt-4">{eyebrow}</p>
-        <h3 className="mt-2 text-[1.2rem]">{title}</h3>
-        <p className="mt-2.5 text-[0.9rem] leading-relaxed text-ink-2">{description}</p>
+        <h3 className="mt-2 text-xl">{title}</h3>
+        <p className="mt-2.5 text-sm leading-relaxed text-ink-2">{description}</p>
 
         {bullets.length > 0 && (
           <ul className="mt-4 list-none space-y-2 p-0">
             {bullets.map((line) => (
-              <li key={line} className="flex items-center gap-2 text-[0.86rem] font-semibold text-ink-2">
+              <li key={line} className="flex items-center gap-2 text-sm font-semibold text-ink-2">
                 <IconCheck size={15} className="text-[var(--st-on-track)]" />
                 {line}
               </li>

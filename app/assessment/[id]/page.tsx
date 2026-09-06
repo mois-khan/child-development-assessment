@@ -545,7 +545,7 @@ export default function AssessmentPage({
       {reward && (
         <span
           key={reward.key}
-          className="animate-float-up pointer-events-none fixed left-1/2 top-[44%] z-50 -translate-x-1/2 text-[1.7rem] font-extrabold"
+          className="animate-float-up pointer-events-none fixed left-1/2 top-[44%] z-50 -translate-x-1/2 text-3xl font-extrabold"
           style={{ fontFamily: "var(--font-sans)", color: "var(--sun-500)" }}
           onAnimationEnd={() => setReward(null)}
         >
@@ -604,7 +604,7 @@ function StageChange({
         <StageChip stage={to} />
       </div>
 
-      <h1 className="mt-7 text-[1.5rem] sm:text-[1.75rem]">
+      <h1 className="mt-7 text-2xl sm:text-3xl">
         {up ? "That's all in place." : "Let's look a little lower."}
       </h1>
       <p className="lede mx-auto mt-3 max-w-[44ch]">
@@ -713,7 +713,7 @@ function SectionIntro({
         Let&rsquo;s go
       </Button>
 
-      <p className="mt-6 text-[0.86rem] text-ink-3">
+      <p className="mt-6 text-sm text-ink-3">
         Answer for what they do <em>now</em> — &ldquo;no&rdquo; is just as useful an
         answer, and is how we find their level.
       </p>
@@ -759,16 +759,16 @@ function QuestionView({
         <span className="flex items-center gap-2.5">
           <SectionTile code={code} size={38} />
           <span className="min-w-0">
-            <span className="block text-[0.88rem] font-extrabold" style={{ color }}>
+            <span className="block text-sm font-extrabold" style={{ color }}>
               {sectionName}
             </span>
-            <span className="block text-[0.74rem] font-bold text-ink-3">
+            <span className="block text-xs font-bold text-ink-3">
               {stageLabel}
             </span>
           </span>
         </span>
         <span className="flex items-center gap-3">
-          <span className="text-[0.82rem] font-bold text-ink-3">
+          <span className="text-sm font-bold text-ink-3">
             <span className="tnum">{index + 1}</span> of {stageTotal}
           </span>
           <ProgressRing
@@ -777,7 +777,7 @@ function QuestionView({
             stroke={5}
             color={color}
           >
-            <span className="tnum text-[0.62rem] font-extrabold text-ink-3">
+            <span className="tnum text-2xs font-extrabold text-ink-3">
               {stageTotal - index - 1}
             </span>
           </ProgressRing>
@@ -785,7 +785,7 @@ function QuestionView({
       </div>
 
       <Card variant="clay" className="clay-lg mt-6 p-6 sm:p-8">
-        <h2 className="text-[1.32rem] leading-snug sm:text-[1.55rem]">{item.text}</h2>
+        <h2 className="text-xl leading-snug sm:text-2xl">{item.text}</h2>
 
         <div
           className="mt-5 flex gap-3 rounded-[var(--radius)] p-4"
@@ -794,7 +794,7 @@ function QuestionView({
           <span className="mt-0.5 shrink-0" style={{ color }}>
             <IconSparkle size={18} />
           </span>
-          <p className="text-[0.9rem] leading-relaxed text-ink-2">
+          <p className="text-sm leading-relaxed text-ink-2">
             <strong className="font-bold text-ink">Try it: </strong>
             {item.how}
           </p>
@@ -818,7 +818,7 @@ function QuestionView({
               <span className="answer-key">{a.glyph}</span>
               <span className="min-w-0">
                 <span className="block">{a.label}</span>
-                <span className="block text-[0.8rem] font-medium text-ink-3">
+                <span className="block text-xs font-medium text-ink-3">
                   {a.hint}
                 </span>
               </span>
@@ -835,7 +835,7 @@ function QuestionView({
         />
       )}
 
-      <p className="mt-7 flex items-center justify-center gap-2 text-[0.83rem] font-semibold text-ink-3">
+      <p className="mt-7 flex items-center justify-center gap-2 text-sm font-semibold text-ink-3">
         <IconClock size={15} />
         About {minutesLeft} min left · your answers save as you go
       </p>
@@ -924,7 +924,7 @@ function ObservationInput({
             onChange={(e) => setDraft(e.target.value)}
           />
           {item.unit && (
-            <span className="shrink-0 text-[0.95rem] font-bold text-ink-3">
+            <span className="shrink-0 text-base font-bold text-ink-3">
               {item.unit}
             </span>
           )}
@@ -938,13 +938,13 @@ function ObservationInput({
         <button
           type="button"
           onClick={onNext}
-          className="btn btn-ghost text-[0.88rem]"
+          className="btn btn-ghost text-sm"
         >
           I&rsquo;m not sure — skip
         </button>
       </div>
 
-      <p className="mt-4 text-[0.82rem] text-ink-3">
+      <p className="mt-4 text-sm text-ink-3">
         This one is just for the report. It doesn&rsquo;t change{" "}
         {item.kind === "choice" ? "their result" : "the result"} either way.
       </p>
@@ -1022,22 +1022,22 @@ function SectionComplete({
       >
         <div className="text-center">
           <p
-            className="tnum text-[1.5rem] font-extrabold text-ink"
+            className="tnum text-2xl font-extrabold text-ink"
             style={{ fontFamily: "var(--font-display)" }}
           >
             {xp}
           </p>
-          <p className="text-[0.76rem] font-bold text-ink-3">Total XP</p>
+          <p className="text-xs font-bold text-ink-3">Total XP</p>
         </div>
         <span className="h-10 w-px bg-line" />
         <div className="text-center">
           <p
-            className="tnum text-[1.5rem] font-extrabold text-ink"
+            className="tnum text-2xl font-extrabold text-ink"
             style={{ fontFamily: "var(--font-display)" }}
           >
             {starsEarned}/{starsTotal}
           </p>
-          <p className="text-[0.76rem] font-bold text-ink-3">Sections</p>
+          <p className="text-xs font-bold text-ink-3">Sections</p>
         </div>
       </Card>
 
@@ -1091,12 +1091,12 @@ function FinishView({
         ].map((s) => (
           <Card key={s.label} variant="clay" className="px-3 py-4">
             <p
-              className="tnum text-[1.28rem] font-extrabold"
+              className="tnum text-xl font-extrabold"
               style={{ fontFamily: "var(--font-display)", color: s.color }}
             >
               {s.value}
             </p>
-            <p className="mt-1 text-[0.72rem] font-bold text-ink-3">{s.label}</p>
+            <p className="mt-1 text-xs font-bold text-ink-3">{s.label}</p>
           </Card>
         ))}
       </div>
@@ -1110,7 +1110,7 @@ function FinishView({
                 onClick={() => onJumpTo(i.id)}
                 className="card clay-press w-full p-3.5 text-left"
               >
-                <span className="text-[0.9rem] font-semibold text-ink-2">{i.text}</span>
+                <span className="text-sm font-semibold text-ink-2">{i.text}</span>
               </button>
             </li>
           ))}
@@ -1204,7 +1204,7 @@ function Loading() {
     <>
       <TopBar nav={false} />
       <Shell>
-        <p className="pt-24 text-center text-[0.95rem] font-semibold text-ink-3">Loading…</p>
+        <p className="pt-24 text-center text-base font-semibold text-ink-3">Loading…</p>
       </Shell>
     </>
   );

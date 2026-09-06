@@ -71,7 +71,7 @@ function AdminLoginInner() {
         <Card variant="clay" className="!p-7">
           {configured ? (
             <form onSubmit={handleSignIn} className="space-y-4">
-              <h1 className="!text-[1.2rem]">Sign in</h1>
+              <h1 className="!text-xl">Sign in</h1>
               <div>
                 <label className="label" htmlFor="email">
                   Email
@@ -101,7 +101,7 @@ function AdminLoginInner() {
                 />
               </div>
               {error && (
-                <p className="text-[0.85rem] font-semibold text-[var(--st-consult)]">{error}</p>
+                <p className="text-sm font-semibold text-[var(--st-consult)]">{error}</p>
               )}
               <Button type="submit" block disabled={submitting}>
                 {submitting ? "Signing in…" : "Sign in"}
@@ -109,10 +109,10 @@ function AdminLoginInner() {
             </form>
           ) : (
             <div className="space-y-4 text-center">
-              <h1 className="!text-[1.2rem]">No Supabase project connected yet</h1>
-              <p className="text-[0.88rem] leading-relaxed text-ink-3">
+              <h1 className="!text-xl">No Supabase project connected yet</h1>
+              <p className="text-sm leading-relaxed text-ink-3">
                 Real sign-in turns on the moment Supabase credentials are added to{" "}
-                <code className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.82rem]">
+                <code className="rounded bg-surface-2 px-1.5 py-0.5 text-sm">
                   .env.local
                 </code>
                 . Until then, use the dev session below to explore the admin portal — it only

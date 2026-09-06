@@ -18,13 +18,15 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
  * further changes to the pages themselves.
  */
 
+import type { AdminRole } from "@/lib/types/rbac";
+
 const DEV_SESSION_KEY = "kaushalya.admin.dev-session";
 const DEV_ADMIN_EMAIL = "dev-admin@local";
 
 export interface AdminSession {
   id: string;
   email: string;
-  role: "super_admin" | "sales" | "content_editor";
+  role: AdminRole;
   /** True when this is the local dev-mode bypass, not a real signed-in admin. */
   isDevSession: boolean;
 }

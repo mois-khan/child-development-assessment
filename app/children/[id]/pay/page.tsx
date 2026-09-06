@@ -236,13 +236,13 @@ export default function PayPage({
                 </div>
                 <div className="text-right">
                   <p
-                    className="tnum text-[2rem] font-extrabold leading-none text-ink"
+                    className="tnum text-3xl font-extrabold leading-none text-ink"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {applied ? "₹0" : `₹${PRICE}`}
                   </p>
                   {applied && (
-                    <p className="tnum mt-1 text-[0.85rem] font-bold text-ink-3 line-through">
+                    <p className="tnum mt-1 text-sm font-bold text-ink-3 line-through">
                       ₹{PRICE}
                     </p>
                   )}
@@ -258,11 +258,11 @@ export default function PayPage({
                     <li key={s.code} className="flex items-center gap-3">
                       <SectionTile code={s.code} size={38} />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[0.9rem] font-bold text-ink">
+                        <span className="block truncate text-sm font-bold text-ink">
                           {s.name}
                         </span>
                         <span
-                          className="block text-[0.78rem] font-semibold"
+                          className="block text-xs font-semibold"
                           style={{ color: domainColor(s.code) }}
                         >
                           {s.count} question{s.count === 1 ? "" : "s"}
@@ -280,17 +280,17 @@ export default function PayPage({
                       <IconCheck size={26} />
                     </span>
                     <div>
-                      <p className="text-[1.02rem] font-extrabold text-ink">
+                      <p className="text-base font-extrabold text-ink">
                         Code applied — this one&rsquo;s on us
                       </p>
-                      <p className="text-[0.85rem] font-semibold text-ink-3">
+                      <p className="text-sm font-semibold text-ink-3">
                         Coupon {VALID_COUPON} · launch offer
                       </p>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <p className="text-[0.9rem] font-medium leading-relaxed text-ink-2">
+                    <p className="text-sm font-medium leading-relaxed text-ink-2">
                       Online payment is arriving shortly. During launch, use your coupon code to
                       unlock the check for free.
                     </p>
@@ -333,7 +333,7 @@ export default function PayPage({
               <span className="mt-0.5 text-accent">
                 <IconShield size={20} />
               </span>
-              <p className="text-[0.85rem] leading-relaxed text-ink-2">
+              <p className="text-sm leading-relaxed text-ink-2">
                 Everything you enter stays on this device. We never send your child&rsquo;s answers
                 or photo anywhere.
               </p>

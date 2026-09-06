@@ -18,7 +18,7 @@ export function AuthNav() {
       <div className="flex items-center gap-3">
         <Link
           href="/profile"
-          className="hidden text-[0.88rem] font-bold text-ink hover:text-accent md:inline transition-colors"
+          className="hidden text-sm font-bold text-ink hover:text-accent md:inline transition-colors"
           title="View Parent Profile"
         >
           {profile?.fullName || user.email}

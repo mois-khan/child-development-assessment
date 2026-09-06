@@ -96,10 +96,10 @@ export function SectionHeading({
   className?: string;
 }) {
   return (
-    <div className={cx(align === "center" && "mx-auto text-center", "max-w-[46rem]", className)}>
+    <div className={cx(align === "center" && "mx-auto text-center", "max-w-[44rem]", className)}>
       {eyebrow && <p className="eyebrow eyebrow-accent mb-3">{eyebrow}</p>}
       <h2>{title}</h2>
-      {description && <p className="lede mt-3.5">{description}</p>}
+      {description && <p className="lede mt-3">{description}</p>}
     </div>
   );
 }
@@ -129,8 +129,11 @@ export function TopBar({
       )}
       style={{ background: "color-mix(in srgb, var(--ground) 82%, transparent)" }}
     >
-      <div className="mx-auto flex min-h-[4.75rem] w-full max-w-[92rem] items-center justify-between gap-4 px-5 py-3 sm:px-8 lg:px-12">
-        <div className="flex items-center gap-8">
+      {/* 64px. An app header is chrome — it should be the least interesting
+          band on the page. v3's 76px put a marketing-scale bar above every
+          screen and stole that height from the content on every scroll. */}
+      <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-6">
           <Link href="/" aria-label="Kaushalya Genius Kid Program — home" className="shrink-0">
             <Wordmark />
           </Link>
@@ -158,18 +161,18 @@ export function Footer() {
   return (
     <footer className="no-print border-t border-line bg-[var(--surface)]">
       <Shell width="wide">
-        <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
-            <Wordmark height={50} />
-            <p className="mt-4 max-w-[34ch] text-[0.9rem] leading-relaxed text-ink-2">
+            <Wordmark height={38} />
+            <p className="mt-4 max-w-[42ch] text-sm leading-relaxed text-ink-2">
               A gentle revolution to make the world a better place — helping every child
               actualise the genius they were born with, in the first six golden years.
             </p>
           </div>
 
           <div>
-            <h3 className="text-[0.95rem]">Programme</h3>
-            <ul className="mt-3 list-none space-y-2 p-0 text-[0.88rem] text-ink-2">
+            <h3 className="text-base">Programme</h3>
+            <ul className="mt-3 list-none space-y-2 p-0 text-sm text-ink-2">
               <li>
                 <Link href="/children" className="hover:text-accent">
                   Milestone check
@@ -199,8 +202,8 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-[0.95rem]">Support</h3>
-            <ul className="mt-3 list-none space-y-2 p-0 text-[0.88rem] text-ink-2">
+            <h3 className="text-base">Support</h3>
+            <ul className="mt-3 list-none space-y-2 p-0 text-sm text-ink-2">
               <li>
                 <a href="mailto:support@kaushalyageniuskid.com" className="hover:text-accent">
                   support@kaushalyageniuskid.com
@@ -216,7 +219,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-soft py-6 text-[0.78rem] text-ink-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-soft py-6 text-xs text-ink-3">
           <p>© {new Date().getFullYear()} Kaushalya Genius Kid Program. All rights reserved.</p>
           <p>A screening tool, not a medical diagnosis.</p>
         </div>
@@ -229,8 +232,8 @@ export function Footer() {
 
 export function Disclaimer({ text }: { text: string }) {
   return (
-    <div className="rounded-[var(--radius)] border border-line bg-[var(--surface-2)] px-5 py-4">
-      <p className="text-[0.8rem] leading-relaxed text-ink-3">
+    <div className="rounded-[var(--radius)] border border-line bg-[var(--surface-2)] px-4 py-3">
+      <p className="text-xs leading-relaxed text-ink-3">
         <strong className="font-bold text-ink-2">A screening tool, not a diagnosis.</strong> {text}
       </p>
     </div>

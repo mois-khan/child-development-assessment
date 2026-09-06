@@ -67,8 +67,8 @@ export default function AdminParentsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="!text-[1.6rem]">Parents</h1>
-          <p className="mt-1 text-[0.88rem] text-ink-3">
+          <h1 className="!text-2xl">Parents</h1>
+          <p className="mt-1 text-sm text-ink-3">
             {parents === null ? "Loading…" : `${parents.length} registered parent${parents.length !== 1 ? "s" : ""}`}
           </p>
         </div>
@@ -82,17 +82,17 @@ export default function AdminParentsPage() {
 
       {error && (
         <Card className="!p-4 border-[var(--st-consult)]">
-          <p className="text-[0.88rem] text-[var(--st-consult-ink)]">⚠ {error}</p>
+          <p className="text-sm text-[var(--st-consult-ink)]">⚠ {error}</p>
         </Card>
       )}
 
       {parents === null && !error && (
-        <p className="text-[0.9rem] text-ink-3">Loading…</p>
+        <p className="text-sm text-ink-3">Loading…</p>
       )}
 
       {filtered !== undefined && filtered.length === 0 && (
         <Card className="!p-8 text-center">
-          <p className="text-[0.92rem] text-ink-3">
+          <p className="text-sm text-ink-3">
             {search ? "No parents match your search." : "No parents have signed up yet."}
           </p>
         </Card>
@@ -107,10 +107,10 @@ export default function AdminParentsPage() {
                 <Avatar name={p.full_name || p.email || "?"} size={44} />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-ink">{p.full_name || "—"}</p>
-                  <p className="mt-0.5 text-[0.82rem] text-ink-3">
+                  <p className="mt-0.5 text-sm text-ink-3">
                     {p.email || "No email"} · {p.phone || "No phone"}
                   </p>
-                  <p className="mt-0.5 text-[0.75rem] text-ink-3">
+                  <p className="mt-0.5 text-xs text-ink-3">
                     Joined {new Date(p.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -123,7 +123,7 @@ export default function AdminParentsPage() {
                   {lead && (
                     <Link
                       href={`/admin/leads/${lead.id}`}
-                      className="text-[0.85rem] font-semibold text-accent hover:underline"
+                      className="text-sm font-semibold text-accent hover:underline"
                     >
                       View Lead →
                     </Link>
