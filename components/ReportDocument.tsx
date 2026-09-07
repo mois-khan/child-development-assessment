@@ -4,14 +4,12 @@ import { Fragment, use, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE } from "@/content/domains";
 import { BRAIN_STAGES, STAGE_BY_ID, cellFor } from "@/content/stages";
-import { activitiesFor } from "@/content/activities";
 import { formatAge, summariseAge } from "@/lib/age";
 import { DISCLAIMER, domainNote, headline, nextSteps, summary } from "@/lib/narrative";
 import { STATUSES, scoreAssessment } from "@/lib/scoring";
 import { stageForAge } from "@/lib/stage";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
 import type {
-  Activity,
   AssessmentResult,
   BrainStage,
   Child,
@@ -33,10 +31,11 @@ import {
   IconClock,
   IconDownload,
   IconHeart,
+  IconPhone,
+  IconPlay,
   IconSparkle,
   LoadError,
   Mascot,
-  Meter,
   Section,
   SectionIcon,
   SectionTile,
@@ -310,9 +309,6 @@ export function ReportDocument({
 
             <Card variant="clay" className="mt-8 p-6 sm:p-8">
               <p className="eyebrow mb-2">Progress, area by area</p>
-              <p className="mb-1 text-sm font-medium text-ink-3">
-                Where each area sits against the expected stage for {child.name}&rsquo;s age.
-              </p>
               <p className="mb-6 text-sm font-medium text-ink-3">
                 These are screening terms, not a diagnosis — see the note at the end of this
                 report.
@@ -374,11 +370,6 @@ export function ReportDocument({
           {/* ══ page 2b · the chart itself, filled in ═══════════════════════ */}
           <Section size="sm" className="print-break">
             <h2>{child.name}&rsquo;s Developmental Profile</h2>
-            <p className="mt-2 max-w-[58ch] text-base leading-relaxed text-ink-2">
-              The same seven-stage chart the programme uses on paper, filled in with{" "}
-              {child.name}&rsquo;s own answers — reflex stage at the bottom, sophisticated
-              cortex at the top.
-            </p>
             <Card variant="clay" className="mt-6 overflow-hidden !p-0">
               <DevelopmentalProfileChart result={result} childName={child.name} />
             </Card>
@@ -387,10 +378,6 @@ export function ReportDocument({
           {/* ══ page 3+ · area by area ═══════════════════════════════════ */}
           <Section size="sm" className="print-break">
             <h2>Area by area</h2>
-            <p className="mt-2 max-w-[58ch] text-base leading-relaxed text-ink-2">
-              What {child.name} is already doing, what is not yet in place, and what to
-              practise at home this week.
-            </p>
 
             <div className="mt-6 space-y-5">
               {ordered.map((score) => (
@@ -398,7 +385,6 @@ export function ReportDocument({
                   key={score.domain}
                   score={score}
                   note={domainNote(score, child)}
-                  activities={pickActivities(score)}
                   isAdmin={isAdmin}
                 />
               ))}
@@ -409,26 +395,13 @@ export function ReportDocument({
           <Section size="sm" className="print-break">
             <h2>Summary &amp; recommendations</h2>
 
-            <div className="mt-5 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-              <Card variant="clay" className="p-6 sm:p-8">
-                <SummaryProse result={result} child={child} />
+            <div className="mt-6 grid gap-6 lg:grid-cols-2 items-stretch">
+              <ExecutiveSummaryCard result={result} child={child} />
+              <DefaultRecommendationCard stage={startStage} child={child} />
+            </div>
 
-                <div className="mt-7 border-t border-line-soft pt-6">
-                  <p className="eyebrow mb-4">What to do next</p>
-                  <ul className="list-none space-y-3.5 p-0">
-                    {nextSteps(result, child).map((s) => (
-                      <li key={s.slice(0, 30)} className="flex items-start gap-3">
-                        <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-accent">
-                          <IconCheck size={13} />
-                        </span>
-                        <span className="text-base leading-relaxed text-ink-2">{s}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Card>
-
-              <DefaultRecommendationCard stage={startStage} />
+            <div className="mt-6">
+              <ActionStepsCard result={result} child={child} />
             </div>
 
             {/* Admin-curated course recommendations, keyed to the stage of the
@@ -733,8 +706,8 @@ function LegendFaded() {
  * breathing room, and their key phrases picked out, so the one sentence a
  * busy parent needs doesn't have to be found by reading every word.
  */
-function SummaryProse({ result, child }: { result: AssessmentResult; child: Child }) {
-  const [context, ...verdict] = summary(result, child);
+function ExecutiveSummaryCard({ result, child }: { result: AssessmentResult; child: Child }) {
+  const [, ...verdict] = summary(result, child);
 
   const terms = [
     child.name,
@@ -743,22 +716,162 @@ function SummaryProse({ result, child }: { result: AssessmentResult; child: Chil
   ];
 
   return (
-    <div>
-      {context && (
-        <p className="flex items-start gap-2 text-sm font-semibold leading-relaxed text-ink-3">
-          <IconCalendar size={15} className="mt-0.5 shrink-0" />
-          {context}
-        </p>
-      )}
+    <div className="flex flex-col justify-between rounded-2xl border border-[var(--brand-200)]/80 bg-gradient-to-br from-[var(--brand-50)]/50 via-[var(--surface)] to-[var(--surface)] p-6 sm:p-7 shadow-[0_4px_24px_-4px_rgba(77,20,53,0.08)]">
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--brand-100)] pb-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-200)] bg-[var(--brand-50)] px-3 py-1 text-xs font-bold text-[var(--brand-600)] shadow-xs">
+              <IconCalendar size={13} className="text-[var(--brand-600)]" />
+              <span>{child.name} · {formatAge(result.assessedMonths)}</span>
+            </span>
+            <span className="rounded-full bg-[var(--brand-600)] px-2.5 py-0.5 text-[0.68rem] font-black uppercase tracking-wider text-white shadow-xs">
+              Overall Summary
+            </span>
+          </div>
 
-      <div
-        className="mt-5 space-y-4 rounded-r-[var(--radius-sm)] py-1 pl-5 sm:pl-6"
-        style={{ borderLeft: `3px solid ${statusColor(result.overallStatus)}` }}
-      >
-        {verdict.map((p) => (
-          <p key={p.slice(0, 40)} className="text-base leading-[1.75] text-ink-2">
-            <Highlight text={p} terms={terms} />
-          </p>
+          <StatusChip status={result.overallStatus} label={STATUSES[result.overallStatus].label} solid size="sm" />
+        </div>
+
+        <div className="mt-5">
+          <div className="mb-2.5 flex items-center justify-between">
+            <h4 className="text-[1.02rem] font-extrabold tracking-tight text-[var(--ink)]">
+              Developmental Profile Verdict
+            </h4>
+            <span className="text-[0.7rem] font-bold uppercase tracking-wider text-[var(--brand-600)]">
+              6 Areas Analyzed
+            </span>
+          </div>
+
+          <div
+            className="rounded-xl border border-[var(--brand-100)] bg-[var(--surface)]/90 p-4.5 sm:p-5 shadow-xs"
+            style={{ borderLeft: `4px solid ${statusColor(result.overallStatus)}` }}
+          >
+            <div className="space-y-3">
+              {verdict.map((p) => (
+                <p key={p.slice(0, 40)} className="text-[0.95rem] leading-[1.7] text-[var(--ink)] font-medium">
+                  <Highlight text={p} terms={terms} />
+                </p>
+              ))}
+            </div>
+
+            {(result.strengths.length > 0 || result.focusAreas.length > 0) && (
+              <div className="mt-4 flex flex-col gap-2.5 border-t border-[var(--line-soft)] pt-3.5">
+                {result.strengths.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[0.72rem] font-bold uppercase tracking-wider text-[var(--ink-3)]">
+                      Notable Strengths:
+                    </span>
+                    {result.strengths.map((code) => (
+                      <span
+                        key={code}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--st-on-track)]/25 bg-[var(--st-on-track-soft)] px-2.5 py-1 text-xs font-bold text-[var(--st-on-track-ink)]"
+                      >
+                        <SectionIcon code={code} size={13} />
+                        {DOMAIN_BY_CODE[code].name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {result.focusAreas.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[0.72rem] font-bold uppercase tracking-wider text-[var(--ink-3)]">
+                      Areas to Nurture:
+                    </span>
+                    {result.focusAreas.map((code) => (
+                      <span
+                        key={code}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--st-needs-focus)]/25 bg-[var(--st-needs-focus-soft)] px-2.5 py-1 text-xs font-bold text-[var(--st-needs-focus-ink)]"
+                      >
+                        <SectionIcon code={code} size={13} />
+                        {DOMAIN_BY_CODE[code].name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {result.overallDq !== null && !result.suppressDq && (
+        <div className="mt-5 flex items-center justify-between rounded-xl border border-[var(--brand-200)]/80 bg-[var(--brand-50)]/70 px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <span className="grid size-8 place-items-center rounded-lg bg-[var(--brand-600)] text-white shadow-xs">
+              <IconSparkle size={15} />
+            </span>
+            <div>
+              <p className="text-[0.82rem] font-bold text-[var(--brand-600)] leading-tight">
+                Developmental Quotient
+              </p>
+              <p className="text-[0.72rem] font-medium text-[var(--ink-2)] mt-0.5 leading-tight">
+                Score of 100 represents on-track for age
+              </p>
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1">
+            <span className="tnum text-2xl font-black text-[var(--brand-600)]">{result.overallDq}</span>
+            <span className="text-xs font-bold text-[var(--brand-600)]/70">pts</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActionStepsCard({ result, child }: { result: AssessmentResult; child: Child }) {
+  const steps = nextSteps(result, child);
+
+  const stepIcons = [
+    <IconCalendar key="cal" size={16} />,
+    <IconSparkle key="act" size={16} />,
+    <IconHeart key="doc" size={16} />,
+    <IconClock key="clk" size={16} />,
+  ];
+
+  const stepHeadings = [
+    "Milestone Progression Check",
+    "Daily Developmental Routine",
+    "Pediatric & Specialist Care",
+    "Continuous Observation",
+  ];
+
+  return (
+    <div className="rounded-2xl border border-line bg-[var(--surface)] p-6 sm:p-7 shadow-[0_2px_12px_-2px_rgba(61,43,53,0.06)]">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-[1.1rem] font-extrabold tracking-tight text-[var(--ink)]">
+            Actionable Next Steps
+          </h3>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-200)] bg-[var(--brand-50)] px-3 py-1 text-xs font-bold text-[var(--brand-600)]">
+          <IconCheck size={13} />
+          Evidence-Based Action Plan
+        </span>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {steps.map((step, idx) => (
+          <div
+            key={idx}
+            className="flex flex-col justify-between rounded-xl border border-line bg-[var(--surface-2)]/60 p-4.5 transition-all hover:border-[var(--line-strong)] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <span className="grid size-7 place-items-center rounded-full bg-[var(--brand-600)] text-xs font-black text-white shadow-xs">
+                  {idx + 1}
+                </span>
+                <span className="grid size-7 place-items-center rounded-lg border border-line bg-[var(--surface)] text-[var(--brand-600)]">
+                  {stepIcons[idx % stepIcons.length]}
+                </span>
+              </div>
+              <h4 className="mb-1.5 text-[0.9rem] font-bold text-[var(--ink)]">
+                {stepHeadings[idx % stepHeadings.length]}
+              </h4>
+              <p className="text-[0.84rem] font-medium leading-relaxed text-[var(--ink-2)]">{step}</p>
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -797,227 +910,259 @@ function escapeRegExp(s: string): string {
 function DomainCard({
   score,
   note,
-  activities,
   isAdmin = false,
 }: {
   score: DomainScore;
   note: string;
-  activities: Activity[];
   isAdmin?: boolean;
 }) {
   const domain = DOMAIN_BY_CODE[score.domain];
   const color = domainColor(score.domain);
   const value = score.dq === null ? score.percent * 100 : score.dq;
-  // Open by default for the areas actually worth reading about; collapsed
-  // for the ones that are already fine, so six full-length cards don't force
-  // a long scroll past detail nobody needs yet. The status chip, score and
-  // blurb stay visible either way, in the summary row.
+  // Open by default for areas with developmental focus needs; collapsed for
+  // areas already on track so parents can focus on what matters most.
   const defaultOpen = score.status === "mild" || score.status === "delay" || score.status === "significant";
 
-  const levels = [
-    {
-      key: "achieved",
-      label: "Doing",
-      n: score.achieved.length,
-      tone: "var(--st-on-track)",
-      icon: <IconCheck size={12} />,
-    },
-    {
-      key: "notYet",
-      label: "Not yet",
-      n: score.notYet.length,
-      tone: "var(--ink-3)",
-      icon: <IconClock size={12} />,
-    },
-  ] as const;
-
   return (
-    <Card variant="clay" className="overflow-hidden">
-      <div aria-hidden="true" className="h-1.5 w-full" style={{ background: color }} />
+    <div className="group/domain relative overflow-hidden rounded-2xl border border-line bg-[var(--surface)] shadow-[0_2px_10px_-2px_rgba(61,43,53,0.06)] transition-all duration-200 hover:border-[var(--line-strong)] hover:shadow-[0_8px_20px_-4px_rgba(61,43,53,0.1)]">
+      <details className="w-full" open={defaultOpen}>
+        <summary className="group/summary cursor-pointer list-none p-4.5 select-none transition-colors duration-150 hover:bg-[var(--surface-2)] sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+            <div className="flex min-w-0 flex-1 items-center gap-3.5">
+              {/* Vibrant domain icon tile */}
+              <span
+                className="grid size-11 shrink-0 place-items-center rounded-xl transition-transform duration-200 group-hover/summary:scale-105 sm:size-12"
+                style={{
+                  background: `color-mix(in srgb, ${color} 14%, var(--surface))`,
+                  color,
+                  border: `1.5px solid color-mix(in srgb, ${color} 30%, var(--line))`,
+                  boxShadow: `0 2px 8px -2px color-mix(in srgb, ${color} 25%, transparent)`,
+                }}
+                aria-hidden="true"
+              >
+                <SectionIcon code={score.domain} size={22} />
+              </span>
 
-      {/* A dropdown rather than a fixed block: the status chip, score and
-          blurb below are enough to read this area at a glance, so the full
-          breakdown — what to work on, activities, video — only costs a click
-          when it's wanted. Printing/downloading still gets everything: see
-          the "print: force every <details> open" rule in globals.css. */}
-      <details className="group/domain" open={defaultOpen}>
-        <summary className="report-domain-summary cursor-pointer list-none p-6 sm:p-7">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <SectionTile code={score.domain} size={52} />
-              <div>
-                <h3 className="text-lg">{domain.name}</h3>
-                <p className="mt-0.5 text-sm font-semibold text-ink-3">{domain.blurb}</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-[1.05rem] font-extrabold tracking-tight text-[var(--ink)] leading-snug sm:text-[1.12rem]">
+                  {domain.name}
+                </h3>
+                <p className="mt-0.5 line-clamp-1 text-[0.82rem] font-semibold text-[var(--ink-2)] sm:text-[0.85rem]">
+                  {domain.blurb}
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+
+            <div className="flex shrink-0 items-center gap-2.5 sm:gap-3">
               <StatusChip status={score.status} label={STATUSES[score.status].label} />
               <span
                 aria-hidden="true"
-                className="no-print grid size-8 shrink-0 place-items-center rounded-full bg-[var(--surface-2)] text-ink-3 transition-transform group-open/domain:rotate-90"
+                className="no-print grid size-7 place-items-center rounded-full border border-line bg-[var(--surface-2)] text-[var(--ink-2)] transition-transform duration-200 group-open/domain:rotate-90 hover:bg-[var(--surface-3)] sm:size-8"
               >
-                <IconChevronRight size={16} />
+                <IconChevronRight size={15} />
               </span>
             </div>
           </div>
 
-          <div className="mt-5 flex items-center gap-4">
-            <Meter value={Math.min(100, value)} color={color} className="flex-1" animate />
-            <span className="tnum text-base font-extrabold text-ink">{Math.round(value)}</span>
+          {/* Slim progress bar and score */}
+          <div className="mt-3.5 flex items-center gap-3.5 sm:mt-4 sm:gap-4">
+            <div
+              className="relative h-2 flex-1 overflow-hidden rounded-full bg-[var(--surface-3)]"
+              role="img"
+              aria-label={`${domain.name} score: ${Math.round(value)}`}
+            >
+              <div
+                className="h-full rounded-full transition-all duration-500 ease-out"
+                style={{
+                  width: `${Math.min(100, value)}%`,
+                  background: `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 80%, black))`,
+                }}
+              />
+            </div>
+            <div className="flex shrink-0 items-baseline gap-1">
+              <span className="tnum text-[1rem] font-black text-[var(--ink)]">{Math.round(value)}</span>
+              <span className="text-[0.72rem] font-bold uppercase tracking-wider text-[var(--ink-3)]">
+                pts
+              </span>
+            </div>
           </div>
         </summary>
 
-        <div
-          className="border-t border-line-soft p-6 sm:p-7"
-        >
-          <div>
-            <p className="prose-read !text-base">{note}</p>
+        {/* Expanded body with high-contrast narrative and modern metric cards */}
+        <div className="border-t border-line-soft bg-[var(--surface-2)] px-4.5 py-4 sm:px-5 sm:py-5">
+          <p className="text-[0.95rem] font-normal leading-relaxed text-[var(--ink)]">{note}</p>
 
-            <p className="eyebrow mb-2.5 mt-6">Where they stand, item by item</p>
-            <div className="grid grid-cols-3 gap-2.5">
-              {levels.map((l) => (
-                <div
-                  key={l.key}
-                  className="level-cell"
-                  style={{ "--tone": l.tone } as React.CSSProperties}
-                >
-                  <span className="level-cell-icon">{l.icon}</span>
-                  <p className="tnum level-cell-count">{l.n}</p>
-                  <p className="level-cell-label">{l.label}</p>
+          <div className="mt-4.5 border-t border-line pt-3.5">
+            <p className="mb-2.5 text-[0.7rem] font-bold uppercase tracking-wider text-[var(--ink-2)]">
+              Where they stand, item by item
+            </p>
+
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              {/* Doing */}
+              <div className="flex items-center gap-3 rounded-xl border border-[var(--st-on-track)]/30 bg-[var(--st-on-track-soft)] px-3.5 py-3">
+                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[var(--st-on-track)] text-white shadow-xs">
+                  <IconCheck size={12} />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="tnum text-base font-black text-[var(--st-on-track-ink)] leading-none">
+                      {score.achieved.length}
+                    </span>
+                    <span className="truncate text-xs font-bold text-[var(--st-on-track-ink)]">Doing</span>
+                  </div>
+                  <p className="mt-1 truncate text-[0.72rem] font-semibold text-[var(--st-on-track-ink)]/80 leading-none">
+                    Milestones achieved
+                  </p>
                 </div>
-              ))}
-            </div>
-
-            {activities.length > 0 && (
-              <div className="mt-6 border-t border-line-soft pt-5">
-                <p className="eyebrow mb-3">Try at home this week</p>
-                <ul className="grid list-none gap-3 p-0 sm:grid-cols-2">
-                  {activities.slice(0, 2).map((a) => (
-                    <li
-                      key={a.id}
-                      className="rounded-[var(--radius-sm)] bg-[var(--surface-2)] p-4"
-                    >
-                      <p className="text-sm font-extrabold text-ink">{a.title}</p>
-                      <p className="mt-1.5 text-sm leading-relaxed text-ink-2">
-                        {a.description}
-                      </p>
-                      <p className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-ink-3">
-                        <IconSparkle size={13} />
-                        {a.minutes === 0 ? "As you go" : `${a.minutes} min`} · {a.frequency}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
               </div>
-            )}
 
-            {/* Milestone video cards for this domain — admin-curated, fetched
-                from DB. Not shown in the admin's own report preview. */}
-            {!isAdmin && (
-              <MilestoneVideoRow
-                stageId={score.achievedStage || "s1"}
-                domain={score.domain}
-                domainName={DOMAIN_BY_CODE[score.domain].name}
-              />
-            )}
+              {/* Not yet */}
+              <div className="flex items-center gap-3 rounded-xl border border-line bg-[var(--surface)] px-3.5 py-3 shadow-xs">
+                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[var(--surface-3)] text-[var(--ink-2)]">
+                  <IconClock size={12} />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="tnum text-base font-black text-[var(--ink)] leading-none">
+                      {score.notYet.length}
+                    </span>
+                    <span className="truncate text-xs font-bold text-[var(--ink)]">Not yet</span>
+                  </div>
+                  <p className="mt-1 truncate text-[0.72rem] font-semibold text-[var(--ink-3)] leading-none">
+                    Next developmental steps
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Milestone video cards for this domain — admin-curated, fetched
+              from DB. Not shown in the admin's own report preview. */}
+          {!isAdmin && (
+            <MilestoneVideoRow
+              stageId={score.achievedStage || "s1"}
+              domain={score.domain}
+              domainName={DOMAIN_BY_CODE[score.domain].name}
+            />
+          )}
         </div>
       </details>
-    </Card>
+    </div>
   );
 }
 
-/* ══ recommendation ═══════════════════════════════════════════════════════
+/* ══ course & programme recommendation ════════════════════════════════════
  * DefaultRecommendationCard is the always-present fallback CTA. CourseRow
  * (rendered alongside it above, parent view only) is the admin-curated
  * version — it fetches from course_recommendations and renders nothing when
  * that stage has no active cards, so the fallback below is never left
  * standing alone. */
 
-function RecommendationShell({
-  eyebrow,
-  title,
-  description,
-  bullets,
-  primaryHref,
-  primaryLabel,
-  secondaryHref,
-  secondaryLabel,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  bullets: string[];
-  primaryHref?: string;
-  primaryLabel: string;
-  secondaryHref: string;
-  secondaryLabel: string;
-}) {
-  return (
-    <Card
-      variant="clay"
-      className="recommend-card flex flex-col overflow-hidden"
-      style={{ background: "linear-gradient(160deg, var(--sun-100), var(--surface))" }}
-    >
-      <div className="p-6">
-        <Mascot size={68} mood="wave" className="no-print" />
-        <p className="eyebrow mt-4">{eyebrow}</p>
-        <h3 className="mt-2 text-xl">{title}</h3>
-        <p className="mt-2.5 text-sm leading-relaxed text-ink-2">{description}</p>
+function DefaultRecommendationCard({ stage, child }: { stage: BrainStage; child: Child }) {
+  const primaryHref = "https://www.kaushalyageniuskid.com";
+  const primaryLabel = `Explore Stage ${stage.roman} Programme`;
+  const secondaryHref = "mailto:support@kaushalyageniuskid.com";
+  const secondaryLabel = "Speak with a Child Specialist";
 
-        {bullets.length > 0 && (
-          <ul className="mt-4 list-none space-y-2 p-0">
-            {bullets.map((line) => (
-              <li key={line} className="flex items-center gap-2 text-sm font-semibold text-ink-2">
-                <IconCheck size={15} className="text-[var(--st-on-track)]" />
-                {line}
-              </li>
-            ))}
-          </ul>
-        )}
+  const perks = [
+    {
+      title: "Daily Screen-Free Playbook",
+      desc: `10 mins/day tailored to ${stage.name}`,
+      icon: <IconCalendar size={14} />,
+    },
+    {
+      title: "Step-by-Step Video Demonstrations",
+      desc: "Parent-guided play across all 6 areas",
+      icon: <IconPlay size={14} />,
+    },
+    {
+      title: "Milestone Tracking & Expert Support",
+      desc: "Checklists with counselor mentorship",
+      icon: <IconCheck size={14} />,
+    },
+  ];
+
+  return (
+    <div
+      className="recommend-card relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#8c3a63]/50 p-6 sm:p-7 text-white shadow-[0_12px_36px_-6px_rgba(77,20,53,0.32)]"
+      style={{ background: "linear-gradient(152deg, #4d1435 0%, #3a0f28 50%, #200617 100%)" }}
+    >
+      <div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-[#f8ce7c] border border-white/20 backdrop-blur-xs">
+            <IconSparkle size={12} />
+            RECOMMENDED PROGRAMME
+          </span>
+          <Mascot size={54} mood="wave" className="no-print drop-shadow-md" />
+        </div>
+
+        <h3 className="mt-3.5 text-[1.28rem] sm:text-[1.38rem] font-black tracking-tight text-white leading-tight">
+          Milestones Acceleration: Stage {stage.roman}
+        </h3>
+        <p className="mt-1 text-[0.88rem] font-bold text-[#f8ce7c]">
+          {stage.name} Phase · Personalised for {child.name}
+        </p>
+
+        <p className="mt-3 text-[0.88rem] leading-relaxed text-[#f6dce6] font-normal">
+          The Kaushalya 0–6 developmental programme for {stage.name}: daily 10-minute guided
+          screen-free play routines and expert parent videos across all six brain areas.
+        </p>
+
+        <div className="mt-4.5 space-y-2">
+          {perks.map((p, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.08] px-3.5 py-2.5 backdrop-blur-xs"
+            >
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#f8ce7c]/20 text-[#f8ce7c]">
+                {p.icon}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[0.82rem] font-bold text-white truncate">{p.title}</p>
+                <p className="text-[0.72rem] text-[#ebb9ce] truncate">{p.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="no-print mt-auto space-y-2.5 p-6 pt-0">
-        {primaryHref && (
-          <ButtonLink href={primaryHref} external variant="sun" block iconRight={<IconArrowRight size={17} />}>
-            {primaryLabel}
-          </ButtonLink>
-        )}
-        <ButtonLink href={secondaryHref} variant="secondary" block external>
-          {secondaryLabel}
-        </ButtonLink>
+      <div className="no-print mt-6 space-y-2.5 pt-2">
+        <a
+          href={primaryHref}
+          target="_blank"
+          rel="noreferrer"
+          className="group/btn relative flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#f8ce7c] via-[#f4a93b] to-[#e8971f] px-5 py-3.5 text-[0.94rem] font-black text-[#2a0b1d] shadow-lg shadow-black/25 transition-all duration-200 hover:brightness-105 active:scale-[0.99]"
+        >
+          <span>{primaryLabel}</span>
+          <IconArrowRight size={17} className="transition-transform group-hover/btn:translate-x-1" />
+        </a>
+
+        <a
+          href={secondaryHref}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-[0.85rem] font-bold text-white transition-colors hover:bg-white/15"
+        >
+          <IconPhone size={14} />
+          <span>{secondaryLabel}</span>
+        </a>
+
+        <p className="text-center text-[0.7rem] font-semibold text-[#ebb9ce]/85 pt-1">
+          ★ Trusted by 25,000+ Indian parents · 100% Screen-Free Home Method
+        </p>
       </div>
 
       {/* Buttons don't work on paper — a printed report gets the plain
           addresses instead, written out in full. */}
-      <dl className="hidden print:block print:space-y-2 print:border-t print:border-line-soft print:p-6 print:pt-4 print:text-[9.5pt]">
-        {primaryHref && (
-          <div>
-            <dt className="inline font-bold">{primaryLabel}: </dt>
-            <dd className="inline">{primaryHref.replace(/^https?:\/\//, "")}</dd>
-          </div>
-        )}
+      <dl className="hidden print:block print:space-y-1.5 print:border-t print:border-white/20 print:mt-4 print:pt-3 print:text-[9pt] text-[#f6dce6]">
         <div>
-          <dt className="inline font-bold">{secondaryLabel}: </dt>
+          <dt className="inline font-bold text-white">{primaryLabel}: </dt>
+          <dd className="inline">{primaryHref.replace(/^https?:\/\//, "")}</dd>
+        </div>
+        <div>
+          <dt className="inline font-bold text-white">{secondaryLabel}: </dt>
           <dd className="inline">{secondaryHref.replace(/^mailto:/, "")}</dd>
         </div>
       </dl>
-    </Card>
-  );
-}
-
-function DefaultRecommendationCard({ stage }: { stage: BrainStage }) {
-  return (
-    <RecommendationShell
-      eyebrow="Recommended next"
-      title={`Milestones Acceleration · Stage ${stage.roman}`}
-      description={`The Kaushalya 0–6 programme for ${stage.name}: day-wise activity plans and short videos across exactly the six areas in this report, ten minutes of screen time and thirty minutes of play a day.`}
-      bullets={["Monthly course for this phase", "Day-wise activity plans", "Milestone checklists"]}
-      primaryHref="https://www.kaushalyageniuskid.com"
-      primaryLabel="Explore the programme"
-      secondaryHref="mailto:support@kaushalyageniuskid.com"
-      secondaryLabel="Talk to our team"
-    />
+    </div>
   );
 }
 
@@ -1058,15 +1203,6 @@ function stagePosition(value: number): { index: number; frac: number } {
     lo = hi;
   }
   return { index: 0, frac: 0 };
-}
-
-/**
- * Activities are picked from the stage the child actually reached, not the one
- * their age points at. A child working at stage III needs stage III play, and
- * handing them their age's activities is how a report becomes discouraging.
- */
-function pickActivities(score: DomainScore): Activity[] {
-  return activitiesFor(score.domain, score.achievedStage || "s1").slice(0, 4);
 }
 
 function formatDate(iso: string): string {

@@ -55,9 +55,6 @@ export default function AdminAssessmentsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="!text-2xl">Assessments</h1>
-        <p className="mt-1 text-sm text-ink-3">
-          All assessments across the programme.
-        </p>
       </div>
 
       {error && (

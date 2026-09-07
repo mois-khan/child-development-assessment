@@ -124,7 +124,7 @@ export default function UserManagementPage() {
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">User Management</h1>
           <p className="mt-1 text-sm text-ink-3">
-            Control which team members can access which admin pages. Only accessible to super admins.
+            Only super admins can change page access.
           </p>
         </div>
         <Button onClick={() => setInviteDrawerOpen(true)} variant="primary">

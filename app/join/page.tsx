@@ -141,11 +141,6 @@ function JoinInner() {
               <h1 className="mt-3">
                 {mode === "signup" ? "Let's get started" : "Sign in to continue"}
               </h1>
-              <p className="lede mx-auto mt-3 max-w-[40ch]">
-                {mode === "signup"
-                  ? "Three details, and your child's results are saved to your account for good."
-                  : "Your children and their reports are waiting."}
-              </p>
             </div>
 
             <Card variant="clay" className="mt-9 p-6 sm:p-8">

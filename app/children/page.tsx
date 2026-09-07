@@ -79,13 +79,11 @@ export default function ChildrenPage() {
                 <h1 className="mt-3">
                   {children === null ? "Loading…" : empty ? "Let's add your child" : "Your children"}
                 </h1>
-                <p className="lede mt-3 max-w-[46ch]">
-                  {children === null
-                    ? ""
-                    : empty
-                      ? "Three quick things and we'll find exactly which of the seven stages they're on."
-                      : "Pick a child to see their reports, or start a new check."}
-                </p>
+                {empty && children !== null && (
+                  <p className="lede mt-3 max-w-[46ch]">
+                    Three quick things and we&rsquo;ll find exactly which of the seven stages they&rsquo;re on.
+                  </p>
+                )}
               </div>
               {!empty && !showForm && children !== null && (
                 <Button variant="secondary" onClick={() => setShowForm(true)} iconLeft={<IconPlus size={17} />}>

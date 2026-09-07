@@ -648,9 +648,6 @@ function ProfileInner() {
             <div>
               <p className="eyebrow eyebrow-accent">Learning &amp; Growth</p>
               <h2 className="mt-1">Courses and programmes</h2>
-              <p className="lede mt-2 max-w-[50ch]">
-                Milestone-tailored curricula and home activity plans built around the Kaushalya Genius Kid Method.
-              </p>
             </div>
 
             {/* Enrolled / Purchased passes */}

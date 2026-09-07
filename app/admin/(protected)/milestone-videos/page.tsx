@@ -148,7 +148,9 @@ export default function MilestoneVideosPage() {
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">Milestone Videos</h1>
-          <p className="mt-1 text-sm text-ink-3">Manage curated video recommendations for the assessment report.</p>
+          <p className="mt-1 text-sm text-ink-3">
+            Shown inside each domain card of the report, matched to the child&apos;s stage.
+          </p>
         </div>
         <Button onClick={() => openAddDrawer()} variant="primary">
           + Add Video
