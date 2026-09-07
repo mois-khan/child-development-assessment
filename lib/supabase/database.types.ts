@@ -222,6 +222,7 @@ export interface Database {
           currency?: string;
           status?: PaymentStatus;
           notes?: Record<string, unknown>;
+          paid_at?: string | null;
         };
         Update: {
           razorpay_payment_id?: string | null;

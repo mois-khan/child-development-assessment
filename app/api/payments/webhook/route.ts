@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { createServerClient } from "@supabase/ssr";
+import { getSupabaseServiceRoleClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
@@ -23,24 +23,26 @@ export async function POST(req: Request) {
     const payload = JSON.parse(rawBody);
 
     if (payload.event === "payment.captured") {
-      const paymentData = payload.payload.payment.entity;
-      const { childId } = paymentData.notes;
+      const paymentEntity = payload.payload.payment.entity;
 
-      // Handle server-to-server DB update
-      // Bypass RLS with SERVICE_ROLE_KEY
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          cookies: {
-            getAll: () => [],
-            setAll: () => {},
-          },
-        }
-      );
+      // Backup path for the same write /api/payments/verify already makes on
+      // the happy path — this is what covers a parent closing the tab before
+      // the checkout handler's fetch resolves. Update-only: the row always
+      // already exists from /api/payments/order, created at "created" status.
+      const supabase = getSupabaseServiceRoleClient();
+      const { error } = await supabase
+        .from("payments")
+        .update({
+          status: "paid",
+          razorpay_payment_id: paymentEntity.id,
+          paid_at: new Date().toISOString(),
+        })
+        .eq("razorpay_order_id", paymentEntity.order_id)
+        .eq("status", "created");
 
-      // We'd insert the payment here into the 'payments' table.
-      // await supabase.from('payments').insert({ ... })
+      if (error) {
+        console.error("Webhook failed to mark payment paid:", error);
+      }
     }
 
     return NextResponse.json({ status: "ok" }, { status: 200 });

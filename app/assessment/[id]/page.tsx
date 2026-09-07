@@ -28,6 +28,7 @@ import {
   IconClose,
   IconSparkle,
   IconStarFilled,
+  LoadError,
   Mascot,
   ProgressRing,
   SectionTile,
@@ -133,20 +134,27 @@ export default function AssessmentPage({
   const [reward, setReward] = useState<{ key: number; amount: number } | null>(null);
   const [pending, setPending] = useState(false);
   const [resumed, setResumed] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    getAssessment(id).then(found => {
-      if (!active) return;
-      setRecord(found);
-      if (found) {
-        setResponses(found.responses);
-        setDetails(found.details ?? {});
-        setStages(found.stagesByDomain);
-      }
-    });
+    setLoadError(false);
+    getAssessment(id)
+      .then(found => {
+        if (!active) return;
+        setRecord(found);
+        if (found) {
+          setResponses(found.responses);
+          setDetails(found.details ?? {});
+          setStages(found.stagesByDomain);
+        }
+      })
+      .catch(() => {
+        if (active) setLoadError(true);
+      });
     return () => { active = false; };
-  }, [id]);
+  }, [id, loadAttempt]);
 
   const months = record ? monthsFor(record) : 0;
 
@@ -294,6 +302,7 @@ export default function AssessmentPage({
     else advanceStage(responses);
   }, [questionIndex, items.length, advanceStage, responses]);
 
+  if (loadError) return <LoadFailed onRetry={() => setLoadAttempt((n) => n + 1)} />;
   if (record === undefined) return <Loading />;
   if (record === null) return <NotFound onStart={() => router.push("/children")} />;
 
@@ -717,6 +726,13 @@ function SectionIntro({
         Answer for what they do <em>now</em> — &ldquo;no&rdquo; is just as useful an
         answer, and is how we find their level.
       </p>
+
+      {index === 0 && (
+        <p className="mt-2 text-sm text-ink-3">
+          The XP counter at the top is just a bit of fun as you go — it doesn&rsquo;t
+          affect the result.
+        </p>
+      )}
     </div>
   );
 }
@@ -1219,13 +1235,23 @@ function NotFound({ onStart }: { onStart: () => void }) {
           <Mascot size={92} mood="think" className="mx-auto" />
           <h1 className="mt-6">We couldn&rsquo;t find that check</h1>
           <p className="prose-read mx-auto mt-3 max-w-[42ch]">
-            Assessments are saved in this browser only, so a link from another device
-            won&rsquo;t open here.
+            This check doesn&rsquo;t exist, or isn&rsquo;t linked to your account.
           </p>
           <Button className="mt-8" onClick={onStart}>
             Go to your children
           </Button>
         </div>
+      </Shell>
+    </>
+  );
+}
+
+function LoadFailed({ onRetry }: { onRetry: () => void }) {
+  return (
+    <>
+      <TopBar nav={false} />
+      <Shell width="narrow">
+        <LoadError onRetry={onRetry} />
       </Shell>
     </>
   );

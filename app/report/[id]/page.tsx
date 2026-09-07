@@ -34,6 +34,7 @@ import {
   IconDownload,
   IconHeart,
   IconSparkle,
+  LoadError,
   Mascot,
   Meter,
   Section,
@@ -58,14 +59,21 @@ export default function ReportPage({
   const { id } = use(params);
   const searchParams = useSearchParams();
   const [record, setRecord] = useState<StoredAssessment | null | undefined>(undefined);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    getAssessment(id).then(found => {
-      if (active) setRecord(found);
-    });
+    setLoadError(false);
+    getAssessment(id)
+      .then(found => {
+        if (active) setRecord(found);
+      })
+      .catch(() => {
+        if (active) setLoadError(true);
+      });
     return () => { active = false; };
-  }, [id]);
+  }, [id, loadAttempt]);
 
   const result = useMemo<AssessmentResult | null>(() => {
     if (!record) return null;
@@ -85,6 +93,17 @@ export default function ReportPage({
       return () => window.clearTimeout(t);
     }
   }, [result, searchParams]);
+
+  if (loadError) {
+    return (
+      <>
+        <TopBar />
+        <Shell width="narrow">
+          <LoadError onRetry={() => setLoadAttempt((n) => n + 1)} />
+        </Shell>
+      </>
+    );
+  }
 
   if (record === undefined) {
     return (
@@ -106,8 +125,7 @@ export default function ReportPage({
             <Mascot size={92} mood="think" className="mx-auto" />
             <h1 className="mt-6">We couldn&rsquo;t find that report</h1>
             <p className="prose-read mx-auto mt-3 max-w-[42ch]">
-              Reports are saved in this browser only, so a link from another device won&rsquo;t
-              open here.
+              This report doesn&rsquo;t exist, or isn&rsquo;t linked to your account.
             </p>
             <ButtonLink href="/children" className="mt-8">
               Go to your children
@@ -290,8 +308,12 @@ export default function ReportPage({
 
             <Card variant="clay" className="mt-8 p-6 sm:p-8">
               <p className="eyebrow mb-2">Progress, area by area</p>
-              <p className="mb-6 text-sm font-medium text-ink-3">
+              <p className="mb-1 text-sm font-medium text-ink-3">
                 Where each area sits against the expected stage for {child.name}&rsquo;s age.
+              </p>
+              <p className="mb-6 text-sm font-medium text-ink-3">
+                These are screening terms, not a diagnosis — see the note at the end of this
+                report.
               </p>
               <div className="overflow-x-auto">
                 <div className="progress-matrix">
@@ -406,11 +428,20 @@ export default function ReportPage({
               <DefaultRecommendationCard stage={startStage} />
             </div>
 
-            {/* Admin-curated course recommendations for this child's overall stage.
-                CourseRow returns null when Supabase is not configured or no courses
-                exist, so DefaultRecommendationCard above always acts as the fallback. */}
+            {/* Admin-curated course recommendations, keyed to the stage of
+                the child's biggest focus area (same "focus" the summary and
+                next-steps above already use) rather than a fixed domain —
+                the domain array happens to start with vision, so indexing
+                domainScores[0] always meant "vision's stage" regardless of
+                which area the child actually needs help with.
+                CourseRow returns null when Supabase is not configured or no
+                courses exist, so DefaultRecommendationCard above always acts
+                as the fallback. */}
             <CourseRow
-              stageId={result.domainScores[0]?.achievedStage || startStage.id}
+              stageId={
+                result.domainScores.find((d) => d.domain === focus[0])?.achievedStage
+                  || startStage.id
+              }
               childName={child.name}
             />
           </Section>
@@ -892,10 +923,10 @@ function DomainCard({
 }
 
 /* ══ recommendation ═══════════════════════════════════════════════════════
- * A single fixed card pointing at the programme. The admin-authored course +
- * rule engine that used to feed an alternative version of this was removed
- * along with the Courses admin section — it produced nothing a hardcoded CTA
- * doesn't, and every deployment had zero courses in it. */
+ * DefaultRecommendationCard is the always-present fallback CTA. CourseRow
+ * (rendered alongside it above) is the admin-curated version — it fetches
+ * from course_recommendations and renders nothing when that stage/cell has
+ * no active cards, so the fallback below is never left standing alone. */
 
 function RecommendationShell({
   eyebrow,

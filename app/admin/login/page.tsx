@@ -107,7 +107,7 @@ function AdminLoginInner() {
                 {submitting ? "Signing in…" : "Sign in"}
               </Button>
             </form>
-          ) : (
+          ) : process.env.NODE_ENV !== "production" ? (
             <div className="space-y-4 text-center">
               <h1 className="!text-xl">No Supabase project connected yet</h1>
               <p className="text-sm leading-relaxed text-ink-3">
@@ -121,6 +121,14 @@ function AdminLoginInner() {
               <Button block onClick={handleDevContinue}>
                 Continue as dev admin
               </Button>
+            </div>
+          ) : (
+            <div className="space-y-4 text-center">
+              <h1 className="!text-xl">Admin sign-in is not configured</h1>
+              <p className="text-sm leading-relaxed text-ink-3">
+                This deployment is missing its Supabase credentials. Contact whoever manages
+                this environment.
+              </p>
             </div>
           )}
         </Card>

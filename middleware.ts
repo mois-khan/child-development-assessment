@@ -39,8 +39,12 @@ export async function middleware(request: NextRequest) {
 
   // ── Admin routes ────────────────────────────────────────────────────────────
   if (path.startsWith("/admin")) {
-    // Login and unauthorized pages are always public to admin routes
-    if (path === "/admin/login" || path === "/admin/unauthorized") return response;
+    // Login, unauthorized, and invite-acceptance pages are always public to
+    // admin routes — accept-invite runs before the invitee has a password
+    // set, so it can't sit behind the auth check below.
+    if (path === "/admin/login" || path === "/admin/unauthorized" || path === "/admin/accept-invite") {
+      return response;
+    }
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

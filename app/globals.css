@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
 /* ═══════════════════════════════════════════════════════════════════════════
    KAUSHALYA GENIUS KID PROGRAM — DESIGN SYSTEM v4
    ───────────────────────────────────────────────────────────────────────────
@@ -200,82 +198,6 @@
   --dur-fast: 120ms;
   --dur: 200ms;
   --dur-slow: 320ms;
-}
-
-/* Light is always the default, regardless of OS preference — dark mode only
-   applies once the user explicitly picks it via the toggle (data-theme). */
-:root[data-theme="dark"] {
-  --ground: #1c0f16;
-  --ground-2: #150a10;
-  --surface: #2a1622;
-  --surface-2: #33192c;
-  --surface-3: #402038;
-  --ink: #f5e9ef; /* 14.39:1 on surface */
-  --ink-2: #d8c3ce; /* 10.21:1 */
-  --ink-3: #a98b9b; /* 5.54:1 — passes, unlike its light twin */
-
-  /* Dark mode inverts which border needs help: on a dark ground a hairline
-     must get *lighter* to be seen, so line-strong climbs rather than falls. */
-  --line-soft: #3a1c2c;
-  --line: #4a2438;
-  --line-strong: #7b4460;
-
-  --accent: #efa3c6;
-  --accent-hover: #f4beda;
-  --accent-soft: #3a1b2c;
-  --accent-line: #5c2e44;
-  --on-accent: #1c0f16;
-
-  /* On a dark ground the light-mode solids are far too dark to read, so these
-     stay bright — all clear 5.5:1+ on their soft tints, verified. `-ink`
-     collapses onto the base value here because there is no second problem to
-     solve: nothing needs darkening. */
-  --st-superior: #a693ff;
-  --st-on-track: #4ecfa0;
-  --st-emerging: #e2b95c;
-  --st-needs-focus: #f09a63;
-  --st-consult: #f0798b;
-  --on-status: #1c0f16;
-
-  --st-superior-ink: var(--st-superior);
-  --st-on-track-ink: var(--st-on-track);
-  --st-emerging-ink: var(--st-emerging);
-  --st-needs-focus-ink: var(--st-needs-focus);
-  --st-consult-ink: var(--st-consult);
-
-  --st-superior-soft: #241f3d;
-  --st-on-track-soft: #16332a;
-  --st-emerging-soft: #332b17;
-  --st-needs-focus-soft: #35251a;
-  --st-consult-soft: #351d24;
-
-  /* The six section hues also brighten — the light-mode values are tuned
-     against white and go muddy on #2a1622. */
-  --sec-visual: #a693ff;
-  --sec-visual-soft: #251f3f;
-  --sec-auditory: #5fb8dd;
-  --sec-auditory-soft: #16303c;
-  --sec-tactile: #f2806a;
-  --sec-tactile-soft: #3a1f1a;
-  --sec-mobility: #e69a66;
-  --sec-mobility-soft: #38251a;
-  --sec-language: #5cbcab;
-  --sec-language-soft: #17332e;
-  --sec-manual: #c2c65a;
-  --sec-manual-soft: #2f3117;
-
-  --focus-ring: #efa3c6;
-
-  /* Shadow does far less work on a dark ground — depth there comes from
-     surface lightness, not from cast shadow. These stay deliberately
-     restrained rather than being the light values with the alpha cranked up. */
-  --shadow-xs: 0 1px 2px rgba(8, 3, 6, 0.4);
-  --shadow-sm: 0 1px 2px rgba(8, 3, 6, 0.4), 0 2px 4px -1px rgba(8, 3, 6, 0.35);
-  --shadow-md: 0 2px 4px -1px rgba(8, 3, 6, 0.4), 0 8px 16px -6px rgba(8, 3, 6, 0.5);
-  --shadow-lg: 0 4px 8px -2px rgba(8, 3, 6, 0.45), 0 16px 28px -10px rgba(8, 3, 6, 0.6);
-  --shadow-xl: 0 8px 16px -4px rgba(8, 3, 6, 0.5), 0 28px 48px -16px rgba(8, 3, 6, 0.7);
-  --shadow-brand:
-    0 1px 2px rgba(8, 3, 6, 0.4), 0 8px 20px -8px rgba(239, 163, 198, 0.35);
 }
 
 @theme inline {
@@ -653,20 +575,25 @@ h4,
    over from a palette this product no longer uses. Every primary button in
    the app was casting a blue-violet glow underneath a maroon brand. Now it
    casts the brand's own hue via --shadow-brand. */
+/* --accent, NOT --brand-600. The two happen to be the same value, but they
+   are different tokens for a reason — --on-accent is paired specifically
+   with --accent for contrast. Taking both halves of a foreground/background
+   pair from the same token is what makes a low-contrast mismatch impossible
+   rather than merely unlikely. */
 .btn-primary {
-  background: var(--brand-600);
+  background: var(--accent);
   color: var(--on-accent);
   box-shadow: var(--shadow-brand);
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--brand-700);
+  background: var(--accent-hover);
   transform: translateY(-1px);
   box-shadow:
     0 2px 4px rgba(77, 20, 53, 0.14),
     0 12px 24px -8px rgba(77, 20, 53, 0.34);
 }
 .btn-primary:active:not(:disabled) {
-  background: var(--brand-700);
+  background: var(--accent-hover);
   transform: translateY(1px);
   box-shadow: 0 1px 2px rgba(77, 20, 53, 0.16);
 }
@@ -1103,8 +1030,7 @@ select.field {
   font-weight: 600;
   line-height: 1.35;
   /* Colour is set inline per-cell (a dark shade of the row's own hue) — the
-     cell background is always a light tint regardless of theme, so var(--ink)
-     would go the wrong way in dark mode. This is just the fallback. */
+     cell background is always a light tint. This is just the fallback. */
   color: var(--ink);
 }
 .dp-chart-cell-kind {
@@ -1377,10 +1303,6 @@ summary::marker {
   );
   mix-blend-mode: multiply;
 }
-:root[data-theme="dark"] .photo-frame::after {
-  mix-blend-mode: soft-light;
-  opacity: 0.75;
-}
 
 /* ── decorative ──────────────────────────────────────────────────────────── */
 
@@ -1401,19 +1323,11 @@ summary::marker {
   );
 }
 
-/* The KGK logo is drawn in near-black type. On a dark ground it disappears, so
-   in dark mode it sits on a light plate rather than being recoloured — the
-   brand mark itself must not change. */
 .brand-plate {
   display: inline-flex;
   align-items: center;
   border-radius: 12px;
   transition: background-color var(--dur) var(--ease-out);
-}
-
-:root[data-theme="dark"] .brand-plate {
-  background: #ffffff;
-  padding: 4px 10px;
 }
 
 .avatar-circle {

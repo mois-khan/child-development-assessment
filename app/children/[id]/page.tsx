@@ -27,6 +27,7 @@ import {
   IconRefresh,
   IconSparkle,
   IconStarFilled,
+  LoadError,
   Mascot,
   Meter,
   Section,
@@ -43,11 +44,13 @@ export default function ChildProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [child, setChild] = useState<SavedChild | null | undefined>(undefined);
+  const [child, setChild] = useState<SavedChild | null | undefined | "error">(undefined);
   const [assessments, setAssessments] = useState<StoredAssessment[]>([]);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
+    setChild(undefined);
     Promise.all([
       getChild(id),
       assessmentsForChild(id)
@@ -55,9 +58,11 @@ export default function ChildProfilePage({
       if (!active) return;
       setChild(c);
       setAssessments(a);
+    }).catch(() => {
+      if (active) setChild("error");
     });
     return () => { active = false; };
-  }, [id]);
+  }, [id, loadAttempt]);
 
   const latest = useMemo(
     () => assessments.find(a => a.completedAt) ?? assessments[0] ?? null,
@@ -86,6 +91,17 @@ export default function ChildProfilePage({
     );
   }
 
+  if (child === "error") {
+    return (
+      <>
+        <TopBar />
+        <Shell width="narrow">
+          <LoadError onRetry={() => setLoadAttempt((n) => n + 1)} />
+        </Shell>
+      </>
+    );
+  }
+
   if (child === null) {
     return (
       <>
@@ -95,8 +111,7 @@ export default function ChildProfilePage({
             <Mascot size={92} mood="think" className="mx-auto" />
             <h1 className="mt-6">We couldn&rsquo;t find that child</h1>
             <p className="prose-read mx-auto mt-3 max-w-[40ch]">
-              Profiles are saved in this browser only, so a link from another device
-              won&rsquo;t open here.
+              This profile doesn&rsquo;t exist, or isn&rsquo;t linked to your account.
             </p>
             <ButtonLink href="/children" className="mt-8">
               Go to your children
@@ -239,14 +254,9 @@ export default function ChildProfilePage({
                               >
                                 {a.completedAt ? <IconStarFilled size={18} /> : <IconRefresh size={18} />}
                               </span>
-                              <div>
-                                <p className="font-extrabold text-ink text-base">
-                                  Genius Milestone Check
-                                </p>
-                                <p className="text-xs font-semibold text-ink-3">
-                                  Stage {stage.roman} · {stage.name}
-                                </p>
-                              </div>
+                              <p className="font-extrabold text-ink text-base">
+                                Genius Milestone Check
+                              </p>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm font-semibold text-ink-2 whitespace-nowrap">
@@ -376,6 +386,10 @@ export default function ChildProfilePage({
           <Shell width="wide">
             <p className="eyebrow eyebrow-accent">Developmental milestone ladder</p>
             <h2 className="mt-1">Their stage on the journey</h2>
+            <p className="lede mt-2 max-w-[54ch]">
+              Each dot is one of the seven brain stages — the filled one is where{" "}
+              {child.name} is today.
+            </p>
             <Card variant="clay" className="mt-5 overflow-x-auto p-6 sm:p-8">
               <BrainJourney
                 stages={STAGE_JOURNEY}
@@ -383,6 +397,9 @@ export default function ChildProfilePage({
                 className="h-auto w-full min-w-[680px]"
               />
             </Card>
+            <p className="mt-2 text-xs font-semibold text-ink-3 sm:hidden">
+              Swipe sideways to see every stage →
+            </p>
           </Shell>
         </Section>
       </main>

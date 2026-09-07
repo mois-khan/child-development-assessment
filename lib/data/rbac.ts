@@ -94,12 +94,13 @@ export async function getPageAccess(userId: string): Promise<string[]> {
  *  1. Deletes all existing admin_page_access rows for this user.
  *  2. Inserts a fresh row for every pageId in the supplied array.
  *
- * Passing an empty array effectively revokes all access.
+ * Passing an empty array effectively revokes all access. `granted_by` is not
+ * set here — the column defaults to auth.uid() at the database level, so it
+ * always records the super_admin who is actually signed in.
  */
 export async function setPageAccess(
   userId: string,
-  pageIds: string[],
-  grantedBy: string
+  pageIds: string[]
 ): Promise<void> {
   const supabase = getSupabaseBrowserClient();
 
@@ -120,7 +121,6 @@ export async function setPageAccess(
   const rows = pageIds.map((pageId) => ({
     admin_user_id: userId,
     page_id: pageId,
-    granted_by: grantedBy,
   }));
 
   const { error: insertError } = await supabase
@@ -139,15 +139,14 @@ export async function setPageAccess(
  */
 export async function grantPageAccess(
   userId: string,
-  pageId: string,
-  grantedBy: string
+  pageId: string
 ): Promise<void> {
   const supabase = getSupabaseBrowserClient();
 
   const { error } = await supabase
     .from("admin_page_access")
     .upsert(
-      { admin_user_id: userId, page_id: pageId, granted_by: grantedBy },
+      { admin_user_id: userId, page_id: pageId },
       { onConflict: "admin_user_id, page_id" }
     );
 

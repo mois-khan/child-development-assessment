@@ -38,12 +38,18 @@ export interface Lead {
   email: string;
   source: string;
   status: LeadStatus;
+  assignedToId?: string;
   assignedToEmail?: string;
   nextFollowUpAt?: string;
   lastInteractionAt?: string;
   createdAt: string;
   children: LeadChild[];
   interactions: Interaction[];
+}
+
+export interface AssignableAdmin {
+  id: string;
+  email: string;
 }
 
 export interface LeadStats {
@@ -60,7 +66,7 @@ export async function adminListLeads(): Promise<Lead[]> {
     .select(`
       id, profile_id, status, source, next_follow_up_at, last_interaction_at, created_at,
       profiles ( full_name, phone, email ),
-      admin_users ( email )
+      admin_users ( id, email )
     ` as any)
     .order("next_follow_up_at", { ascending: true, nullsFirst: false }) as any);
   
@@ -101,6 +107,7 @@ export async function adminListLeads(): Promise<Lead[]> {
     email: l.profiles?.email || "",
     source: l.source,
     status: l.status,
+    assignedToId: l.admin_users?.id,
     assignedToEmail: l.admin_users?.email,
     nextFollowUpAt: l.next_follow_up_at || undefined,
     lastInteractionAt: l.last_interaction_at || undefined,
@@ -170,6 +177,7 @@ export async function adminGetLead(id: string): Promise<Lead | null> {
     email: l.profiles?.email || "",
     source: l.source,
     status: l.status,
+    assignedToId: l.admin_users?.id,
     assignedToEmail: l.admin_users?.email,
     nextFollowUpAt: l.next_follow_up_at || undefined,
     lastInteractionAt: l.last_interaction_at || undefined,
@@ -185,13 +193,51 @@ export async function adminUpdateLead(id: string, patch: { parentName?: string; 
   if (!lead) throw new Error("Lead not found");
 
   if (patch.parentName !== undefined || patch.phone !== undefined || patch.email !== undefined) {
-    await supabase.from("profiles").update({
+    const { error } = await supabase.from("profiles").update({
       full_name: patch.parentName ?? lead.parentName,
       phone: patch.phone ?? lead.phone,
       email: patch.email ?? lead.email
     }).eq("id", lead.profileId);
+    if (error) throw error;
   }
-  
+
+  return adminGetLead(id) as Promise<Lead>;
+}
+
+/** Every admin_users row, for the "assign to" picker on a lead. */
+export async function listAssignableAdmins(): Promise<AssignableAdmin[]> {
+  const supabase = getSupabaseBrowserClient();
+  const { data, error } = await supabase
+    .from("admin_users")
+    .select("id, email")
+    .order("email", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function adminAssignLead(id: string, adminUserId: string | null): Promise<Lead> {
+  const supabase = getSupabaseBrowserClient();
+  const { error } = await supabase
+    .from("leads")
+    .update({ assigned_to: adminUserId })
+    .eq("id", id);
+  if (error) throw error;
+  return adminGetLead(id) as Promise<Lead>;
+}
+
+/**
+ * Direct status override — separate from the automatic outcome-driven sync
+ * in adminLogInteraction(). Exists for the two cases the interaction-outcome
+ * mapping can never reach on its own: marking a lead "lost" (no interaction
+ * outcome maps to it) and reopening a closed lead so it can be worked again.
+ */
+export async function adminSetLeadStatus(id: string, status: LeadStatus): Promise<Lead> {
+  const supabase = getSupabaseBrowserClient();
+  const { error } = await supabase
+    .from("leads")
+    .update({ status })
+    .eq("id", id);
+  if (error) throw error;
   return adminGetLead(id) as Promise<Lead>;
 }
 
@@ -228,10 +274,26 @@ export async function adminLeadStats(): Promise<LeadStats> {
 }
 
 import { useState, useCallback, useEffect } from "react";
-export function useAdminLeads(): { leads: Lead[]; refresh: () => void } {
+export function useAdminLeads(): {
+  leads: Lead[];
+  loading: boolean;
+  error: string | null;
+  refresh: () => void;
+} {
   const [leads, setLeads] = useState<Lead[]>([]);
-  const refresh = useCallback(() => { adminListLeads().then(setLeads); }, []);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    adminListLeads()
+      .then(setLeads)
+      .catch((err) => setError(err?.message || "Failed to load leads."))
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(() => { refresh(); }, [refresh]);
-  return { leads, refresh };
+  return { leads, loading, error, refresh };
 }
 

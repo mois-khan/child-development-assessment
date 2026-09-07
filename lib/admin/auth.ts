@@ -23,6 +23,13 @@ import type { AdminRole } from "@/lib/types/rbac";
 const DEV_SESSION_KEY = "kaushalya.admin.dev-session";
 const DEV_ADMIN_EMAIL = "dev-admin@local";
 
+/**
+ * The dev-session bypass must never activate in a deployed production build,
+ * even if Supabase env vars are somehow missing there — "not configured" is
+ * meant to describe a local machine, not a misconfigured live deployment.
+ */
+const DEV_SESSION_ALLOWED = process.env.NODE_ENV !== "production";
+
 export interface AdminSession {
   id: string;
   email: string;
@@ -32,12 +39,14 @@ export interface AdminSession {
 }
 
 function readDevSession(): AdminSession | null {
+  if (!DEV_SESSION_ALLOWED) return null;
   if (typeof window === "undefined") return null;
   if (window.localStorage.getItem(DEV_SESSION_KEY) !== "1") return null;
   return { id: "00000000-0000-0000-0000-000000000000", email: DEV_ADMIN_EMAIL, role: "super_admin", isDevSession: true };
 }
 
 export function startDevSession(): void {
+  if (!DEV_SESSION_ALLOWED) return;
   window.localStorage.setItem(DEV_SESSION_KEY, "1");
 }
 

@@ -68,6 +68,8 @@ function ProfileInner() {
   const [assessments, setAssessments] = useState<AssessmentRow[] | null>(null);
   const [payments, setPayments] = useState<PaymentRecord[] | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [dataLoadError, setDataLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   // Edit details state
   const [editing, setEditing] = useState(false);
@@ -91,6 +93,7 @@ function ProfileInner() {
 
     async function loadData() {
       setLoadingData(true);
+      setDataLoadError(false);
       try {
         const supabase = getSupabaseBrowserClient();
 
@@ -152,6 +155,7 @@ function ProfileInner() {
         }
       } catch (e) {
         console.error("Error loading profile data:", e);
+        if (active) setDataLoadError(true);
       } finally {
         if (active) setLoadingData(false);
       }
@@ -162,7 +166,7 @@ function ProfileInner() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user, loadAttempt]);
 
   // Sync edit form fields when profile is available
   useEffect(() => {
@@ -227,6 +231,19 @@ function ProfileInner() {
       <TopBar />
 
       <main className="pb-16">
+        {dataLoadError && (
+          <Shell width="wide">
+            <div className="mt-7 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius)] border border-line bg-[var(--st-consult-soft)] p-4">
+              <p className="text-sm font-semibold text-[var(--st-consult)]">
+                Some of your data couldn&rsquo;t load. Check your connection and try again.
+              </p>
+              <Button size="sm" variant="secondary" onClick={() => setLoadAttempt((n) => n + 1)}>
+                Try again
+              </Button>
+            </div>
+          </Shell>
+        )}
+
         {/* ══ Hero Header ════════════════════════════════════════════════ */}
         <Shell width="wide">
           <div

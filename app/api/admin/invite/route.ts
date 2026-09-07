@@ -2,11 +2,16 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+const VALID_ROLES = ["super_admin", "admin", "manager", "sales"];
+
 export async function POST(request: Request) {
   try {
     const { email, role } = await request.json();
     if (!email || !role) {
       return NextResponse.json({ error: "email and role required" }, { status: 400 });
+    }
+    if (!VALID_ROLES.includes(role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
     const cookieStore = await cookies();
@@ -36,22 +41,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden: Only super_admin can invite users" }, { status: 403 });
     }
 
+    // Where the invite email sends them to finish setting up their account —
+    // without this Supabase falls back to the project's default Site URL,
+    // which has no reason to know about this app's admin section at all.
+    const redirectTo = `${new URL(request.url).origin}/admin/accept-invite`;
+
     // Call Supabase Admin API to invite user
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/invite`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        "Authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-      },
-      body: JSON.stringify({
-        email,
-        data: {
-          is_admin: "true", // metadata flag that triggers route them to admin_users
-          role,
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/invite?redirect_to=${encodeURIComponent(redirectTo)}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          "Authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
         },
-      }),
-    });
+        body: JSON.stringify({
+          email,
+          data: {
+            is_admin: "true", // metadata flag that triggers route them to admin_users
+            role,
+          },
+        }),
+      },
+    );
 
     if (!response.ok) {
       const err = await response.json();

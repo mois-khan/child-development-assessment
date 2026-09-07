@@ -6,10 +6,14 @@ import {
   adminGetLead,
   adminUpdateLead,
   adminLogInteraction,
+  adminAssignLead,
+  adminSetLeadStatus,
+  listAssignableAdmins,
   type Lead,
   type LeadStatus,
   type InteractionOutcome,
   type InteractionChannel,
+  type AssignableAdmin,
 } from "@/lib/admin/leads";
 import { useAdminSession } from "@/lib/admin/auth";
 import { completedMonths, formatAge, todayISO } from "@/lib/age";
@@ -155,9 +159,12 @@ export default function AdminLeadDetailPage({
             </div>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <Badge tone={STATUS_TONE[lead.status]} size="lg">
-              {STATUS_LABEL[lead.status]}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge tone={STATUS_TONE[lead.status]} size="lg">
+                {STATUS_LABEL[lead.status]}
+              </Badge>
+              <LeadStatusAction lead={lead} onChanged={refresh} />
+            </div>
             {isOverdue && (
               <span className="flex items-center gap-1.5 rounded-full bg-[var(--st-consult-soft)] px-3 py-1.5 text-xs font-bold text-[var(--st-consult-ink)] shadow-sm border border-[var(--st-consult-soft)]">
                 <IconShield size={14} /> Follow-up overdue · {lead.nextFollowUpAt}
@@ -331,7 +338,9 @@ export default function AdminLeadDetailPage({
               <p className="text-sm font-semibold text-ink-3">
                 This lead is marked as <strong>{STATUS_LABEL[lead.status]}</strong>.
               </p>
-              <p className="mt-1 text-xs text-ink-3">No further interactions can be logged.</p>
+              <p className="mt-1 text-xs text-ink-3">
+                Reopen it above to log more interactions.
+              </p>
             </Card>
           )}
         </div>
@@ -348,17 +357,24 @@ function ProfileCard({ lead, onSaved }: { lead: Lead; onSaved: () => void }) {
   const [phone, setPhone] = useState(lead.phone ?? "");
   const [email, setEmail] = useState(lead.email ?? "");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function save() {
     setSaving(true);
-    await adminUpdateLead(lead.id, {
-      parentName: name.trim(),
-      phone: phone.trim(),
-      email: email.trim(),
-    });
-    setSaving(false);
-    setEditing(false);
-    onSaved();
+    setError(null);
+    try {
+      await adminUpdateLead(lead.id, {
+        parentName: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+      });
+      setEditing(false);
+      onSaved();
+    } catch (err: any) {
+      setError(err?.message || "Failed to save. You may not have permission to edit parents.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -386,6 +402,7 @@ function ProfileCard({ lead, onSaved }: { lead: Lead; onSaved: () => void }) {
               <input type="email" className="field" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
           </div>
+          {error && <p className="text-sm font-semibold text-[var(--st-consult)]">{error}</p>}
           <div className="flex justify-end">
             <Button size="sm" onClick={save} disabled={saving} iconLeft={<IconCheck size={14} />}>
               {saving ? "Saving…" : "Save Profile"}
@@ -398,7 +415,7 @@ function ProfileCard({ lead, onSaved }: { lead: Lead; onSaved: () => void }) {
           <InfoRow label="Phone" value={lead.phone || "—"} />
           <InfoRow label="Email" value={lead.email || "—"} />
           <InfoRow label="Source" value={lead.source || "—"} />
-          <InfoRow label="Assigned To" value={lead.assignedToEmail || "Unassigned"} />
+          <AssignedToRow lead={lead} onChanged={onSaved} />
           {lead.lastInteractionAt && (
             <InfoRow
               label="Last Contacted"
@@ -427,6 +444,81 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-ink-3">{label}</dt>
       <dd className="text-right text-sm font-medium text-ink">{value}</dd>
     </div>
+  );
+}
+
+/* ── Assigned-to picker ──────────────────────────────────────────────────── */
+
+function AssignedToRow({ lead, onChanged }: { lead: Lead; onChanged: () => void }) {
+  const [admins, setAdmins] = useState<AssignableAdmin[] | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    listAssignableAdmins().then(setAdmins).catch(() => setAdmins([]));
+  }, []);
+
+  async function handleChange(value: string) {
+    setSaving(true);
+    try {
+      await adminAssignLead(lead.id, value || null);
+      onChanged();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-line-soft pb-2.5 last:border-0 last:pb-0">
+      <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-ink-3">Assigned To</dt>
+      <dd className="text-right text-sm font-medium text-ink">
+        {admins === null ? (
+          lead.assignedToEmail || "Unassigned"
+        ) : (
+          <select
+            className="field !w-auto !py-1 text-sm"
+            value={lead.assignedToId ?? ""}
+            disabled={saving}
+            onChange={(e) => handleChange(e.target.value)}
+          >
+            <option value="">Unassigned</option>
+            {admins.map((a) => (
+              <option key={a.id} value={a.id}>{a.email}</option>
+            ))}
+          </select>
+        )}
+      </dd>
+    </div>
+  );
+}
+
+/* ── Status override (Lost / Reopen) ────────────────────────────────────── */
+
+function LeadStatusAction({ lead, onChanged }: { lead: Lead; onChanged: () => void }) {
+  const [saving, setSaving] = useState(false);
+  const isClosed = ["converted", "lost", "not_interested"].includes(lead.status);
+
+  async function setStatus(status: LeadStatus) {
+    setSaving(true);
+    try {
+      await adminSetLeadStatus(lead.id, status);
+      onChanged();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (isClosed) {
+    return (
+      <Button size="sm" variant="ghost" disabled={saving} onClick={() => setStatus("new")}>
+        {saving ? "Reopening…" : "Reopen lead"}
+      </Button>
+    );
+  }
+
+  return (
+    <Button size="sm" variant="ghost" disabled={saving} onClick={() => setStatus("lost")}>
+      {saving ? "Saving…" : "Mark as lost"}
+    </Button>
   );
 }
 

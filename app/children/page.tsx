@@ -19,6 +19,7 @@ import {
   IconChevronRight,
   IconPlus,
   IconSparkle,
+  LoadError,
   Mascot,
   Section,
   Shell,
@@ -32,20 +33,38 @@ const GENDERS: [Gender, string][] = [
 
 export default function ChildrenPage() {
   const router = useRouter();
-  const [children, setChildren] = useState<SavedChild[] | null>(null);
+  const [children, setChildren] = useState<SavedChild[] | null | "error">(null);
   const [showForm, setShowForm] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    listChildren().then(list => {
-      if (!active) return;
-      setChildren(list);
-      setShowForm(list.length === 0);
-    });
+    setChildren(null);
+    listChildren()
+      .then(list => {
+        if (!active) return;
+        setChildren(list);
+        setShowForm(list.length === 0);
+      })
+      .catch(() => {
+        if (active) setChildren("error");
+      });
     return () => { active = false; };
-  }, []);
+  }, [loadAttempt]);
 
-  const empty = children !== null && children.length === 0;
+  const empty = children !== null && children !== "error" && children.length === 0;
+
+  if (children === "error") {
+    return (
+      <>
+        <TopBar />
+        <Shell width="narrow">
+          <LoadError onRetry={() => setLoadAttempt((n) => n + 1)} />
+        </Shell>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -62,7 +81,7 @@ export default function ChildrenPage() {
                 </h1>
                 <p className="lede mt-3 max-w-[46ch]">
                   {children === null
-                    ? " "
+                    ? ""
                     : empty
                       ? "Three quick things and we'll find exactly which of the seven stages they're on."
                       : "Pick a child to see their reports, or start a new check."}
@@ -251,7 +270,8 @@ function NewChildForm({
         <div>
           <p className="text-base font-extrabold text-ink">Add a photo</p>
           <p className="hint !mt-1 max-w-[28ch]">
-            Optional, and it never leaves this device. It makes the report feel like theirs.
+            Optional — it makes the report feel like theirs. Only you and admins reviewing
+            the account can see it.
           </p>
         </div>
       </div>

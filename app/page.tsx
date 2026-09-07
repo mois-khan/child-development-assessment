@@ -128,7 +128,7 @@ export default function Home() {
                 >
                   {[
                     { icon: <IconClock size={17} />, text: "About 10 minutes" },
-                    { icon: <IconShield size={17} />, text: "Private to your device" },
+                    { icon: <IconShield size={17} />, text: "Kept private to your account" },
                     { icon: <IconBolt size={17} />, text: "Instant report" },
                   ].map((f) => (
                     <li key={f.text} className="flex items-center gap-2">

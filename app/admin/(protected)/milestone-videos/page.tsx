@@ -70,7 +70,17 @@ export default function MilestoneVideosPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    
+
+    // Append to the end of this (stage, domain) cell rather than always
+    // inserting at 0 — otherwise every new card ties for first and ordering
+    // is whatever Postgres happens to return.
+    const cellSiblings = videos.filter(
+      v => v.stage_id === drawerStageId && v.domain === drawerDomain && v.id !== editingVideo?.id
+    );
+    const nextSortOrder = cellSiblings.length > 0
+      ? Math.max(...cellSiblings.map(v => v.sort_order)) + 1
+      : 0;
+
     const input: MilestoneVideoInput = {
       stage_id: drawerStageId,
       domain: drawerDomain as any,
@@ -78,7 +88,7 @@ export default function MilestoneVideosPage() {
       description,
       thumbnail_url: thumbnailUrl,
       redirect_url: redirectUrl,
-      sort_order: editingVideo ? editingVideo.sort_order : 0, // simple append for now
+      sort_order: editingVideo ? editingVideo.sort_order : nextSortOrder,
       is_active: isActive
     };
 
@@ -167,8 +177,6 @@ export default function MilestoneVideosPage() {
       <div className="mt-8 space-y-6">
         {loading ? (
           <p className="text-ink-3">Loading videos...</p>
-        ) : filtered.length === 0 ? (
-          <p className="text-ink-3">No milestone videos found matching these filters.</p>
         ) : (
           BRAIN_STAGES.map(stage => (
             (filterStage === "all" || filterStage === stage.id) && DOMAINS.map(domain => {
@@ -176,14 +184,14 @@ export default function MilestoneVideosPage() {
               
               const key = `${stage.id}-${domain.code}`;
               const cellVideos = groups.get(key) || [];
-              
-              if (cellVideos.length === 0 && (filterStage !== "all" || filterDomain !== "all")) return null;
-              if (cellVideos.length === 0) return null;
 
               return (
-                <details key={key} className="group" open>
+                <details key={key} className="group" open={cellVideos.length > 0}>
                   <summary className="cursor-pointer list-none py-2 text-lg font-bold text-ink">
                     Stage {stage.roman} &middot; {domain.name}
+                    {cellVideos.length === 0 && (
+                      <span className="ml-2 text-sm font-semibold text-ink-3">— no videos yet</span>
+                    )}
                   </summary>
                   <div className="mt-3 space-y-3 pl-4 border-l-2 border-line-soft">
                     {cellVideos.map(video => (

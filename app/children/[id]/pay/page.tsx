@@ -6,7 +6,7 @@ import { DOMAINS } from "@/content/domains";
 import { scoredItemsFor } from "@/content/items";
 import { stageForAge } from "@/lib/stage";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
-import { createAssessment, getChild, markUnlocked, type SavedChild } from "@/lib/store";
+import { createAssessment, getChild, type SavedChild } from "@/lib/store";
 import {
   Badge,
   Button,
@@ -19,6 +19,7 @@ import {
   IconClock,
   IconShield,
   IconSparkle,
+  LoadError,
   Mascot,
   Section,
   SectionTile,
@@ -27,8 +28,6 @@ import {
   domainColor,
 } from "@/components/ui";
 
-const ASSESSMENT_SLUG = "genius-milestones-check";
-const VALID_COUPON = "GENIUS99";
 const PRICE = 99;
 
 /**
@@ -49,23 +48,29 @@ export default function PayPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const [child, setChild] = useState<SavedChild | null | undefined>(undefined);
+  const [child, setChild] = useState<SavedChild | null | undefined | "error">(undefined);
   const [coupon, setCoupon] = useState("");
   const [applied, setApplied] = useState(false);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    getChild(id).then(c => {
-      if (active) setChild(c);
-    });
+    setChild(undefined);
+    getChild(id)
+      .then(c => {
+        if (active) setChild(c);
+      })
+      .catch(() => {
+        if (active) setChild("error");
+      });
     return () => { active = false; };
-  }, [id]);
+  }, [id, loadAttempt]);
 
   const today = todayISO();
   const age = useMemo(
-    () => (child ? summariseAge(child.dob, today, child.gestationalWeeks) : null),
+    () => (child && child !== "error" ? summariseAge(child.dob, today, child.gestationalWeeks) : null),
     [child, today],
   );
   const startStage = age ? stageForAge(age.assessedMonths) : null;
@@ -84,24 +89,40 @@ export default function PayPage({
   }, [startStage, age]);
   const questionCount = perSection.reduce((n, s) => n + s.count, 0);
 
-  function applyCoupon(e: React.FormEvent) {
+  async function applyCoupon(e: React.FormEvent) {
     e.preventDefault();
-    if (coupon.trim().toUpperCase() === VALID_COUPON) {
-      setApplied(true);
-      setError("");
-    } else {
-      setError("That code doesn't look right — check and try again.");
+    if (!child || child === "error") return;
+    setError("");
+    setStarting(true);
+    try {
+      const res = await fetch("/api/payments/coupon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ childId: child.id, code: coupon }),
+      });
+      if (res.ok) {
+        setApplied(true);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setError(body?.error === "Invalid coupon code"
+          ? "That code doesn't look right — check and try again."
+          : "Couldn't apply that code. Please try again.");
+      }
+    } catch {
+      setError("Couldn't apply that code. Please try again.");
+    } finally {
+      setStarting(false);
     }
   }
 
   async function startAssessment() {
-    if (!child || !age || !startStage) return;
+    if (!child || child === "error" || !age || !startStage) return;
     setStarting(true);
     setError("");
 
     if (applied) {
-      // Coupon applied - skip payment
-      markUnlocked(child.id, ASSESSMENT_SLUG);
+      // Coupon already redeemed server-side in applyCoupon() — the payments
+      // row that unlocks assessment creation already exists.
       const stagesByDomain = Object.fromEntries(
         DOMAINS.map((d) => [d.code, [startStage.id]]),
       ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
@@ -114,11 +135,7 @@ export default function PayPage({
       const orderRes = await fetch("/api/payments/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amountPaise: PRICE * 100,
-          childId: child.id,
-          metadata: { assessmentSlug: ASSESSMENT_SLUG },
-        }),
+        body: JSON.stringify({ childId: child.id }),
       });
       if (!orderRes.ok) throw new Error("Failed to create order");
       const order = await orderRes.json();
@@ -141,7 +158,6 @@ export default function PayPage({
             }),
           });
           if (verifyRes.ok) {
-            markUnlocked(child.id, ASSESSMENT_SLUG);
             const stagesByDomain = Object.fromEntries(
               DOMAINS.map((d) => [d.code, [startStage.id]]),
             ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
@@ -179,6 +195,16 @@ export default function PayPage({
         <TopBar />
         <Shell>
           <p className="pt-24 text-center font-semibold text-ink-3">Loading…</p>
+        </Shell>
+      </>
+    );
+  }
+  if (child === "error") {
+    return (
+      <>
+        <TopBar />
+        <Shell width="narrow">
+          <LoadError onRetry={() => setLoadAttempt((n) => n + 1)} />
         </Shell>
       </>
     );
@@ -284,7 +310,7 @@ export default function PayPage({
                         Code applied — this one&rsquo;s on us
                       </p>
                       <p className="text-sm font-semibold text-ink-3">
-                        Coupon {VALID_COUPON} · launch offer
+                        Coupon {coupon.trim().toUpperCase()} · launch offer
                       </p>
                     </div>
                   </div>
@@ -309,8 +335,8 @@ export default function PayPage({
                         />
                         {error && <p className="hint hint-error">{error}</p>}
                       </div>
-                      <Button type="submit" variant="secondary" size="lg">
-                        Apply
+                      <Button type="submit" variant="secondary" size="lg" disabled={starting}>
+                        {starting ? "Checking…" : "Apply"}
                       </Button>
                     </form>
                   </>
@@ -334,8 +360,9 @@ export default function PayPage({
                 <IconShield size={20} />
               </span>
               <p className="text-sm leading-relaxed text-ink-2">
-                Everything you enter stays on this device. We never send your child&rsquo;s answers
-                or photo anywhere.
+                Payments are handled by Razorpay — we never see or store your card details.
+                {child.name}&rsquo;s answers are saved securely to your account so you can pick
+                up the check on any device.
               </p>
             </div>
           </Shell>

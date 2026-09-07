@@ -11,12 +11,9 @@ import { useAdminSession } from "@/lib/admin/auth";
 import {
   Avatar,
   Badge,
-  Button,
   Card,
-  IconArrowRight,
   IconCalendar,
   IconPhone,
-  IconPlus,
 } from "@/components/ui";
 
 type QuickFilter = "worklist" | "new" | "won" | "lost" | "all";
@@ -43,7 +40,7 @@ const STATUS_LABEL: Record<LeadStatus, string> = {
 
 export default function AdminLeadsPage() {
   const { session } = useAdminSession();
-  const { leads, refresh } = useAdminLeads();
+  const { leads, loading, error, refresh } = useAdminLeads();
   const [quick, setQuick] = useState<QuickFilter>("worklist");
   const [query, setQuery] = useState("");
 
@@ -94,9 +91,9 @@ export default function AdminLeadsPage() {
             <h1 className="!text-2xl">Leads</h1>
           </div>
           <p className="mt-1.5 max-w-[62ch] text-sm text-ink-3">
-            Every completed assessment shows up here automatically as a lead worth calling.
-            Log what happens on each call — the date and the verdict decide when it needs
-            following up again.
+            Every signup shows up here as a lead worth calling, whether or not they&rsquo;ve
+            added a child yet. Log what happens on each call — the date and the verdict
+            decide when it needs following up again.
           </p>
         </div>
       </div>
@@ -147,11 +144,22 @@ export default function AdminLeadsPage() {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {error ? (
+        <Card className="!p-8 text-center">
+          <p className="text-sm font-semibold text-[var(--st-consult)]">{error}</p>
+          <button type="button" onClick={refresh} className="btn btn-secondary mt-4">
+            Try again
+          </button>
+        </Card>
+      ) : loading ? (
+        <Card className="!p-8 text-center">
+          <p className="text-sm text-ink-3">Loading leads…</p>
+        </Card>
+      ) : filtered.length === 0 ? (
         <Card className="!p-8 text-center">
           <p className="text-sm text-ink-3">
             {leads.length === 0
-              ? "No leads yet. They'll appear here the moment a parent completes the milestone check."
+              ? "No leads yet. They'll appear here the moment someone signs up."
               : "Nothing matches that search or filter."}
           </p>
         </Card>

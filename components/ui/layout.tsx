@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { NavLink } from "@/components/nav-link";
 import { AuthNav } from "@/components/auth-nav";
 import { cx } from "./primitives";
@@ -148,7 +147,6 @@ export function TopBar({
         <div className="flex items-center gap-2">
           {right}
           <AuthNav />
-          <ThemeToggle />
         </div>
       </div>
     </header>

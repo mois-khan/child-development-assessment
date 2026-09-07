@@ -34,6 +34,7 @@ import {
   IconDownload,
   IconHeart,
   IconSparkle,
+  LoadError,
   Mascot,
   Meter,
   Section,
@@ -46,6 +47,8 @@ import {
   domainColor,
   statusColor,
 } from "@/components/ui";
+import { MilestoneVideoRow } from "@/components/report/MilestoneVideoRow";
+import { CourseRow } from "@/components/report/CourseRow";
 
 export function ReportDocument({
   id,
@@ -56,14 +59,21 @@ export function ReportDocument({
 }) {
   const searchParams = useSearchParams();
   const [record, setRecord] = useState<StoredAssessment | null | undefined>(undefined);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    getAssessment(id).then(found => {
-      if (active) setRecord(found);
-    });
+    setLoadError(false);
+    getAssessment(id)
+      .then(found => {
+        if (active) setRecord(found);
+      })
+      .catch(() => {
+        if (active) setLoadError(true);
+      });
     return () => { active = false; };
-  }, [id]);
+  }, [id, loadAttempt]);
 
   const result = useMemo<AssessmentResult | null>(() => {
     if (!record) return null;
@@ -83,6 +93,17 @@ export function ReportDocument({
       return () => window.clearTimeout(t);
     }
   }, [result, searchParams]);
+
+  if (loadError) {
+    return (
+      <>
+        {!isAdmin && <TopBar />}
+        <Shell width="narrow">
+          <LoadError onRetry={() => setLoadAttempt((n) => n + 1)} />
+        </Shell>
+      </>
+    );
+  }
 
   if (record === undefined) {
     return (
@@ -104,8 +125,7 @@ export function ReportDocument({
             <Mascot size={92} mood="think" className="mx-auto" />
             <h1 className="mt-6">We couldn&rsquo;t find that report</h1>
             <p className="prose-read mx-auto mt-3 max-w-[42ch]">
-              Reports are saved in this browser only, so a link from another device won&rsquo;t
-              open here.
+              This report doesn&rsquo;t exist, or isn&rsquo;t linked to your account.
             </p>
             <ButtonLink href="/children" className="mt-8">
               Go to your children
@@ -290,8 +310,12 @@ export function ReportDocument({
 
             <Card variant="clay" className="mt-8 p-6 sm:p-8">
               <p className="eyebrow mb-2">Progress, area by area</p>
-              <p className="mb-6 text-sm font-medium text-ink-3">
+              <p className="mb-1 text-sm font-medium text-ink-3">
                 Where each area sits against the expected stage for {child.name}&rsquo;s age.
+              </p>
+              <p className="mb-6 text-sm font-medium text-ink-3">
+                These are screening terms, not a diagnosis — see the note at the end of this
+                report.
               </p>
               <div className="overflow-x-auto">
                 <div className="progress-matrix">
@@ -375,6 +399,7 @@ export function ReportDocument({
                   score={score}
                   note={domainNote(score, child)}
                   activities={pickActivities(score)}
+                  isAdmin={isAdmin}
                 />
               ))}
             </div>
@@ -405,6 +430,22 @@ export function ReportDocument({
 
               <DefaultRecommendationCard stage={startStage} />
             </div>
+
+            {/* Admin-curated course recommendations, keyed to the stage of the
+                child's biggest focus area — not shown in the admin's own
+                internal report view, where there's no "explore courses" CTA
+                to make. CourseRow returns null when there's nothing active
+                for that stage, so DefaultRecommendationCard above always
+                acts as the fallback either way. */}
+            {!isAdmin && (
+              <CourseRow
+                stageId={
+                  result.domainScores.find((d) => d.domain === focus[0])?.achievedStage
+                    || startStage.id
+                }
+                childName={child.name}
+              />
+            )}
           </Section>
 
           {/* ══ footer of the document ═══════════════════════════════════ */}
@@ -757,10 +798,12 @@ function DomainCard({
   score,
   note,
   activities,
+  isAdmin = false,
 }: {
   score: DomainScore;
   note: string;
   activities: Activity[];
+  isAdmin?: boolean;
 }) {
   const domain = DOMAIN_BY_CODE[score.domain];
   const color = domainColor(score.domain);
@@ -867,6 +910,16 @@ function DomainCard({
                 </ul>
               </div>
             )}
+
+            {/* Milestone video cards for this domain — admin-curated, fetched
+                from DB. Not shown in the admin's own report preview. */}
+            {!isAdmin && (
+              <MilestoneVideoRow
+                stageId={score.achievedStage || "s1"}
+                domain={score.domain}
+                domainName={DOMAIN_BY_CODE[score.domain].name}
+              />
+            )}
           </div>
         </div>
       </details>
@@ -875,10 +928,11 @@ function DomainCard({
 }
 
 /* ══ recommendation ═══════════════════════════════════════════════════════
- * A single fixed card pointing at the programme. The admin-authored course +
- * rule engine that used to feed an alternative version of this was removed
- * along with the Courses admin section — it produced nothing a hardcoded CTA
- * doesn't, and every deployment had zero courses in it. */
+ * DefaultRecommendationCard is the always-present fallback CTA. CourseRow
+ * (rendered alongside it above, parent view only) is the admin-curated
+ * version — it fetches from course_recommendations and renders nothing when
+ * that stage has no active cards, so the fallback below is never left
+ * standing alone. */
 
 function RecommendationShell({
   eyebrow,

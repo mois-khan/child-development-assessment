@@ -70,7 +70,17 @@ export default function CourseRecommendationsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    
+
+    // Append to the end of this stage's list rather than always inserting at
+    // 0 — otherwise every new card ties for first and ordering is whatever
+    // Postgres happens to return.
+    const stageSiblings = courses.filter(
+      c => c.stage_id === drawerStageId && c.id !== editingCourse?.id
+    );
+    const nextSortOrder = stageSiblings.length > 0
+      ? Math.max(...stageSiblings.map(c => c.sort_order)) + 1
+      : 0;
+
     const input: CourseRecommendationInput = {
       stage_id: drawerStageId,
       title,
@@ -79,7 +89,7 @@ export default function CourseRecommendationsPage() {
       age_label: ageLabel,
       thumbnail_url: thumbnailUrl,
       redirect_url: redirectUrl,
-      sort_order: editingCourse ? editingCourse.sort_order : 0,
+      sort_order: editingCourse ? editingCourse.sort_order : nextSortOrder,
       is_active: isActive
     };
 

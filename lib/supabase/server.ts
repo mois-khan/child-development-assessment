@@ -4,6 +4,24 @@ import { isSupabaseConfigured } from "./env";
 import type { Database } from "./database.types";
 
 /**
+ * Service-role Supabase client for trusted server code only (route handlers
+ * that must write past RLS — payment confirmation, admin invites). Never
+ * import this into anything that ships to the browser.
+ */
+export function getSupabaseServiceRoleClient() {
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      cookies: {
+        getAll: () => [],
+        setAll: () => {},
+      },
+    },
+  );
+}
+
+/**
  * Server-side Supabase client (server components, route handlers, server
  * actions). Not wired into any page yet — this app is client-rendered
  * throughout — but ready for the moment a page needs server-side session

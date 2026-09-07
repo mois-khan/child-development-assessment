@@ -73,8 +73,7 @@ export default function UserManagementPage() {
       }
       // Super admins don't need explicit page access grants
       if (editRole !== "super_admin") {
-        await setPageAccess(editingUser.id, Array.from(userPageAccess), "current_user_id"); 
-        // Note: the backend actually determines the granted_by from auth.uid() automatically in the trigger or RLS if we set it up, or we can omit. The data function might just not send it.
+        await setPageAccess(editingUser.id, Array.from(userPageAccess));
       }
       
       setEditDrawerOpen(false);

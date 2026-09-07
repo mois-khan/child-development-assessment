@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Poetsen_One } from "next/font/google";
 import "./globals.css";
-import { THEME_INIT_SCRIPT } from "@/components/theme-toggle";
 import { AuthProvider } from "@/lib/auth/provider";
 
 /**
@@ -38,10 +37,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
+    <html lang="en" data-scroll-behavior="smooth">
       <body className={`${inter.variable} ${poetsen.variable}`}>
         <AuthProvider>{children}</AuthProvider>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
