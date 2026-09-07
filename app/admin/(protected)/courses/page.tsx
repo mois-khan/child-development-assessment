@@ -10,7 +10,7 @@ import {
   deleteCourseRecommendation,
   toggleCourseRecommendationActive
 } from "@/lib/data/course-recommendations";
-import { Card, Button, Badge, IconClose } from "@/components/ui";
+import { Card, Button, Badge, IconClose, InlineBanner, useBanner } from "@/components/ui";
 
 export default function CourseRecommendationsPage() {
   const [courses, setCourses] = useState<CourseRecommendation[]>([]);
@@ -28,12 +28,13 @@ export default function CourseRecommendationsPage() {
   const [redirectUrl, setRedirectUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const banner = useBanner();
 
   const fetchCourses = () => {
     setLoading(true);
     listAllCourseRecommendations()
       .then(setCourses)
-      .catch(err => alert("Failed to fetch courses: " + err.message))
+      .catch(err => banner.showError("Failed to fetch courses: " + err.message))
       .finally(() => setLoading(false));
   };
 
@@ -101,8 +102,9 @@ export default function CourseRecommendationsPage() {
       }
       setDrawerOpen(false);
       fetchCourses();
+      banner.showSuccess(editingCourse ? "Course updated." : "Course added.");
     } catch (err: any) {
-      alert("Failed to save: " + err.message);
+      banner.showError("Failed to save: " + err.message);
     } finally {
       setSaving(false);
     }
@@ -113,17 +115,18 @@ export default function CourseRecommendationsPage() {
     try {
       await deleteCourseRecommendation(id);
       fetchCourses();
+      banner.showSuccess("Course deleted.");
     } catch (err: any) {
-      alert("Failed to delete: " + err.message);
+      banner.showError("Failed to delete: " + err.message);
     }
   };
-  
+
   const handleToggleActive = async (id: string, currentlyActive: boolean) => {
     try {
       await toggleCourseRecommendationActive(id, !currentlyActive);
       setCourses(courses.map(c => c.id === id ? { ...c, is_active: !currentlyActive } : c));
     } catch (err: any) {
-      alert("Failed to toggle status: " + err.message);
+      banner.showError("Failed to toggle status: " + err.message);
     }
   };
 
@@ -136,6 +139,7 @@ export default function CourseRecommendationsPage() {
 
   return (
     <>
+      <InlineBanner message={banner.message} onDismiss={banner.clear} />
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">Course Recommendations</h1>

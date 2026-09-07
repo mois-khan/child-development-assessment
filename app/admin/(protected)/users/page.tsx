@@ -9,12 +9,13 @@ import {
   updateAdminUserRole, 
   inviteAdminUser 
 } from "@/lib/data/rbac";
-import { Card, Button, Badge, IconClose } from "@/components/ui";
+import { Card, Button, Badge, IconClose, InlineBanner, useBanner } from "@/components/ui";
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [pages, setPages] = useState<AdminPage[]>([]);
   const [loading, setLoading] = useState(true);
+  const banner = useBanner();
   
   // Edit User Drawer State
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
@@ -36,7 +37,7 @@ export default function UserManagementPage() {
       setUsers(u);
       setPages(p);
     } catch (err: any) {
-      alert("Failed to load users: " + err.message);
+      banner.showError("Failed to load users: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -78,8 +79,9 @@ export default function UserManagementPage() {
       
       setEditDrawerOpen(false);
       fetchData();
+      banner.showSuccess("User updated.");
     } catch (err: any) {
-      alert("Failed to save user: " + err.message);
+      banner.showError("Failed to save user: " + err.message);
     } finally {
       setSavingEdit(false);
     }
@@ -93,9 +95,9 @@ export default function UserManagementPage() {
       setInviteEmail("");
       setInviteDrawerOpen(false);
       fetchData();
-      alert("Invite sent successfully!");
+      banner.showSuccess("Invite sent successfully!");
     } catch (err: any) {
-      alert("Failed to send invite: " + err.message);
+      banner.showError("Failed to send invite: " + err.message);
     } finally {
       setInviting(false);
     }
@@ -117,6 +119,7 @@ export default function UserManagementPage() {
 
   return (
     <>
+      <InlineBanner message={banner.message} onDismiss={banner.clear} />
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">User Management</h1>

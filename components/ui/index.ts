@@ -11,6 +11,7 @@ export * from "./primitives";
 export * from "./layout";
 export * from "./confirm-delete-button";
 export * from "./error-state";
+export * from "./inline-banner";
 
 export {
   IconMessage,

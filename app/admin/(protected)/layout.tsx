@@ -76,7 +76,9 @@ export default function AdminProtectedLayout({ children }: { children: ReactNode
   return (
     <div className="flex min-h-screen bg-[var(--ground-2)]">
       {/* ── desktop sidebar ─────────────────────────────────────────────── */}
-      <aside className="no-print hidden w-60 shrink-0 flex-col border-r border-line bg-[var(--surface)] px-4 py-6 md:flex">
+      {/* sticky + its own scroll: the sidebar stays put while `main` scrolls,
+          instead of scrolling away with the page content underneath it. */}
+      <aside className="thin-scroll no-print sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-line bg-[var(--surface)] px-4 py-6 md:flex">
         <Link href="/admin" className="mb-8 block px-2">
           <Wordmark height={34} />
         </Link>
@@ -179,7 +181,9 @@ function AdminNav({
             href={entry.href}
             className={cx(
               "flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-colors",
-              active ? "bg-[var(--accent-soft)] text-[var(--accent-hover)]" : "text-ink-2 hover:bg-surface-2",
+              active
+                ? "bg-[var(--accent)] text-white shadow-sm"
+                : "text-ink-2 hover:bg-surface-2",
             )}
           >
             {entry.icon}

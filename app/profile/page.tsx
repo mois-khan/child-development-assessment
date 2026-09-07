@@ -803,7 +803,12 @@ const COURSES = [
 
 function formatDate(iso: string): string {
   if (!iso) return "—";
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", {
+  // Date-only columns (e.g. child.dob) need a local midnight anchor so they
+  // don't shift a day under UTC parsing; timestamptz columns (e.g. profile
+  // created_at) already carry a time and zone, so parse them as-is.
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(`${iso}T00:00:00`) : new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",

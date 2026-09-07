@@ -27,6 +27,7 @@ import {
   IconCheck,
   IconPhone,
   IconMessage,
+  IconWhatsApp,
   IconMail,
   IconUser,
   IconDots,
@@ -71,7 +72,7 @@ const OUTCOME_LABEL: Record<InteractionOutcome, string> = {
 
 const CHANNEL_ICON: Record<InteractionChannel, ReactNode> = {
   phone: <IconPhone size={16} />,
-  whatsapp: <IconMessage size={16} />,
+  whatsapp: <IconWhatsApp size={16} />,
   email: <IconMail size={16} />,
   sms: <IconMessage size={16} />,
   in_person: <IconUser size={16} />,
@@ -571,85 +572,91 @@ function LogInteractionForm({
   }
 
   return (
-    <Card className="!p-6">
+    <Card className="!p-5">
       <h2 className="!text-base font-bold text-ink">Log New Interaction</h2>
-      <p className="mt-1 text-xs text-ink-3">
-        Record what happened. Everything is optional except the outcome.
+      <p className="mt-0.5 text-xs text-ink-3">
+        Everything is optional except the outcome.
       </p>
 
-      <div className="mt-5 space-y-4">
-        {/* Channel */}
+      <div className="mt-3.5 space-y-3">
+        {/* Channel — icon-only, one row, so it never needs to wrap */}
         <div>
-          <label className="label">Channel</label>
-          <div className="flex flex-wrap gap-2">
+          <label className="label mb-1.5">Channel</label>
+          <div className="flex gap-1.5">
             {(Object.entries(CHANNEL_LABEL) as [InteractionChannel, string][]).map(([v, l]) => (
               <button
                 key={v}
                 type="button"
+                title={l}
+                aria-label={l}
+                aria-pressed={channel === v}
                 onClick={() => setChannel(v)}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                className={`grid size-9 shrink-0 place-items-center rounded-full transition-all ${
                   channel === v
-                    ? "bg-[var(--accent)] text-white shadow-md scale-100"
-                    : "bg-surface-2 text-ink-3 hover:bg-surface-3 hover:text-ink scale-95"
+                    ? "bg-[var(--accent)] text-white shadow-md"
+                    : "bg-surface-2 text-ink-3 hover:bg-surface-3 hover:text-ink"
                 }`}
               >
-                {CHANNEL_ICON[v]} {l}
+                {CHANNEL_ICON[v]}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Outcome */}
-        <div>
-          <label className="label">Outcome</label>
-          <select
-            className="field w-full"
-            value={outcome}
-            onChange={(e) => setOutcome(e.target.value as InteractionOutcome)}
-          >
-            {(Object.entries(OUTCOME_LABEL) as [InteractionOutcome, string][]).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Notes */}
-        <div>
-          <label className="label">Notes <span className="font-normal text-ink-3">(optional)</span></label>
-          <textarea
-            className="field w-full"
-            rows={3}
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-            placeholder="What was discussed? Any key details from the conversation…"
-          />
-        </div>
-
-        {/* Follow-up toggle */}
-        <div className="rounded-xl border border-line-soft bg-surface-2 p-4">
-          <label className="flex cursor-pointer items-center gap-3">
-            <input
-              type="checkbox"
-              checked={scheduleFollowUp}
-              onChange={toggleFollowUp}
-              className="h-4 w-4 accent-[var(--accent)]"
-            />
-            <span className="text-sm font-semibold text-ink">
-              Schedule a follow-up call
-            </span>
-          </label>
-          {scheduleFollowUp && (
-            <div className="mt-3">
-              <label className="label">Follow-Up Date</label>
+        {/* Outcome + follow-up date, side by side to use the row instead of the column */}
+        <div className="grid grid-cols-[1fr_auto] gap-3">
+          <div>
+            <label className="label mb-1.5">Outcome</label>
+            <select
+              className="field w-full"
+              value={outcome}
+              onChange={(e) => setOutcome(e.target.value as InteractionOutcome)}
+            >
+              {(Object.entries(OUTCOME_LABEL) as [InteractionOutcome, string][]).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col justify-end">
+            {scheduleFollowUp ? (
               <input
                 type="date"
-                className="field"
+                className="field !w-auto"
                 value={nextDate}
                 min={todayISO()}
                 onChange={(e) => setNextDate(e.target.value)}
               />
-            </div>
-          )}
+            ) : (
+              <button
+                type="button"
+                onClick={toggleFollowUp}
+                className="btn btn-secondary btn-sm whitespace-nowrap"
+              >
+                <IconCalendar size={14} /> Follow-up
+              </button>
+            )}
+          </div>
+        </div>
+        {scheduleFollowUp && (
+          <button
+            type="button"
+            onClick={toggleFollowUp}
+            className="-mt-2 text-xs font-semibold text-ink-3 hover:text-ink"
+          >
+            Cancel follow-up date
+          </button>
+        )}
+
+        {/* Notes */}
+        <div>
+          <label className="label mb-1.5">Notes <span className="font-normal text-ink-3">(optional)</span></label>
+          <textarea
+            className="field w-full"
+            rows={2}
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            placeholder="What was discussed?"
+          />
         </div>
 
         {/* Save — always visible */}

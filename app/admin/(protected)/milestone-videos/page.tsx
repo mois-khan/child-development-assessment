@@ -11,7 +11,7 @@ import {
   deleteMilestoneVideo,
   toggleMilestoneVideoActive
 } from "@/lib/data/milestone-videos";
-import { Card, Button, Badge, IconClose } from "@/components/ui";
+import { Card, Button, Badge, IconClose, InlineBanner, useBanner } from "@/components/ui";
 
 export default function MilestoneVideosPage() {
   const [videos, setVideos] = useState<MilestoneVideo[]>([]);
@@ -30,12 +30,13 @@ export default function MilestoneVideosPage() {
   const [redirectUrl, setRedirectUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const banner = useBanner();
 
   const fetchVideos = () => {
     setLoading(true);
     listAllMilestoneVideos()
       .then(setVideos)
-      .catch(err => alert("Failed to fetch videos: " + err.message))
+      .catch(err => banner.showError("Failed to fetch videos: " + err.message))
       .finally(() => setLoading(false));
   };
 
@@ -100,8 +101,9 @@ export default function MilestoneVideosPage() {
       }
       setDrawerOpen(false);
       fetchVideos();
+      banner.showSuccess(editingVideo ? "Video updated." : "Video added.");
     } catch (err: any) {
-      alert("Failed to save: " + err.message);
+      banner.showError("Failed to save: " + err.message);
     } finally {
       setSaving(false);
     }
@@ -112,17 +114,18 @@ export default function MilestoneVideosPage() {
     try {
       await deleteMilestoneVideo(id);
       fetchVideos();
+      banner.showSuccess("Video deleted.");
     } catch (err: any) {
-      alert("Failed to delete: " + err.message);
+      banner.showError("Failed to delete: " + err.message);
     }
   };
-  
+
   const handleToggleActive = async (id: string, currentlyActive: boolean) => {
     try {
       await toggleMilestoneVideoActive(id, !currentlyActive);
       setVideos(videos.map(v => v.id === id ? { ...v, is_active: !currentlyActive } : v));
     } catch (err: any) {
-      alert("Failed to toggle status: " + err.message);
+      banner.showError("Failed to toggle status: " + err.message);
     }
   };
 
@@ -141,6 +144,7 @@ export default function MilestoneVideosPage() {
 
   return (
     <>
+      <InlineBanner message={banner.message} onDismiss={banner.clear} />
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">Milestone Videos</h1>
