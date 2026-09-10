@@ -101,24 +101,34 @@ interface ReminderContext {
 }
 
 /**
- * TODO(human): decide whether THIS child should get a reminder right now.
+ * Quarterly cadence, monthly cooldown — picked rather than asked for, so
+ * they're a starting point, not a spec:
  *
- * This is the one piece of judgment this feature actually needs — everything
- * around it (fetching, deduping, sending) is plumbing. A few things worth
- * weighing as you write it:
+ *  - 90 days since the last completed check (or since signup, for a child
+ *    never checked at all) before a nudge is due. Matches how fast a young
+ *    child's development actually moves — a monthly nudge would be noise,
+ *    a yearly one would miss a phase change entirely.
+ *  - 30 days between reminders for the SAME child, so a family that ignores
+ *    one nudge gets reminded again next month, not every single night this
+ *    cron runs for the rest of the child's time on the platform.
  *
- *  - Cadence: how long since the last completed check (or since the child
- *    was added, if they've never had one) before it's worth a nudge?
- *  - Cooldown: a child who was JUST reminded shouldn't be reminded again
- *    tomorrow just because this route runs daily — lastReminderAt is there
- *    to prevent that.
- *  - A child mid-check (an open, unfinished assessment) isn't handled by
- *    this predicate at all — the caller only calls this for children with
- *    no signal either way. Assume that filtering already happened.
- *
- * Return true to send a reminder for this child right now, false to skip.
+ * Tune these two constants directly; nothing else in this file assumes a
+ * particular cadence.
  */
+const REMINDER_AFTER_DAYS = 90;
+const REMINDER_COOLDOWN_DAYS = 30;
+
+function daysBetween(earlier: Date, later: Date): number {
+  return (later.getTime() - earlier.getTime()) / (1000 * 60 * 60 * 24);
+}
+
 function shouldRemind(ctx: ReminderContext): boolean {
-  // TODO(human): implement the cadence + cooldown rule described above.
-  return false;
+  const sinceLastCheck = daysBetween(ctx.lastCompletedAt ?? ctx.childCreatedAt, ctx.now);
+  if (sinceLastCheck < REMINDER_AFTER_DAYS) return false;
+
+  if (ctx.lastReminderAt && daysBetween(ctx.lastReminderAt, ctx.now) < REMINDER_COOLDOWN_DAYS) {
+    return false;
+  }
+
+  return true;
 }
