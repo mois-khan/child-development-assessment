@@ -1,12 +1,17 @@
 /**
- * The push service worker.
+ * The service worker — push delivery, and the one thing a PWA needs from a
+ * service worker to be installable at all.
  *
- * Deliberately tiny and dependency-free — it isn't a PWA shell or an
- * offline cache, just the one thing only a service worker can do: receive a
- * push while the tab is closed and turn it into an OS-level notification.
- * Everything else (subscribing, the in-app bell, marking read) happens in
- * normal page JS — see lib/notifications/.
+ * Deliberately not an offline cache: this app's every page depends on a
+ * live, authenticated Supabase session, so a cached shell would either show
+ * a stale sign-in state or a stale report — worse than "you're offline."
+ * The fetch listener below exists only to be present, not to do anything.
  */
+
+self.addEventListener("fetch", () => {
+  // No-op passthrough — every request goes to the network exactly as if
+  // this listener didn't exist. See the header note above for why.
+});
 
 self.addEventListener("push", (event) => {
   let payload = { title: "Kaushalya", body: "", url: "/dashboard" };
