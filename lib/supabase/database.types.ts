@@ -43,6 +43,8 @@ export type AdminRole = "super_admin" | "admin" | "manager" | "sales";
 export type ChildGender = "girl" | "boy" | "other";
 export type MilestoneVideoDomain =
   | "vision" | "auditory" | "tactile" | "mobility" | "language" | "hand";
+export type ItemBankKind = "yesno" | "choice" | "count" | "percent" | "text";
+export type ItemBankSource = "ACE" | "AUTHORED";
 
 
 export interface Database {
@@ -106,6 +108,8 @@ export interface Database {
           gender: ChildGender;
           gestational_weeks: number | null;
           city: string | null;
+          parent_email: string | null;
+          parent_phone: string | null;
           photo_url: string | null;
           created_at: string;
           updated_at: string;
@@ -117,6 +121,8 @@ export interface Database {
           gender?: ChildGender;
           gestational_weeks?: number | null;
           city?: string | null;
+          parent_email?: string | null;
+          parent_phone?: string | null;
           photo_url?: string | null;
         };
         Update: {
@@ -125,6 +131,8 @@ export interface Database {
           gender?: ChildGender;
           gestational_weeks?: number | null;
           city?: string | null;
+          parent_email?: string | null;
+          parent_phone?: string | null;
           photo_url?: string | null;
         };
         Relationships: [];
@@ -345,6 +353,55 @@ export interface Database {
         };
         Update: {
           granted_by?: string | null;
+        };
+        Relationships: [];
+      };
+      item_overrides: {
+        Row: {
+          id: string;
+          domain: MilestoneVideoDomain;
+          stage_id: string;
+          text: string;
+          how: string;
+          kind: ItemBankKind;
+          source: ItemBankSource;
+          invert: boolean;
+          min_age_months: number | null;
+          choices: string[] | null;
+          unit: string | null;
+          deleted: boolean;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          domain: MilestoneVideoDomain;
+          stage_id: string;
+          text?: string;
+          how?: string;
+          kind?: ItemBankKind;
+          source?: ItemBankSource;
+          invert?: boolean;
+          min_age_months?: number | null;
+          choices?: string[] | null;
+          unit?: string | null;
+          deleted?: boolean;
+          updated_by?: string | null;
+        };
+        Update: {
+          domain?: MilestoneVideoDomain;
+          stage_id?: string;
+          text?: string;
+          how?: string;
+          kind?: ItemBankKind;
+          source?: ItemBankSource;
+          invert?: boolean;
+          min_age_months?: number | null;
+          choices?: string[] | null;
+          unit?: string | null;
+          deleted?: boolean;
+          updated_by?: string | null;
         };
         Relationships: [];
       };

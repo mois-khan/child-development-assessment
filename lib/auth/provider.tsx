@@ -38,6 +38,13 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /** Sends a reset link to `email`. Always resolves without error, even for
+   *  an email with no account — Supabase does this deliberately so a login
+   *  screen can never be used to check who has an account here. */
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+  /** Sets a new password for whoever the reset link's session belongs to —
+   *  call after the /join/reset-password page has exchanged the link's code. */
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
 }
 
 export interface SignUpInput {
@@ -133,13 +140,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    const supabase = getSupabaseBrowserClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/join/reset-password`,
+    });
+    return { error: error ? friendlyAuthError(error.message) : null };
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    const supabase = getSupabaseBrowserClient();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error: error ? friendlyAuthError(error.message) : null };
+  }, []);
+
   const refreshProfile = useCallback(async () => {
     if (user) await loadProfile(user.id);
   }, [user, loadProfile]);
 
   const value = useMemo<AuthState>(
-    () => ({ user, profile, loading, signUp, signIn, signOut, refreshProfile }),
-    [user, profile, loading, signUp, signIn, signOut, refreshProfile],
+    () => ({
+      user,
+      profile,
+      loading,
+      signUp,
+      signIn,
+      signOut,
+      refreshProfile,
+      resetPassword,
+      updatePassword,
+    }),
+    [user, profile, loading, signUp, signIn, signOut, refreshProfile, resetPassword, updatePassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { NavLink } from "@/components/nav-link";
+import { MainNav, MobileNav } from "@/components/main-nav";
 import { AuthNav } from "@/components/auth-nav";
 import { cx } from "./primitives";
 
@@ -12,7 +12,7 @@ export function Wordmark({ height = 34 }: { height?: number }) {
     <span className="brand-plate">
       <Image
         src="/kgk-logo.svg"
-        alt="Kaushalya Genius Kid Program"
+        alt="Kaushalya Developmental Screening Platform"
         width={Math.round(height * 1.62)}
         height={height}
         priority
@@ -105,12 +105,6 @@ export function SectionHeading({
 
 /* ══ top bar ═══════════════════════════════════════════════════════════════ */
 
-const NAV_LINKS: [string, string][] = [
-  ["/", "Home"],
-  ["/children", "My children"],
-  ["/profile", "Parent profile"],
-];
-
 export function TopBar({
   right,
   bordered = true,
@@ -133,22 +127,17 @@ export function TopBar({
           screen and stole that height from the content on every scroll. */}
       <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6">
-          <Link href="/" aria-label="Kaushalya Genius Kid Program — home" className="shrink-0">
+          <Link href="/" aria-label="Kaushalya Developmental Screening Platform — home" className="shrink-0">
             <Wordmark />
           </Link>
-          {nav && (
-            <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
-              {NAV_LINKS.map(([href, label]) => (
-                <NavLink key={href} href={href} label={label} />
-              ))}
-            </nav>
-          )}
+          {nav && <MainNav />}
         </div>
         <div className="flex items-center gap-2">
           {right}
           <AuthNav />
         </div>
       </div>
+      {nav && <MobileNav />}
     </header>
   );
 }
@@ -218,7 +207,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-soft py-6 text-xs text-ink-3">
-          <p>© {new Date().getFullYear()} Kaushalya Genius Kid Program. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Kaushalya Developmental Screening Platform. All rights reserved.</p>
           <p>A screening tool, not a medical diagnosis.</p>
         </div>
       </Shell>

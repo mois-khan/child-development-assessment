@@ -10,8 +10,16 @@ import { usePathname } from "next/navigation";
  */
 export function NavLink({ href, label }: { href: string; label: string }) {
   const pathname = usePathname();
+  // A link to a section of a page ("/#how") points INTO the current page
+  // rather than at another one. Marking it current would light up two links
+  // at once — the page's own link and every anchor on it.
+  const isAnchor = href.includes("#");
   const target = href.split("#")[0] || "/";
-  const active = target === "/" ? pathname === "/" : (pathname?.startsWith(target) ?? false);
+  const active = isAnchor
+    ? false
+    : target === "/"
+      ? pathname === "/"
+      : (pathname?.startsWith(target) ?? false);
 
   return (
     <Link

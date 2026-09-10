@@ -5,10 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Badge, Button, Card, IconShield, Shell, Wordmark } from "@/components/ui";
 
 /**
- * Where a Supabase admin-invite email actually lands (see the `redirect_to`
- * on the /api/admin/invite call). Before this page existed, the invite
- * created the admin_users row immediately but there was nowhere for the
- * invitee to ever set a password — signing in was a dead end.
+ * Where both a Supabase admin-invite AND a password-reset email land (see
+ * the `redirect_to` on /api/admin/invite, and the `redirectTo` on
+ * resetPasswordForEmail() in app/admin/login/page.tsx). Both are the same
+ * screen from here on: exchange the link's code for a session, then let
+ * whoever it belongs to set a password. Before this page existed for
+ * invites, the invite created the admin_users row immediately but there
+ * was nowhere for the invitee to ever set a password — signing in was a
+ * dead end.
  */
 export default function AcceptInvitePage() {
   return (
@@ -89,17 +93,17 @@ function AcceptInviteInner() {
         <Card variant="clay" className="!p-7">
           {status === "invalid" ? (
             <div className="space-y-3 text-center">
-              <h1 className="!text-xl">This invite link isn&rsquo;t valid</h1>
+              <h1 className="!text-xl">This link isn&rsquo;t valid</h1>
               <p className="text-sm leading-relaxed text-ink-3">
                 It may have expired or already been used. Ask your super admin to send a new
-                invite.
+                invite, or request a new reset link from the sign-in page.
               </p>
             </div>
           ) : (
             <form onSubmit={handleSetPassword} className="space-y-4">
               <h1 className="!text-xl">Set your password</h1>
               <p className="text-sm text-ink-3">
-                Choose a password to finish setting up your admin account.
+                Choose a password for your admin account.
               </p>
               <div>
                 <label className="label" htmlFor="password">

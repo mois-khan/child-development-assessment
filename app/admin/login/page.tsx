@@ -28,6 +28,8 @@ function AdminLoginInner() {
       : ""
   );
   const [submitting, setSubmitting] = useState(false);
+  const [forgot, setForgot] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     if (!loading && session) router.replace("/admin");
@@ -56,6 +58,25 @@ function AdminLoginInner() {
     }
   }
 
+  async function handleResetRequest(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setSubmitting(true);
+    try {
+      const { getSupabaseBrowserClient } = await import("@/lib/supabase/client");
+      const supabase = getSupabaseBrowserClient();
+      // Lands on /admin/accept-invite, which already knows how to exchange
+      // a link's code for a session and let someone set a password — an
+      // invite and a reset are the same "set a password and continue" screen.
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/accept-invite`,
+      });
+      setResetSent(true);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   if (loading) return null;
 
   return (
@@ -69,7 +90,58 @@ function AdminLoginInner() {
         </div>
 
         <Card variant="clay" className="!p-7">
-          {configured ? (
+          {configured && resetSent ? (
+            <div className="space-y-3 text-center">
+              <h1 className="!text-xl">Check your email</h1>
+              <p className="text-sm leading-relaxed text-ink-3">
+                If <strong className="font-bold text-ink">{email}</strong> has an admin account,
+                we&rsquo;ve sent a link to reset the password.
+              </p>
+              <Button
+                block
+                onClick={() => {
+                  setForgot(false);
+                  setResetSent(false);
+                }}
+              >
+                Back to sign in
+              </Button>
+            </div>
+          ) : configured && forgot ? (
+            <form onSubmit={handleResetRequest} className="space-y-4">
+              <h1 className="!text-xl">Reset your password</h1>
+              <div>
+                <label className="label" htmlFor="email">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  className="field"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="username"
+                />
+              </div>
+              {error && (
+                <p className="text-sm font-semibold text-[var(--st-consult)]">{error}</p>
+              )}
+              <Button type="submit" block disabled={submitting}>
+                {submitting ? "Sending…" : "Send reset link"}
+              </Button>
+              <button
+                type="button"
+                className="block w-full text-center text-sm font-semibold text-accent hover:underline"
+                onClick={() => {
+                  setForgot(false);
+                  setError("");
+                }}
+              >
+                Back to sign in
+              </button>
+            </form>
+          ) : configured ? (
             <form onSubmit={handleSignIn} className="space-y-4">
               <h1 className="!text-xl">Sign in</h1>
               <div>
@@ -106,6 +178,16 @@ function AdminLoginInner() {
               <Button type="submit" block disabled={submitting}>
                 {submitting ? "Signing in…" : "Sign in"}
               </Button>
+              <button
+                type="button"
+                className="block w-full text-center text-sm font-semibold text-accent hover:underline"
+                onClick={() => {
+                  setForgot(true);
+                  setError("");
+                }}
+              >
+                Forgot password?
+              </button>
             </form>
           ) : process.env.NODE_ENV !== "production" ? (
             <div className="space-y-4 text-center">

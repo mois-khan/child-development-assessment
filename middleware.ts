@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { updateSession } from "@/lib/supabase/middleware";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 /**
  * The set of admin routes that map directly to a page_id in admin_pages.
@@ -99,11 +100,25 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── Parent-only routes ─────────────────────────────────────────────────────
-  if (
-    path.startsWith("/children") ||
-    path.startsWith("/assessment") ||
-    path.startsWith("/report")
-  ) {
+  //
+  // Everything a signed-in parent owns. /dashboard is their home, so an
+  // unauthenticated hit on it goes to /join like any other private page.
+  const PARENT_ONLY = ["/dashboard", "/children", "/assessment", "/report", "/profile"];
+
+  // ── Routes that only make sense signed OUT ─────────────────────────────────
+  //
+  // The marketing homepage and the sign-in screen. Landing a signed-in parent
+  // on either is the flow bug this list fixes: "/" is a pitch for a product
+  // they already bought, and /join is a form for an account they already have.
+  const SIGNED_OUT_ONLY = ["/", "/join"];
+
+  const needsAuth = PARENT_ONLY.some((p) => path === p || path.startsWith(p + "/"));
+  const isSignedOutOnly = SIGNED_OUT_ONLY.includes(path);
+
+  // With no credentials configured (a fresh clone, CI) there is no session to
+  // read and nothing to route on — every page is public and renders as it
+  // did before. Without this guard the homepage would throw on every hit.
+  if ((needsAuth || isSignedOutOnly) && isSupabaseConfigured()) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -115,9 +130,33 @@ export async function middleware(request: NextRequest) {
       }
     );
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+
+    if (needsAuth && !user) {
       return NextResponse.redirect(
         new URL(`/join?next=${encodeURIComponent(path)}`, request.url)
+      );
+    }
+
+    if (isSignedOutOnly && user) {
+      // /join carries ?next= when something bounced the visitor here. Honour
+      // it — a parent who clicked a report link and got asked to sign in
+      // should land on the report, not on a generic dashboard.
+      const next = request.nextUrl.searchParams.get("next");
+      if (next && next.startsWith("/") && !next.startsWith("//")) {
+        return NextResponse.redirect(new URL(next, request.url));
+      }
+
+      // Staff are auth.users too, and a staff account usually has no children
+      // — sending them to the parent dashboard would show them an empty
+      // state for a family they don't have. Their home is the admin panel.
+      const { data: adminRow } = await supabase
+        .from("admin_users")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      return NextResponse.redirect(
+        new URL(adminRow ? "/admin" : "/dashboard", request.url)
       );
     }
   }

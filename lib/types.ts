@@ -168,11 +168,17 @@ export interface Child {
   /** City the family is based in. Optional, parent-entered free text. */
   city?: string;
   /**
-   * Parent's phone number, optional and parent-entered. The one field the
-   * sales follow-up system (lib/admin/leads.ts) actually needs to be useful —
-   * a lead with no way to reach the family isn't one.
+   * Guardian's phone number for THIS child, optional and parent-entered. The
+   * one field the sales follow-up system (lib/admin/leads.ts) actually needs
+   * to be useful — a lead with no way to reach the family isn't one.
    */
-  phone?: string;
+  parentPhone?: string;
+  /**
+   * Guardian's email for THIS child. Distinct from the account holder's own
+   * email on `profiles`, because a school account is one login with many
+   * students and each student's guardian is a different person.
+   */
+  parentEmail?: string;
   createdAt?: string;
   /** Optional profile photo, stored as a data: URL. */
   photoUrl?: string;

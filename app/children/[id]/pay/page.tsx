@@ -238,7 +238,7 @@ export default function PayPage({
                 <p className="eyebrow eyebrow-accent">Genius Milestone Check</p>
                 <h1 className="mt-3">Start {child.name}&rsquo;s check</h1>
                 <p className="lede mt-3 max-w-[46ch]">
-                  Built for {child.name}&rsquo;s exact stage — Stage {startStage.roman},{" "}
+                  Built for {child.name}&rsquo;s exact phase — Phase {startStage.roman},{" "}
                   {startStage.name}.
                 </p>
               </div>
@@ -253,7 +253,7 @@ export default function PayPage({
               <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-7">
                 <div className="flex flex-wrap gap-2">
                   <Badge tone="accent" size="lg">
-                    <IconSparkle size={14} /> Stage {startStage.roman} · {startStage.name}
+                    <IconSparkle size={14} /> Phase {startStage.roman} · {startStage.name}
                   </Badge>
                   <Badge tone="neutral">from {questionCount} questions</Badge>
                   <Badge tone="neutral">

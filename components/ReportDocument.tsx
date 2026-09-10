@@ -3,10 +3,11 @@
 import { Fragment, use, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE } from "@/content/domains";
-import { BRAIN_STAGES, STAGE_BY_ID, cellFor } from "@/content/stages";
 import { formatAge, summariseAge } from "@/lib/age";
+import { PLATFORM_NAME, PLATFORM_SHORT, phaseLabel, reportName } from "@/lib/naming";
 import { DISCLAIMER, domainNote, headline, nextSteps, summary } from "@/lib/narrative";
-import { STATUSES, scoreAssessment } from "@/lib/scoring";
+import { STATUS_SEVERITY, STATUSES, scoreAssessment } from "@/lib/scoring";
+import { itemBankReady, primeItemBank } from "@/lib/item-bank";
 import { stageForAge } from "@/lib/stage";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
 import type {
@@ -15,6 +16,7 @@ import type {
   Child,
   DomainCode,
   DomainScore,
+  StatusCode,
 } from "@/lib/types";
 import {
   Avatar,
@@ -49,6 +51,38 @@ import {
 import { MilestoneVideoRow } from "@/components/report/MilestoneVideoRow";
 import { CourseRow } from "@/components/report/CourseRow";
 
+/**
+ * The worst a competence may be before the report offers a course.
+ *
+ * "mild" means: any single area slightly behind the chart is enough. That
+ * follows the brief — recommend when the child "is lacking the development
+ * based on his phase" — and it matches what the status itself already says
+ * mild means ("worth daily focused activity"), which is precisely what a
+ * course is.
+ *
+ * Tighten it to "delay" here if the offer starts feeling too eager. Nothing
+ * else needs to change: this constant is the whole rule.
+ */
+const RECOMMEND_AT_OR_WORSE: StatusCode = "mild";
+
+/**
+ * Is this child behind for their phase — i.e. should the report recommend a
+ * course at all?
+ *
+ * This is the gate on the whole recommendation block: the course card, and
+ * the admin-curated course row under it, both appear only when this is true.
+ *
+ * Deliberately checks every competence rather than the overall verdict. The
+ * overall verdict is a median, so a child on track in five areas and behind
+ * in one reads as "typically developing" overall — which is the right thing
+ * to tell a parent, and the wrong thing to decide a recommendation on, since
+ * that one area is exactly what a course would address.
+ */
+function lacksDevelopmentForPhase(result: AssessmentResult): boolean {
+  const floor = STATUS_SEVERITY[RECOMMEND_AT_OR_WORSE];
+  return result.domainScores.some((d) => STATUS_SEVERITY[d.status] >= floor);
+}
+
 export function ReportDocument({
   id,
   isAdmin = false,
@@ -60,6 +94,22 @@ export function ReportDocument({
   const [record, setRecord] = useState<StoredAssessment | null | undefined>(undefined);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  /* The score is recomputed from the stored responses every time this page
+     opens, so it has to be computed against the same question bank the parent
+     was actually asked — the shipped bank plus whatever the admin has changed.
+     Scoring against the un-overlaid bank would let a report disagree with the
+     assessment that produced it. */
+  const [bankReady, setBankReady] = useState(itemBankReady());
+
+  useEffect(() => {
+    let active = true;
+    primeItemBank().finally(() => {
+      if (active) setBankReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -75,7 +125,7 @@ export function ReportDocument({
   }, [id, loadAttempt]);
 
   const result = useMemo<AssessmentResult | null>(() => {
-    if (!record) return null;
+    if (!record || !bankReady) return null;
     return scoreAssessment({
       child: record.child,
       assessedOn: record.assessedOn,
@@ -83,7 +133,24 @@ export function ReportDocument({
       details: record.details,
       stagesByDomain: record.stagesByDomain,
     });
-  }, [record]);
+  }, [record, bankReady]);
+
+  /* The browser seeds the "Save as PDF" filename from document.title, so this
+     is what decides whether a parent ends up with "Kaushik KDSP-IV Report.pdf"
+     or "localhost.pdf". Restored on unmount so the title doesn't leak into
+     whatever page they navigate to next. */
+  useEffect(() => {
+    if (!record || !result) return;
+    const previous = document.title;
+    const stage = stageForAge(
+      summariseAge(record.child.dob, record.assessedOn, record.child.gestationalWeeks)
+        .assessedMonths,
+    );
+    document.title = reportName(record.child.name, stage);
+    return () => {
+      document.title = previous;
+    };
+  }, [record, result]);
 
   // ?download=1 (from the child's profile) opens the print dialogue directly.
   useEffect(() => {
@@ -104,7 +171,7 @@ export function ReportDocument({
     );
   }
 
-  if (record === undefined) {
+  if (record === undefined || !bankReady) {
     return (
       <>
         {!isAdmin && <TopBar />}
@@ -147,6 +214,13 @@ export function ReportDocument({
     result.focusAreas.length > 0
       ? result.focusAreas
       : [...result.domainScores].sort((a, b) => metric(a) - metric(b)).slice(0, 2).map((d) => d.domain);
+
+  /* Whether this report should recommend a course at all.
+     A child who is on track in every competence is not sold anything — the
+     recommendation and the admin-curated course row below both hang off this
+     one flag, so the report can never congratulate a parent and upsell them
+     in the same breath. */
+  const needsSupport = lacksDevelopmentForPhase(result);
 
 
 
@@ -205,11 +279,12 @@ export function ReportDocument({
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
                 <div className="min-w-0">
                   <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/65 print:hidden">
-                    Kaushalya Genius Kid Program
+                    {PLATFORM_NAME}
                   </p>
                   <h1 className="display mt-3 !text-3xl leading-[1.08] text-white sm:!text-4xl">
-                    {child.name}&rsquo;s
-                    <br className="hidden sm:block" /> Milestone Report
+                    {child.name}
+                    <br className="hidden sm:block" />{" "}
+                    {PLATFORM_SHORT}-{startStage.roman} Report
                   </h1>
                 </div>
 
@@ -238,10 +313,7 @@ export function ReportDocument({
                     child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—",
                   ],
                   ["Assessment date", formatDate(record.assessedOn)],
-                  [
-                    "Started at",
-                    `Stage ${startStage.roman} · ${startStage.name}`,
-                  ],
+                  ["Phase", phaseLabel(startStage)],
                 ].map(([label, value]) => (
                   <div key={label} className="cover-meta-item">
                     <dt>{label}</dt>
@@ -326,7 +398,12 @@ export function ReportDocument({
                   {ordered.map((score) => {
                     const d = DOMAIN_BY_CODE[score.domain];
                     const value = score.dq === null ? score.percent * 100 : score.dq;
-                    const color = domainColor(score.domain);
+                    /* Colour by RESULT, not by competence. A bar coloured by
+                       domain is decoration — every child gets the same six
+                       colours whatever their answers. Coloured by status, the
+                       bar and its length say the same thing, and a row of
+                       greens vs a row of reds reads before any label does. */
+                    const color = statusColor(score.status);
                     const { index, frac } = stagePosition(value);
                     const pct = ((index + frac) / STAGES.length) * 100;
                     return (
@@ -367,14 +444,6 @@ export function ReportDocument({
             </Card>
           </Section>
 
-          {/* ══ page 2b · the chart itself, filled in ═══════════════════════ */}
-          <Section size="sm" className="print-break">
-            <h2>{child.name}&rsquo;s Developmental Profile</h2>
-            <Card variant="clay" className="mt-6 overflow-hidden !p-0">
-              <DevelopmentalProfileChart result={result} childName={child.name} />
-            </Card>
-          </Section>
-
           {/* ══ page 3+ · area by area ═══════════════════════════════════ */}
           <Section size="sm" className="print-break">
             <h2>Area by area</h2>
@@ -395,29 +464,27 @@ export function ReportDocument({
           <Section size="sm" className="print-break">
             <h2>Summary &amp; recommendations</h2>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-2 items-stretch">
+            <div
+              className={`mt-6 grid gap-6 items-stretch ${needsSupport ? "lg:grid-cols-2" : ""}`}
+            >
               <ExecutiveSummaryCard result={result} child={child} />
-              <DefaultRecommendationCard stage={startStage} child={child} />
+              {needsSupport && <DefaultRecommendationCard stage={startStage} child={child} />}
             </div>
 
             <div className="mt-6">
               <ActionStepsCard result={result} child={child} />
             </div>
 
-            {/* Admin-curated course recommendations, keyed to the stage of the
-                child's biggest focus area — not shown in the admin's own
-                internal report view, where there's no "explore courses" CTA
-                to make. CourseRow returns null when there's nothing active
-                for that stage, so DefaultRecommendationCard above always
-                acts as the fallback either way. */}
-            {!isAdmin && (
-              <CourseRow
-                stageId={
-                  result.domainScores.find((d) => d.domain === focus[0])?.achievedStage
-                    || startStage.id
-                }
-                childName={child.name}
-              />
+            {/* Admin-curated course cards, keyed to the child's AGE phase —
+                the same phase the recommendation card above is built around,
+                so a parent is never offered two different phases' courses in
+                one report. Suppressed entirely for a child with no gaps: a
+                report that says "everything is on track" and then sells a
+                remediation course contradicts itself, and the contradiction
+                is what a parent remembers. Also hidden from the admin's own
+                view, where there is no CTA to make. */}
+            {!isAdmin && needsSupport && (
+              <CourseRow stageId={startStage.id} childName={child.name} />
             )}
           </Section>
 
@@ -462,7 +529,7 @@ export function ReportDocument({
               {/* print-only colophon — the closing line a real document has */}
               <div className="mt-6 hidden border-t border-line-soft pt-4 text-[9pt] text-ink-3 print:flex print:items-center print:justify-between">
                 <span>
-                  Kaushalya Genius Kid Program · Prepared for {child.name} on {formatDate(record.assessedOn)}
+                  Kaushalya Developmental Screening Platform · Prepared for {child.name} on {formatDate(record.assessedOn)}
                 </span>
                 <span>www.kaushalyageniuskid.com</span>
               </div>
@@ -475,225 +542,6 @@ export function ReportDocument({
     </>
   );
 }
-
-/* ══ the chart itself, filled in ══════════════════════════════════════════ */
-
-type CellState = "reached" | "current" | "next" | "ahead";
-
-/**
- * Where one competence's score puts it on one row of the chart.
- *
- * "reached" and "current" only ever look at the stage the child actually
- * landed on (DomainScore.achievedStage) — they never assume a stage was
- * literally asked about. That is deliberate: reaching stage VI implies I
- * through V without re-testing them, exactly as the physical chart assumes.
- * "next" is the one state that DOES require the stage to have been asked
- * (DomainScore.stagesAsked) — we only draw a progress bar into a stage we
- * have actual answers for, never a guess.
- */
-function cellState(
-  score: DomainScore,
-  stage: BrainStage,
-): { state: CellState; frac?: number } {
-  const achieved = STAGE_BY_ID[score.achievedStage];
-
-  if (achieved) {
-    if (stage.order < achieved.order) return { state: "reached" };
-    if (stage.order === achieved.order) return { state: "current" };
-    if (stage.order === achieved.order + 1 && score.stagesAsked.includes(stage.id)) {
-      const span = stage.averageMonths - achieved.averageMonths;
-      const frac =
-        span <= 0
-          ? 0
-          : clamp01((score.neurologicalMonths - achieved.averageMonths) / span);
-      return { state: "next", frac };
-    }
-    return { state: "ahead" };
-  }
-
-  // Nothing passed yet: anchor "current" on the lowest stage we actually
-  // asked about, using the domain's overall answer rate as its fill.
-  const lowestAsked = [...score.stagesAsked]
-    .map((id) => STAGE_BY_ID[id])
-    .filter((s): s is BrainStage => !!s)
-    .sort((a, b) => a.order - b.order)[0];
-  if (lowestAsked && stage.id === lowestAsked.id) {
-    return { state: "current", frac: score.percent };
-  }
-  return { state: "ahead" };
-}
-
-function clamp01(n: number): number {
-  return Math.min(1, Math.max(0, n));
-}
-
-/**
- * The Developmental Profile chart, filled in with one child's answers.
- *
- * Seven rows (the brain stages, reflex at the bottom to match the printed
- * chart), six columns (the competences, in the chart's own order — the three
- * that take information in, then the three that put it back out). Every one
- * of the 42 cells carries the chart's own wording, so this reads as the same
- * document a family already has on paper, just marked up with where their
- * child stands.
- */
-function DevelopmentalProfileChart({
-  result,
-  childName,
-}: {
-  result: AssessmentResult;
-  childName: string;
-}) {
-  const scoreByDomain = Object.fromEntries(
-    result.domainScores.map((s) => [s.domain, s]),
-  ) as Record<DomainCode, DomainScore>;
-  const rows = [...BRAIN_STAGES].sort((a, b) => b.order - a.order); // VII at top
-
-  return (
-    <div>
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line-soft px-5 py-3.5 text-xs font-semibold text-ink-3 sm:px-7">
-        <LegendItem swatch={<LegendCheck />} label="Already reached" />
-        <LegendItem swatch={<LegendRing />} label={`${childName} is here`} />
-        <LegendItem swatch={<LegendDash />} label="In progress" />
-        <LegendItem swatch={<LegendFaded />} label="Not reached yet" />
-      </div>
-
-      <div className="dp-chart-scroll">
-        <div className="dp-chart">
-          <div className="dp-chart-head dp-chart-corner" aria-hidden="true" />
-          {DOMAINS.map((d) => (
-            <div key={d.code} className="dp-chart-head">
-              <SectionIcon code={d.code} size={17} />
-              <span>{d.short}</span>
-            </div>
-          ))}
-
-          {rows.flatMap((stage) => [
-              <div
-                key={`${stage.id}-label`}
-                className="dp-chart-stage"
-                style={{
-                  background: `hsl(${stage.hue} 68% 93%)`,
-                  color: `hsl(${stage.hue} 60% 28%)`,
-                }}
-              >
-                <span className="dp-chart-roman">{stage.roman}</span>
-                <span className="dp-chart-stage-name">{stage.name}</span>
-              </div>,
-              ...DOMAINS.map((d) => {
-                const score = scoreByDomain[d.code];
-                const cell = cellFor(stage.id, d.code);
-                const { state, frac } = cellState(score, stage);
-                const color = domainColor(d.code);
-                return (
-                  <div
-                    key={`${stage.id}-${d.code}`}
-                    className="dp-chart-cell"
-                    data-state={state}
-                    style={
-                      {
-                        background: `hsl(${stage.hue} 55% 96%)`,
-                        "--cell-color": color,
-                      } as React.CSSProperties
-                    }
-                  >
-                    {state === "reached" && (
-                      <span className="dp-chart-marker dp-chart-marker-check" style={{ color }}>
-                        <IconCheck size={11} />
-                      </span>
-                    )}
-                    {state === "current" && (
-                      <span className="dp-chart-marker dp-chart-marker-here">
-                        <Avatar name={childName} size={20} />
-                      </span>
-                    )}
-                    {/* Inline, theme-independent ink — this cell's background is
-                        always a light tint of the row's own hue, by design, the
-                        same way the printed chart never changes with the light in
-                        the room. var(--ink) would flip to a pale colour in dark
-                        mode and vanish against it, so the text carries its own
-                        dark shade of the same hue instead. */}
-                    <p
-                      className="dp-chart-cell-desc"
-                      style={{ color: `hsl(${stage.hue} 45% 20%)` }}
-                    >
-                      {cell.description}
-                    </p>
-                    <p
-                      className="dp-chart-cell-kind"
-                      style={{ color: `hsl(${stage.hue} 25% 38%)` }}
-                    >
-                      {cell.kind}
-                    </p>
-                    {state === "next" && frac !== undefined && (
-                      <span
-                        className="dp-chart-cell-fill"
-                        style={{ width: `${Math.max(6, frac * 100)}%`, background: color }}
-                        aria-hidden="true"
-                      />
-                    )}
-                  </div>
-                );
-              }),
-          ])}
-        </div>
-      </div>
-
-      <p className="border-t border-line-soft px-5 py-3.5 text-xs leading-relaxed text-ink-3 sm:px-7">
-        Cells below where {childName} is marked are assumed in place, the same way the paper
-        chart reads — reaching a later stage means the earlier ones are already there.
-      </p>
-    </div>
-  );
-}
-
-function LegendItem({ swatch, label }: { swatch: React.ReactNode; label: string }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      {swatch}
-      {label}
-    </span>
-  );
-}
-
-function LegendCheck() {
-  return (
-    <span
-      className="grid size-4 place-items-center rounded-full"
-      style={{ background: "var(--surface-3)", color: "var(--ink-2)" }}
-    >
-      <IconCheck size={10} />
-    </span>
-  );
-}
-
-function LegendRing() {
-  return (
-    <span
-      className="size-4 rounded-full"
-      style={{ border: "2.5px solid var(--ink-2)", background: "var(--surface)" }}
-    />
-  );
-}
-
-function LegendDash() {
-  return (
-    <span
-      className="size-4 rounded-full"
-      style={{ border: "2px dashed var(--ink-3)", background: "var(--surface)" }}
-    />
-  );
-}
-
-function LegendFaded() {
-  return (
-    <span
-      className="size-4 rounded-full"
-      style={{ background: "var(--surface-3)", opacity: 0.5 }}
-    />
-  );
-}
-
 /* ══ the summary, readable rather than a wall of text ══════════════════════ */
 
 /**
@@ -917,7 +765,12 @@ function DomainCard({
   isAdmin?: boolean;
 }) {
   const domain = DOMAIN_BY_CODE[score.domain];
+  /* Two colours doing two different jobs: the domain's own colour identifies
+     WHICH competence this is (the icon tile, same on every child's report),
+     and the status colour says HOW THIS CHILD DID (the bar, different per
+     child). Using one colour for both makes the result unreadable. */
   const color = domainColor(score.domain);
+  const resultColor = statusColor(score.status);
   const value = score.dq === null ? score.percent * 100 : score.dq;
   // Open by default for areas with developmental focus needs; collapsed for
   // areas already on track so parents can focus on what matters most.
@@ -975,7 +828,7 @@ function DomainCard({
                 className="h-full rounded-full transition-all duration-500 ease-out"
                 style={{
                   width: `${Math.min(100, value)}%`,
-                  background: `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 80%, black))`,
+                  background: `linear-gradient(90deg, ${resultColor}, color-mix(in srgb, ${resultColor} 80%, black))`,
                 }}
               />
             </div>
@@ -991,50 +844,6 @@ function DomainCard({
         {/* Expanded body with high-contrast narrative and modern metric cards */}
         <div className="border-t border-line-soft bg-[var(--surface-2)] px-4.5 py-4 sm:px-5 sm:py-5">
           <p className="text-[0.95rem] font-normal leading-relaxed text-[var(--ink)]">{note}</p>
-
-          <div className="mt-4.5 border-t border-line pt-3.5">
-            <p className="mb-2.5 text-[0.7rem] font-bold uppercase tracking-wider text-[var(--ink-2)]">
-              Where they stand, item by item
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              {/* Doing */}
-              <div className="flex items-center gap-3 rounded-xl border border-[var(--st-on-track)]/30 bg-[var(--st-on-track-soft)] px-3.5 py-3">
-                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[var(--st-on-track)] text-white shadow-xs">
-                  <IconCheck size={12} />
-                </span>
-                <div className="min-w-0">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="tnum text-base font-black text-[var(--st-on-track-ink)] leading-none">
-                      {score.achieved.length}
-                    </span>
-                    <span className="truncate text-xs font-bold text-[var(--st-on-track-ink)]">Doing</span>
-                  </div>
-                  <p className="mt-1 truncate text-[0.72rem] font-semibold text-[var(--st-on-track-ink)]/80 leading-none">
-                    Milestones achieved
-                  </p>
-                </div>
-              </div>
-
-              {/* Not yet */}
-              <div className="flex items-center gap-3 rounded-xl border border-line bg-[var(--surface)] px-3.5 py-3 shadow-xs">
-                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[var(--surface-3)] text-[var(--ink-2)]">
-                  <IconClock size={12} />
-                </span>
-                <div className="min-w-0">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="tnum text-base font-black text-[var(--ink)] leading-none">
-                      {score.notYet.length}
-                    </span>
-                    <span className="truncate text-xs font-bold text-[var(--ink)]">Not yet</span>
-                  </div>
-                  <p className="mt-1 truncate text-[0.72rem] font-semibold text-[var(--ink-3)] leading-none">
-                    Next developmental steps
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Milestone video cards for this domain — admin-curated, fetched
               from DB. Not shown in the admin's own report preview. */}
@@ -1097,7 +906,7 @@ function DefaultRecommendationCard({ stage, child }: { stage: BrainStage; child:
         </div>
 
         <h3 className="mt-3.5 text-[1.28rem] sm:text-[1.38rem] font-black tracking-tight text-white leading-tight">
-          Milestones Acceleration: Stage {stage.roman}
+          Milestones Acceleration: Phase {stage.roman}
         </h3>
         <p className="mt-1 text-[0.88rem] font-bold text-[#f8ce7c]">
           {stage.name} Phase · Personalised for {child.name}

@@ -165,7 +165,7 @@ export default function MilestoneVideosPage() {
         >
           <option value="all">All Stages</option>
           {BRAIN_STAGES.map(s => (
-            <option key={s.id} value={s.id}>Stage {s.roman} - {s.name}</option>
+            <option key={s.id} value={s.id}>Phase {s.roman} - {s.name}</option>
           ))}
         </select>
         <select 
@@ -194,7 +194,7 @@ export default function MilestoneVideosPage() {
               return (
                 <details key={key} className="group" open={cellVideos.length > 0}>
                   <summary className="cursor-pointer list-none py-2 text-lg font-bold text-ink">
-                    Stage {stage.roman} &middot; {domain.name}
+                    Phase {stage.roman} &middot; {domain.name}
                     {cellVideos.length === 0 && (
                       <span className="ml-2 text-sm font-semibold text-ink-3">— no videos yet</span>
                     )}
@@ -251,14 +251,14 @@ export default function MilestoneVideosPage() {
             
             <form onSubmit={handleSave} className="p-5 space-y-5 flex-1">
               <div>
-                <label className="block text-sm font-semibold text-ink-2 mb-1">Stage</label>
+                <label className="block text-sm font-semibold text-ink-2 mb-1">Phase</label>
                 <select 
                   className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"
                   value={drawerStageId}
                   onChange={e => setDrawerStageId(e.target.value)}
                   disabled={saving}
                 >
-                  {BRAIN_STAGES.map(s => <option key={s.id} value={s.id}>Stage {s.roman} - {s.name}</option>)}
+                  {BRAIN_STAGES.map(s => <option key={s.id} value={s.id}>Phase {s.roman} - {s.name}</option>)}
                 </select>
               </div>
 

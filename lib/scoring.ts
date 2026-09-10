@@ -6,7 +6,13 @@ import {
   stageBelow,
 } from "@/content/stages";
 import { DOMAINS } from "@/content/domains";
-import { itemsFor, scoredItemsFor } from "@/content/items";
+// The LIVE bank, not the shipped one: an admin who edits or retires a
+// question in the item bank must have that reflected in what the walk asks
+// AND in what the score counts. Reading two different banks in those two
+// places is how a child passes a stage on screen and fails it in the report.
+// Before lib/item-bank.ts has been primed (server render, first paint) these
+// return the shipped bank unchanged — see the note at the top of that file.
+import { liveItemsFor as itemsFor, liveScoredItemsFor as scoredItemsFor } from "@/lib/item-bank";
 import type {
   AssessmentResult,
   BrainStage,
@@ -33,10 +39,11 @@ import { classifyAgainstStage, stageForAge } from "./stage";
  *      average month is nearest their age. Nothing else is asked first.
  *
  *   2. For each competence independently, we ask that stage's questions.
- *      Pass, and we climb: ask the stage above, and keep climbing until they
- *      stop passing or we run out of chart. Fail, and we descend: ask the
- *      stage below, and keep descending until they pass one or we reach the
- *      bottom. The walk never changes direction, so it always terminates.
+ *      Every answer "yes" and we climb: ask the stage above, and keep
+ *      climbing until a "no" appears or we run out of chart. A single "no"
+ *      and we descend: ask the stage below, and keep descending until a
+ *      clean sweep or we reach the bottom. The walk never changes direction,
+ *      so it always terminates.
  *
  *   3. The highest stage passed — with every stage asked below it also passed
  *      — is the stage the child has reached. Partial credit from the stage
@@ -56,19 +63,22 @@ import { classifyAgainstStage, stageForAge } from "./stage";
  * ──────────────────────────────────────────────────────────────────────────*/
 
 /**
- * Share of a stage's scored questions a child must answer "yes" to have
+ * Share of a phase's scored questions a child must answer "yes" to have
  * reached it.
  *
- * CLINICAL CONSTANT — Kaushalya's child development lead should confirm this
- * before any real family sees a result.
+ * CLINICAL CONSTANT — set to 1.0 on Kaushalya's instruction: a single "no"
+ * means the phase has not been reached, and the walk drops to the phase
+ * below. Only a clean sweep climbs.
  *
- * A consequence worth knowing: most cells of the chart carry only two or three
- * questions, and at 0.75 that means every one of them has to be "yes". Only
- * the cells with four or more questions can absorb a single "no". That is very
- * close to how the paper booklet is read in the room, which is why it is the
- * default.
+ * What actually changed: most cells of the chart carry two or three
+ * questions, where 0.75 already demanded every one of them. This bites only
+ * on cells with four or more questions, which previously could absorb one
+ * "no". The instrument is now strictly harder in those cells and never
+ * easier, so expect quotients to sit a little lower across the board than
+ * they did before — reports issued under the old threshold are not
+ * comparable to reports issued under this one.
  */
-export const PASS_THRESHOLD = 0.75;
+export const PASS_THRESHOLD = 1;
 
 /**
  * Below this age the ratio of neurological to actual age divides by something
@@ -106,7 +116,9 @@ export const STATUSES: Record<StatusCode, Status> = {
   },
 };
 
-const STATUS_SEVERITY: Record<StatusCode, number> = {
+/** Status codes as an ordered scale, so callers can ask "is this one worse
+ *  than that one" without hard-coding the order of the five. */
+export const STATUS_SEVERITY: Record<StatusCode, number> = {
   advanced: 0,
   typical: 1,
   mild: 2,

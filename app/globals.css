@@ -127,6 +127,37 @@
   --st-needs-focus-soft: #fdefe6;
   --st-consult-soft: #fdecef;
 
+  /* ═══ THE FIVE-STEP DEVELOPMENTAL SCALE ═════════════════════════════════
+     One colour per StatusCode, in severity order, and nothing else uses
+     them. This is deliberately separate from the STATUS tokens above: those
+     also carry the interface's generic success/warning/error work (a valid
+     field's tick, an error banner's red), and a scale that reads as
+     "how is this child doing" must not shift because someone restyled a
+     form error.
+
+     The scale runs green → amber → red, doubling as its own legend:
+     two greens for the two good outcomes, amber for the first real gap,
+     and two reds whose darkness IS the severity — a parent should be able
+     to tell a delay from a significant one without reading the label.
+     Solids hold 4.5:1 on white; `-ink` is for text on the matching `-soft`. */
+  --st-advanced: #076c4e; /* dark green   — ahead of the chart */
+  --st-typical: #0d875f; /* victory green — on track for age */
+  --st-mild: #b7791f; /* amber         — slightly behind */
+  --st-delay: #dd344a; /* red           — noticeably behind */
+  --st-significant: #9f1239; /* dark red      — needs a professional */
+
+  --st-advanced-ink: #05563e;
+  --st-typical-ink: #0c7e58;
+  --st-mild-ink: #96620f;
+  --st-delay-ink: #d1233a;
+  --st-significant-ink: #881337;
+
+  --st-advanced-soft: #dcf2ea;
+  --st-typical-soft: #e7f7f1;
+  --st-mild-soft: #fdf4e0;
+  --st-delay-soft: #fdecef;
+  --st-significant-soft: #fbe4ea;
+
   --focus-ring: var(--brand-600);
 
   /* ═══ SPACE — 4px grid ══════════════════════════════════════════════════

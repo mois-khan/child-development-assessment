@@ -209,12 +209,16 @@ const STATUS_TONE: Record<StatusCode, BadgeTone> = {
   significant: "danger",
 };
 
+/* The five-step developmental scale — see app/globals.css. One colour per
+   status, in severity order. `delay` and `significant` used to share a single
+   red, which meant the two outcomes that matter most were the two a parent
+   could not tell apart. */
 const STATUS_VAR: Record<StatusCode, string> = {
-  advanced: "--st-superior",
-  typical: "--st-on-track",
-  mild: "--st-needs-focus",
-  delay: "--st-consult",
-  significant: "--st-consult",
+  advanced: "--st-advanced",
+  typical: "--st-typical",
+  mild: "--st-mild",
+  delay: "--st-delay",
+  significant: "--st-significant",
 };
 
 export function statusColor(status: StatusCode): string {

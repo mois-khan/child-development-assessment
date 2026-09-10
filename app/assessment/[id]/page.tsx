@@ -4,7 +4,7 @@ import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE } from "@/content/domains";
 import { STAGE_BY_ID } from "@/content/stages";
-import { liveItemsFor } from "@/lib/admin/content";
+import { itemBankReady, liveItemsFor, primeItemBank } from "@/lib/item-bank";
 import { summariseAge } from "@/lib/age";
 import { cellComplete, nextStageFor, startStageFor } from "@/lib/scoring";
 import {
@@ -135,7 +135,24 @@ export default function AssessmentPage({
   const [pending, setPending] = useState(false);
   const [resumed, setResumed] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  /** The admin question overlay has to be in memory before the first question
+   *  renders. Reading the shipped bank first and swapping questions in
+   *  underneath a parent mid-answer is the one failure mode worth a spinner. */
+  const [bankReady, setBankReady] = useState(itemBankReady());
   const [loadAttempt, setLoadAttempt] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    // Never blocks on failure: primeItemBank() resolves to the shipped bank
+    // when the overlay can't be fetched, so a Supabase blip costs the admin's
+    // recent edits, not the parent's session.
+    primeItemBank().finally(() => {
+      if (active) setBankReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -303,7 +320,7 @@ export default function AssessmentPage({
   }, [questionIndex, items.length, advanceStage, responses]);
 
   if (loadError) return <LoadFailed onRetry={() => setLoadAttempt((n) => n + 1)} />;
-  if (record === undefined) return <Loading />;
+  if (record === undefined || !bankReady) return <Loading />;
   if (record === null) return <NotFound onStart={() => router.push("/children")} />;
 
   const domain = DOMAIN_BY_CODE[domainCode];

@@ -26,7 +26,7 @@ const poetsen = Poetsen_One({
 });
 
 export const metadata: Metadata = {
-  title: "Kaushalya Genius Kid Program — Milestone Check",
+  title: "Kaushalya Developmental Screening Platform",
   description:
     "A ten-minute milestone check for children aged 0–6, across six areas of brain development, with a keepsake report and activities to do at home.",
 };

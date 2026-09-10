@@ -1,6 +1,8 @@
 "use client";
 
 import { use, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { EditChildDialog } from "@/components/EditChildDialog";
 import { DOMAIN_BY_CODE, STAGE_JOURNEY } from "@/content/domains";
 import { stageForAge } from "@/lib/stage";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
@@ -44,9 +46,11 @@ export default function ChildProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const [child, setChild] = useState<SavedChild | null | undefined | "error">(undefined);
   const [assessments, setAssessments] = useState<StoredAssessment[]>([]);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -162,10 +166,19 @@ export default function ChildProfilePage({
                     Born {formatDate(child.dob)} ({age.chronologicalMonths} month{age.chronologicalMonths === 1 ? "" : "s"}) ·{" "}
                     {child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"}
                   </p>
-                  <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-bold text-white backdrop-blur">
-                    <IconSparkle size={15} />
-                    Stage {stage.roman} of VII · {stage.name}
-                  </span>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-bold text-white backdrop-blur">
+                      <IconSparkle size={15} />
+                      Phase {stage.roman} of VII · {stage.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(true)}
+                      className="rounded-full border border-white/30 px-3.5 py-1.5 text-sm font-bold text-white/90 backdrop-blur transition-colors hover:bg-white/15 hover:text-white"
+                    >
+                      Edit details
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -385,9 +398,9 @@ export default function ChildProfilePage({
         <Section size="sm">
           <Shell width="wide">
             <p className="eyebrow eyebrow-accent">Developmental milestone ladder</p>
-            <h2 className="mt-1">Their stage on the journey</h2>
+            <h2 className="mt-1">Their phase on the journey</h2>
             <p className="lede mt-2 max-w-[54ch]">
-              Each dot is one of the seven brain stages — the filled one is where{" "}
+              Each dot is one of the seven phases — the filled one is where{" "}
               {child.name} is today.
             </p>
             <Card variant="clay" className="mt-5 overflow-x-auto p-6 sm:p-8">
@@ -398,11 +411,25 @@ export default function ChildProfilePage({
               />
             </Card>
             <p className="mt-2 text-xs font-semibold text-ink-3 sm:hidden">
-              Swipe sideways to see every stage →
+              Swipe sideways to see every phase →
             </p>
           </Shell>
         </Section>
       </main>
+
+      {editing && (
+        <EditChildDialog
+          child={child}
+          onClose={() => setEditing(false)}
+          onSaved={(updated) => {
+            setChild(updated);
+            setEditing(false);
+          }}
+          /* Their profile page is the thing that was just deleted, so there
+             is nowhere to stay — go back to the list. */
+          onDeleted={() => router.replace("/children")}
+        />
+      )}
 
       <Footer />
     </>

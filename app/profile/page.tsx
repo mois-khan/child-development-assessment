@@ -22,7 +22,11 @@ import {
   IconRefresh,
   IconShield,
   IconSparkle,
+  IconCalendar,
+  IconMail,
+  IconPhone,
   IconStarFilled,
+  IconUser,
   Mascot,
   Section,
   Shell,
@@ -75,6 +79,7 @@ function ProfileInner() {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState<string | null>(null);
 
@@ -173,6 +178,7 @@ function ProfileInner() {
     if (profile) {
       setEditName(profile.fullName || "");
       setEditPhone(profile.phone || "");
+      setEditEmail(profile.email || "");
     }
   }, [profile]);
 
@@ -194,10 +200,29 @@ function ProfileInner() {
 
       if (error) throw error;
 
+      /* Email is the login identity, so it is changed through auth, not by
+         writing to profiles — Supabase mails a confirmation link to the old
+         and new address and only then updates auth.users. A trigger
+         (migration 0005) copies it into profiles at that point, which is why
+         nothing here writes profiles.email itself. */
+      const nextEmail = editEmail.trim();
+      const emailChanged =
+        nextEmail !== "" &&
+        nextEmail.toLowerCase() !== (profile?.email || "").trim().toLowerCase();
+
+      if (emailChanged) {
+        const { error: emailError } = await supabase.auth.updateUser({ email: nextEmail });
+        if (emailError) throw emailError;
+      }
+
       await refreshProfile();
       setEditing(false);
-      setProfileMsg("Profile updated successfully!");
-      setTimeout(() => setProfileMsg(null), 3000);
+      setProfileMsg(
+        emailChanged
+          ? `Saved. Open the confirmation link we sent to ${nextEmail} to finish changing your email.`
+          : "Profile updated successfully!",
+      );
+      setTimeout(() => setProfileMsg(null), emailChanged ? 8000 : 3000);
     } catch (err: any) {
       setProfileMsg(err?.message || "Failed to update profile. Please try again.");
     } finally {
@@ -270,6 +295,12 @@ function ProfileInner() {
               }
             />
 
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-16 left-[32%] size-48 rounded-full"
+              style={{ background: "var(--coral-300)", opacity: 0.12 }}
+            />
+
             <div className="relative flex flex-wrap items-center justify-between gap-6">
               <div className="flex items-center gap-5">
                 <Avatar name={parentName} size={84} ring />
@@ -286,43 +317,22 @@ function ProfileInner() {
                 </div>
               </div>
 
-              {/* Stats pill cards */}
               <div className="flex flex-wrap gap-3">
-                <div className="min-w-[94px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur">
-                  <p
-                    className="tnum text-2xl font-extrabold text-white"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {children ? children.length : "—"}
-                  </p>
-                  <p className="text-xs font-bold text-white/70">
-                    {children?.length === 1 ? "Child" : "Children"}
-                  </p>
-                </div>
-
-                <div className="min-w-[94px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur">
-                  <p
-                    className="tnum text-2xl font-extrabold text-white"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {assessments ? assessments.length : "—"}
-                  </p>
-                  <p className="text-xs font-bold text-white/70">
-                    {assessments?.length === 1 ? "Assessment" : "Assessments"}
-                  </p>
-                </div>
-
-                <div className="min-w-[94px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur">
-                  <p
-                    className="tnum text-2xl font-extrabold text-white"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {completedAssessmentsCount}
-                  </p>
-                  <p className="text-xs font-bold text-white/70">
-                    {completedAssessmentsCount === 1 ? "Report" : "Reports"}
-                  </p>
-                </div>
+                <HeroCount
+                  value={children ? children.length : "—"}
+                  label={children?.length === 1 ? "Child" : "Children"}
+                  icon={<IconStarFilled size={14} />}
+                />
+                <HeroCount
+                  value={assessments ? assessments.length : "—"}
+                  label={assessments?.length === 1 ? "Assessment" : "Assessments"}
+                  icon={<IconSparkle size={14} />}
+                />
+                <HeroCount
+                  value={completedAssessmentsCount}
+                  label={completedAssessmentsCount === 1 ? "Report" : "Reports"}
+                  icon={<IconCheck size={14} />}
+                />
               </div>
             </div>
           </div>
@@ -390,6 +400,31 @@ function ProfileInner() {
                       placeholder="98765 43210"
                     />
                   </div>
+                  <div>
+                    <label className="label" htmlFor="edit-email">
+                      Email
+                    </label>
+                    <input
+                      id="edit-email"
+                      type="email"
+                      className="field"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="priya@example.com"
+                      autoComplete="email"
+                    />
+                    {/* This is the address they sign in with, so a change is
+                        not a profile edit — it goes through auth and both the
+                        old and new inboxes have to confirm it. Saying so here
+                        stops it looking broken when the field appears not to
+                        have changed after saving. */}
+                    <p className="hint">
+                      {editEmail.trim().toLowerCase() !==
+                      (profile?.email || "").trim().toLowerCase()
+                        ? "You'll get a confirmation link at both your old and new address. The change applies once you open it."
+                        : "This is the address you sign in with."}
+                    </p>
+                  </div>
                   <div className="pt-2 flex items-center gap-3">
                     <Button type="submit" disabled={savingProfile}>
                       {savingProfile ? "Saving…" : "Save Changes"}
@@ -401,6 +436,7 @@ function ProfileInner() {
                         setEditing(false);
                         setEditName(profile?.fullName || "");
                         setEditPhone(profile?.phone || "");
+                        setEditEmail(profile?.email || "");
                       }}
                     >
                       Cancel
@@ -408,31 +444,32 @@ function ProfileInner() {
                   </div>
                 </form>
               ) : (
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
-                      Parent Name
-                    </p>
-                    <p className="mt-1 text-base font-bold text-ink">{parentName}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
-                      Email Address
-                    </p>
-                    <p className="mt-1 text-base font-bold text-ink">{parentEmail || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
-                      Mobile Phone
-                    </p>
-                    <p className="mt-1 text-base font-bold text-ink">{parentPhone || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
-                      Member Since
-                    </p>
-                    <p className="mt-1 text-base font-bold text-ink">{joinedDate}</p>
-                  </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <DetailTile
+                    label="Parent name"
+                    value={parentName}
+                    icon={<IconUser size={17} />}
+                    color="var(--brand-500)"
+                  />
+                  <DetailTile
+                    label="Email address"
+                    value={parentEmail || "—"}
+                    icon={<IconMail size={17} />}
+                    color="var(--sec-auditory)"
+                  />
+                  <DetailTile
+                    label="Mobile phone"
+                    value={parentPhone || "Not provided"}
+                    muted={!parentPhone}
+                    icon={<IconPhone size={17} />}
+                    color="var(--sec-language)"
+                  />
+                  <DetailTile
+                    label="Member since"
+                    value={joinedDate}
+                    icon={<IconCalendar size={17} />}
+                    color="var(--sun-500)"
+                  />
                 </div>
               )}
             </Card>
@@ -463,7 +500,21 @@ function ProfileInner() {
                   const completedChecks = childChecks.filter((a) => a.completedAt).length;
 
                   return (
-                    <Card key={child.id} variant="clay" className="lift p-6 flex flex-col justify-between">
+                    <Card
+                      key={child.id}
+                      variant="clay"
+                      className="lift flex flex-col justify-between overflow-hidden !p-0"
+                    >
+                      {/* Status spine, same language as the dashboard: green
+                          once a report exists, brand tint until then. */}
+                      <div
+                        className="h-1.5 w-full"
+                        style={{
+                          background:
+                            completedChecks > 0 ? "var(--st-on-track)" : "var(--accent-line)",
+                        }}
+                      />
+                      <div className="flex flex-1 flex-col justify-between p-6">
                       <div>
                         <div className="flex items-center gap-4">
                           <Avatar name={child.name} photoUrl={child.photoUrl} size={64} ring />
@@ -483,7 +534,7 @@ function ProfileInner() {
 
                         <div className="mt-4 flex flex-wrap items-center gap-2">
                           <Badge tone="accent">
-                            Stage {stage.roman} · {stage.name}
+                            Phase {stage.roman} · {stage.name}
                           </Badge>
                           <Badge tone={completedChecks > 0 ? "success" : "neutral"}>
                             {completedChecks > 0
@@ -495,11 +546,12 @@ function ProfileInner() {
 
                       <div className="mt-6 pt-4 border-t border-line-soft flex items-center gap-2.5">
                         <ButtonLink href={`/children/${child.id}`} size="sm" variant="secondary" block>
-                          View Profile
+                          View profile
                         </ButtonLink>
                         <ButtonLink href={`/children/${child.id}/pay`} size="sm" block>
-                          New Check
+                          New check
                         </ButtonLink>
+                      </div>
                       </div>
                     </Card>
                   );
@@ -510,7 +562,7 @@ function ProfileInner() {
                 <Mascot size={80} mood="wave" className="mx-auto" />
                 <h3 className="mt-5 text-xl">No children added yet</h3>
                 <p className="mx-auto mt-2 max-w-[40ch] text-base leading-relaxed text-ink-2">
-                  Add your child&rsquo;s details to start tracking their developmental milestones and unlock stage-based reports.
+                  Add your child&rsquo;s details to start tracking their developmental milestones and unlock phase-based reports.
                 </p>
                 <ButtonLink href="/children" size="lg" className="mt-6" iconLeft={<IconPlus size={18} />}>
                   Add your first child
@@ -758,7 +810,7 @@ const COURSES = [
     accentBg: "var(--accent-soft)",
     accentColor: "var(--accent)",
     description:
-      "The flagship Kaushalya method covering all seven brain developmental stages and six competences: visual, auditory, tactile, mobility, language, and manual.",
+      "The flagship Kaushalya method covering all seven developmental phases and six competences: visual, auditory, tactile, mobility, language, and manual.",
     highlights: [
       "10 min daily guided video lessons",
       "30 min sensory & motor play kits",
@@ -767,13 +819,13 @@ const COURSES = [
     href: "https://www.kaushalyageniuskid.com",
   },
   {
-    title: "Stage-Specific Acceleration Kits",
+    title: "Phase-Specific Acceleration Kits",
     stageLabel: "Phase I–VI",
     ageRange: "Newborn to Toddler",
     accentBg: "var(--sun-100)",
     accentColor: "var(--sun-700)",
     description:
-      "Targeted neurological stimulation for Medulla, Pons, Mid-Brain, and Cortex stages to maximize neural connectivity during critical sensitive periods.",
+      "Targeted neurological stimulation for Medulla, Pons, Mid-Brain, and Cortex phases to maximize neural connectivity during critical sensitive periods.",
     highlights: [
       "Day-wise activity plans",
       "Flashcards & sensory stimulation guides",
@@ -797,6 +849,73 @@ const COURSES = [
     href: "https://www.kaushalyageniuskid.com",
   },
 ];
+
+function HeroCount({
+  value,
+  label,
+  icon,
+}: {
+  value: number | string;
+  label: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="min-w-[104px] rounded-[var(--radius)] bg-white/12 px-4 py-3 text-center backdrop-blur">
+      <span className="mb-1.5 inline-grid size-7 place-items-center rounded-full bg-white/20 text-white">
+        {icon}
+      </span>
+      <p
+        className="tnum text-2xl font-extrabold leading-none text-white"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        {value}
+      </p>
+      <p className="mt-1.5 text-xs font-bold text-white/70">{label}</p>
+    </div>
+  );
+}
+
+/**
+ * One field of the parent's account, as a tile rather than a line of text.
+ * Four labelled strings in a row read as a database dump; the same four with
+ * a tinted glyph each read as a card you own.
+ */
+function DetailTile({
+  label,
+  value,
+  icon,
+  color,
+  muted = false,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  color: string;
+  muted?: boolean;
+}) {
+  return (
+    <div
+      className="rounded-[var(--radius)] border border-line p-4"
+      style={{ background: `color-mix(in srgb, ${color} 6%, var(--surface))` }}
+    >
+      <div className="flex items-center gap-2.5">
+        <span
+          className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)]"
+          style={{ color, background: `color-mix(in srgb, ${color} 14%, var(--surface))` }}
+        >
+          {icon}
+        </span>
+        <p className="text-xs font-bold uppercase tracking-wider text-ink-3">{label}</p>
+      </div>
+      <p
+        className={`mt-2.5 truncate text-base font-bold ${muted ? "text-ink-3" : "text-ink"}`}
+        title={value}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
 
 function formatDate(iso: string): string {
   if (!iso) return "—";

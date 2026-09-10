@@ -20,8 +20,8 @@ import {
  * One page, two modes. Creating an account and signing in are the same
  * decision from the parent's side — "let me in" — and splitting them across
  * two routes just adds a navigation between someone and the thing they came
- * to do. `?next=` carries where they were heading so they land there and not
- * on a generic dashboard.
+ * to do. `?next=` carries where they were heading so a parent bounced off a
+ * page mid-task returns to it; everyone else lands on their dashboard.
  */
 export default function JoinPage() {
   return (
@@ -34,11 +34,15 @@ export default function JoinPage() {
 function JoinInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const { user, loading, signUp, signIn } = useAuth();
+  const { user, loading, signUp, signIn, resetPassword } = useAuth();
 
   const rawNext = params.get("next");
-  const next = !rawNext || rawNext === "/" || rawNext === "/join" ? "/profile" : rawNext;
-  const [mode, setMode] = useState<"signup" | "signin">(
+  // No `next` means they came here on their own rather than being bounced off
+  // a page they wanted. /dashboard is a parent's home — it is what the top-bar
+  // link, the middleware's own signed-in redirect and this page must all agree
+  // on, or "sign in" lands somewhere different depending on how you got here.
+  const next = !rawNext || rawNext === "/" || rawNext === "/join" ? "/dashboard" : rawNext;
+  const [mode, setMode] = useState<"signup" | "signin" | "forgot">(
     params.get("mode") === "signin" ? "signin" : "signup",
   );
 
@@ -50,6 +54,7 @@ function JoinInner() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   // Already signed in? Don't make them look at a login form.
   useEffect(() => {
@@ -64,7 +69,9 @@ function JoinInner() {
   const canSubmit =
     mode === "signup"
       ? nameOk && phoneOk && emailOk && passwordOk
-      : emailOk && password.length > 0;
+      : mode === "forgot"
+        ? emailOk
+        : emailOk && password.length > 0;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,6 +80,17 @@ function JoinInner() {
 
     setSubmitting(true);
     setError(null);
+
+    if (mode === "forgot") {
+      const result = await resetPassword(email.trim());
+      setSubmitting(false);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setResetSent(true);
+      return;
+    }
 
     const result =
       mode === "signup"
@@ -103,6 +121,34 @@ function JoinInner() {
     }
 
     router.replace(next);
+  }
+
+  if (resetSent) {
+    return (
+      <>
+        <TopBar nav={false} />
+        <Shell width="narrow">
+          <div className="pt-20 text-center">
+            <Mascot size={96} mood="wave" className="mx-auto" />
+            <h1 className="mt-6">Check your email</h1>
+            <p className="prose-read mx-auto mt-3 max-w-[42ch]">
+              If there&rsquo;s an account for{" "}
+              <strong className="font-bold text-ink">{email.trim()}</strong>, we&rsquo;ve sent
+              a link to reset the password — it&rsquo;s valid for a short while.
+            </p>
+            <Button
+              className="mt-8"
+              onClick={() => {
+                setMode("signin");
+                setResetSent(false);
+              }}
+            >
+              Back to sign in
+            </Button>
+          </div>
+        </Shell>
+      </>
+    );
   }
 
   if (checkEmail) {
@@ -136,10 +182,18 @@ function JoinInner() {
           <Shell width="narrow">
             <div className="text-center">
               <p className="eyebrow eyebrow-accent justify-center">
-                {mode === "signup" ? "Create your account" : "Welcome back"}
+                {mode === "signup"
+                  ? "Create your account"
+                  : mode === "forgot"
+                    ? "Reset your password"
+                    : "Welcome back"}
               </p>
               <h1 className="mt-3">
-                {mode === "signup" ? "Let's get started" : "Sign in to continue"}
+                {mode === "signup"
+                  ? "Let's get started"
+                  : mode === "forgot"
+                    ? "Forgot your password?"
+                    : "Sign in to continue"}
               </h1>
             </div>
 
@@ -187,18 +241,35 @@ function JoinInner() {
                   error="Please enter a valid email address."
                 />
 
-                <Field
-                  id="password"
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
-                  placeholder={mode === "signup" ? "At least 6 characters" : ""}
-                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                  valid={mode === "signup" ? passwordOk : password.length > 0}
-                  showError={touched && mode === "signup" && !passwordOk}
-                  error="Passwords need at least 6 characters."
-                />
+                {mode !== "forgot" && (
+                  <div>
+                    <Field
+                      id="password"
+                      label="Password"
+                      type="password"
+                      value={password}
+                      onChange={setPassword}
+                      placeholder={mode === "signup" ? "At least 6 characters" : ""}
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                      valid={mode === "signup" ? passwordOk : password.length > 0}
+                      showError={touched && mode === "signup" && !passwordOk}
+                      error="Passwords need at least 6 characters."
+                    />
+                    {mode === "signin" && (
+                      <button
+                        type="button"
+                        className="mt-2 text-sm font-semibold text-accent hover:underline"
+                        onClick={() => {
+                          setMode("forgot");
+                          setError(null);
+                          setTouched(false);
+                        }}
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {error && (
                   <div
@@ -223,26 +294,46 @@ function JoinInner() {
                   {submitting
                     ? mode === "signup"
                       ? "Creating your account…"
-                      : "Signing you in…"
+                      : mode === "forgot"
+                        ? "Sending…"
+                        : "Signing you in…"
                     : mode === "signup"
                       ? "Create account"
-                      : "Sign in"}
+                      : mode === "forgot"
+                        ? "Send reset link"
+                        : "Sign in"}
                 </Button>
               </form>
 
               <p className="mt-6 text-center text-sm text-ink-2">
-                {mode === "signup" ? "Already have an account?" : "New here?"}{" "}
-                <button
-                  type="button"
-                  className="font-bold text-accent hover:underline"
-                  onClick={() => {
-                    setMode(mode === "signup" ? "signin" : "signup");
-                    setError(null);
-                    setTouched(false);
-                  }}
-                >
-                  {mode === "signup" ? "Sign in" : "Create one"}
-                </button>
+                {mode === "forgot" ? (
+                  <button
+                    type="button"
+                    className="font-bold text-accent hover:underline"
+                    onClick={() => {
+                      setMode("signin");
+                      setError(null);
+                      setTouched(false);
+                    }}
+                  >
+                    Back to sign in
+                  </button>
+                ) : (
+                  <>
+                    {mode === "signup" ? "Already have an account?" : "New here?"}{" "}
+                    <button
+                      type="button"
+                      className="font-bold text-accent hover:underline"
+                      onClick={() => {
+                        setMode(mode === "signup" ? "signin" : "signup");
+                        setError(null);
+                        setTouched(false);
+                      }}
+                    >
+                      {mode === "signup" ? "Sign in" : "Create one"}
+                    </button>
+                  </>
+                )}
               </p>
             </Card>
 

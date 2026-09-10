@@ -144,7 +144,7 @@ export default function CourseRecommendationsPage() {
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">Course Recommendations</h1>
           <p className="mt-1 text-sm text-ink-3">
-            Courses shown at the end of the assessment report, based on the child&apos;s overall brain stage.
+            Courses shown at the end of the assessment report, based on the child&apos;s overall phase.
           </p>
         </div>
         <Button onClick={() => openAddDrawer()} variant="primary">
@@ -163,7 +163,7 @@ export default function CourseRecommendationsPage() {
               <details key={stage.id} className="group" open>
                 <summary className="cursor-pointer list-none py-2 border-b border-line-soft flex items-center justify-between">
                   <span className="text-xl font-bold text-ink">
-                    Stage {stage.roman} — {stage.name} <span className="text-sm font-normal text-ink-3 ml-2">({stage.averageMonths} months avg)</span>
+                    Phase {stage.roman} — {stage.name} <span className="text-sm font-normal text-ink-3 ml-2">({stage.averageMonths} months avg)</span>
                   </span>
                   <Badge size="sm" tone="neutral">{stageCourses.length} courses</Badge>
                 </summary>
@@ -248,14 +248,14 @@ export default function CourseRecommendationsPage() {
             
             <form onSubmit={handleSave} className="p-5 space-y-5 flex-1">
               <div>
-                <label className="block text-sm font-semibold text-ink-2 mb-1">Stage *</label>
+                <label className="block text-sm font-semibold text-ink-2 mb-1">Phase *</label>
                 <select 
                   className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"
                   value={drawerStageId}
                   onChange={e => setDrawerStageId(e.target.value)}
                   disabled={saving}
                 >
-                  {BRAIN_STAGES.map(s => <option key={s.id} value={s.id}>Stage {s.roman} - {s.name}</option>)}
+                  {BRAIN_STAGES.map(s => <option key={s.id} value={s.id}>Phase {s.roman} - {s.name}</option>)}
                 </select>
               </div>
 
