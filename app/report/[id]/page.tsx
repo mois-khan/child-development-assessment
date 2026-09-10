@@ -1086,10 +1086,10 @@ function RecommendedCourseCard({ course }: { course: AdminCourse }) {
  * lib/narrative.ts.
  */
 const STAGES = [
-  { label: "Worth a closer look", max: 50 },
-  { label: "Needs focus", max: 100 },
-  { label: "On track", max: 200 },
-  { label: "Ahead of the chart", max: Infinity },
+  { label: "Significant Developmental Delay", max: 50 },
+  { label: "Mild Developmental Gaps", max: 100 },
+  { label: "Typically Developing", max: 200 },
+  { label: "Advaned Development", max: Infinity },
 ] as const;
 
 function stagePosition(value: number): { index: number; frac: number } {
