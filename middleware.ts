@@ -18,6 +18,7 @@ const PAGE_GATE: Record<string, string> = {
   "/admin/milestone-videos": "milestone-videos",
   "/admin/courses":          "courses",
   "/admin/users":            "users",
+  "/admin/schools":          "schools",
 };
 
 /**
@@ -101,9 +102,13 @@ export async function middleware(request: NextRequest) {
 
   // ── Parent-only routes ─────────────────────────────────────────────────────
   //
-  // Everything a signed-in parent owns. /dashboard is their home, so an
-  // unauthenticated hit on it goes to /join like any other private page.
+  // Everything a signed-in account owns — a school owns children and
+  // assessments exactly the way a parent does (see 0007_schools.sql), so
+  // this list gates by "signed in" rather than by account type. /dashboard
+  // is the one exception, handled separately below: it's a parent's home,
+  // and a school has its own at /school.
   const PARENT_ONLY = ["/dashboard", "/children", "/assessment", "/report", "/profile"];
+  const SCHOOL_ONLY = ["/school"];
 
   // ── Routes that only make sense signed OUT ─────────────────────────────────
   //
@@ -112,7 +117,9 @@ export async function middleware(request: NextRequest) {
   // they already bought, and /join is a form for an account they already have.
   const SIGNED_OUT_ONLY = ["/", "/join"];
 
-  const needsAuth = PARENT_ONLY.some((p) => path === p || path.startsWith(p + "/"));
+  const isSchoolPath = SCHOOL_ONLY.some((p) => path === p || path.startsWith(p + "/"));
+  const needsAuth =
+    isSchoolPath || PARENT_ONLY.some((p) => path === p || path.startsWith(p + "/"));
   const isSignedOutOnly = SIGNED_OUT_ONLY.includes(path);
 
   // With no credentials configured (a fresh clone, CI) there is no session to
@@ -137,6 +144,28 @@ export async function middleware(request: NextRequest) {
       );
     }
 
+    // A school's home is /school; a parent's is /dashboard. The two are
+    // mutually exclusive, so a signed-in account on the wrong one is sent
+    // straight to its own rather than shown an empty state for a family
+    // (or roster) it doesn't have. Only checked on these two paths — every
+    // other PARENT_ONLY route (children, assessment, report, profile)
+    // already scopes correctly by profile_id regardless of account type.
+    if (user && (path === "/dashboard" || isSchoolPath)) {
+      const { data: schoolRow } = await supabase
+        .from("schools")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+      const isSchool = !!schoolRow;
+
+      if (path === "/dashboard" && isSchool) {
+        return NextResponse.redirect(new URL("/school", request.url));
+      }
+      if (isSchoolPath && !isSchool) {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+    }
+
     if (isSignedOutOnly && user) {
       // /join carries ?next= when something bounced the visitor here. Honour
       // it — a parent who clicked a report link and got asked to sign in
@@ -154,9 +183,20 @@ export async function middleware(request: NextRequest) {
         .select("id")
         .eq("id", user.id)
         .maybeSingle();
+      if (adminRow) {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+
+      // Same idea for a school account: /dashboard is a parent's family
+      // overview, and a school signing in has no family — it has a roster.
+      const { data: schoolRow } = await supabase
+        .from("schools")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
 
       return NextResponse.redirect(
-        new URL(adminRow ? "/admin" : "/dashboard", request.url)
+        new URL(schoolRow ? "/school" : "/dashboard", request.url)
       );
     }
   }

@@ -30,15 +30,28 @@ const SIGNED_IN: [string, string][] = [
   ["/profile", "Parent profile"],
 ];
 
+/** A school account owns children the same way a parent does (see
+ *  0007_schools.sql), but "My children" and "Parent profile" describe a
+ *  family, not a roster — same destinations, words a school recognises. */
+const SIGNED_IN_SCHOOL: [string, string][] = [
+  ["/school", "Dashboard"],
+  ["/children", "Students"],
+  ["/profile", "School account"],
+];
+
 export function MainNav() {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
 
   // Rendering the signed-out set while we find out, then swapping it, makes
   // the bar visibly rewrite itself on every load. An empty nav for that beat
   // is quieter, and the logo and auth buttons hold the bar's height anyway.
   if (loading) return <nav className="hidden md:flex" aria-hidden="true" />;
 
-  const links = user ? SIGNED_IN : SIGNED_OUT;
+  const links = !user
+    ? SIGNED_OUT
+    : profile?.accountType === "school"
+      ? SIGNED_IN_SCHOOL
+      : SIGNED_IN;
 
   return (
     <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
@@ -62,17 +75,19 @@ export function MainNav() {
  * more than it gives.
  */
 export function MobileNav() {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   const pathname = usePathname();
 
   if (loading || !user) return null;
+
+  const links = profile?.accountType === "school" ? SIGNED_IN_SCHOOL : SIGNED_IN;
 
   return (
     <nav
       className="flex items-center gap-1.5 overflow-x-auto border-t border-line-soft px-4 py-2 md:hidden"
       aria-label="Main"
     >
-      {SIGNED_IN.map(([href, label]) => {
+      {links.map(([href, label]) => {
         const active = pathname === href || pathname?.startsWith(href + "/");
         return (
           <Link

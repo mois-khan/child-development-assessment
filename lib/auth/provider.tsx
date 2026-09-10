@@ -12,6 +12,7 @@ import {
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import type { AccountType } from "@/lib/supabase/database.types";
 
 /**
  * Who is signed in, app-wide.
@@ -21,18 +22,27 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
  * disagreeing about whether someone is logged in.
  */
 
-export interface ParentProfile {
+/**
+ * The signed-in account's own profile row — a parent or a school, the two
+ * account_type values a profiles row can hold (staff never reach this
+ * provider; they have their own session in lib/admin/auth.ts). `school`
+ * is only present for a school account, carrying what the schools table
+ * adds on top of the shared profiles fields.
+ */
+export interface AccountProfile {
   id: string;
   fullName: string;
   phone: string;
   email: string;
   createdAt: string;
+  accountType: AccountType;
+  school: { name: string; contactName: string; contactPhone: string } | null;
 }
 
 interface AuthState {
   /** undefined while we're still finding out — distinct from "signed out". */
   user: User | null | undefined;
-  profile: ParentProfile | null;
+  profile: AccountProfile | null;
   loading: boolean;
   signUp: (input: SignUpInput) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
@@ -58,28 +68,52 @@ const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null | undefined>(undefined);
-  const [profile, setProfile] = useState<ParentProfile | null>(null);
+  const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (id: string) => {
     const supabase = getSupabaseBrowserClient();
     const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, phone, email, created_at")
+      .select("id, full_name, phone, email, created_at, account_type")
       .eq("id", id)
       .maybeSingle();
 
-    setProfile(
-      data
-        ? {
-            id: data.id as string,
-            fullName: (data.full_name as string) ?? "",
-            phone: (data.phone as string) ?? "",
-            email: (data.email as string) ?? "",
-            createdAt: data.created_at as string,
-          }
-        : null,
-    );
+    if (!data) {
+      setProfile(null);
+      return;
+    }
+
+    const accountType = (data.account_type as AccountType) ?? "parent";
+
+    // A school's own institutional details live in a second table (see
+    // 0007_schools.sql) — one extra row-fetch, only for the account type
+    // that has one, rather than an always-null join for every parent.
+    let school: AccountProfile["school"] = null;
+    if (accountType === "school") {
+      const { data: schoolRow } = await supabase
+        .from("schools")
+        .select("school_name, contact_name, contact_phone")
+        .eq("id", id)
+        .maybeSingle();
+      if (schoolRow) {
+        school = {
+          name: schoolRow.school_name,
+          contactName: schoolRow.contact_name,
+          contactPhone: schoolRow.contact_phone,
+        };
+      }
+    }
+
+    setProfile({
+      id: data.id as string,
+      fullName: (data.full_name as string) ?? "",
+      phone: (data.phone as string) ?? "",
+      email: (data.email as string) ?? "",
+      createdAt: data.created_at as string,
+      accountType,
+      school,
+    });
   }, []);
 
   useEffect(() => {

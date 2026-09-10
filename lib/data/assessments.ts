@@ -154,8 +154,18 @@ export async function completeAssessment(id: string): Promise<void> {
       completed_at: new Date().toISOString()
     })
     .eq("id", id);
-    
+
   if (error) throw error;
+
+  // Best-effort: the report existing is the actual outcome of this
+  // function, and a failed or slow notification call must never turn into
+  // a failed completion. See app/api/notifications/report-ready for why
+  // this can't just be a second Supabase write from here.
+  fetch("/api/notifications/report-ready", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assessmentId: id }),
+  }).catch(() => {});
 }
 
 export async function deleteAssessment(id: string): Promise<void> {

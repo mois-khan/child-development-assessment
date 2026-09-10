@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MainNav, MobileNav } from "@/components/main-nav";
 import { AuthNav } from "@/components/auth-nav";
+import { NotificationBell } from "@/components/NotificationBell";
 import { cx } from "./primitives";
 
 /* ══ brand ═════════════════════════════════════════════════════════════════ */
@@ -134,6 +135,7 @@ export function TopBar({
         </div>
         <div className="flex items-center gap-2">
           {right}
+          <NotificationBell />
           <AuthNav />
         </div>
       </div>

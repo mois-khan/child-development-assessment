@@ -1,6 +1,5 @@
 /**
- * Database types, mirroring supabase/migrations/0001_core.sql and
- * 0002_recommendations.sql.
+ * Database types, mirroring supabase/migrations/0001 through 0008.
  *
  * Hand-written rather than generated: `supabase gen types` runs through the
  * management API, which is currently refusing requests for this org. Keep
@@ -45,6 +44,8 @@ export type MilestoneVideoDomain =
   | "vision" | "auditory" | "tactile" | "mobility" | "language" | "hand";
 export type ItemBankKind = "yesno" | "choice" | "count" | "percent" | "text";
 export type ItemBankSource = "ACE" | "AUTHORED";
+export type AccountType = "parent" | "school";
+export type NotificationType = "report_ready" | "reminder" | "broadcast";
 
 
 export interface Database {
@@ -62,6 +63,7 @@ export interface Database {
           full_name: string;
           phone: string;
           email: string;
+          account_type: AccountType;
           created_at: string;
           updated_at: string;
         };
@@ -70,8 +72,37 @@ export interface Database {
           full_name?: string;
           phone?: string;
           email?: string;
+          account_type?: AccountType;
         };
         Update: { full_name?: string; phone?: string; email?: string };
+        Relationships: [];
+      };
+      schools: {
+        Row: {
+          id: string;
+          school_name: string;
+          contact_name: string;
+          contact_phone: string;
+          address: string;
+          city: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          school_name: string;
+          contact_name?: string;
+          contact_phone?: string;
+          address?: string;
+          city?: string;
+        };
+        Update: {
+          school_name?: string;
+          contact_name?: string;
+          contact_phone?: string;
+          address?: string;
+          city?: string;
+        };
         Relationships: [];
       };
       leads: {
@@ -405,10 +436,52 @@ export interface Database {
         };
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: NotificationType;
+          title: string;
+          body: string;
+          url: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          type: NotificationType;
+          title: string;
+          body?: string;
+          url?: string | null;
+        };
+        Update: { read_at?: string | null };
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth_key: string;
+          user_agent: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth_key: string;
+          user_agent?: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: Record<never, never>;
     Functions: {
       is_admin: { Args: Record<never, never>; Returns: boolean };
+      is_school: { Args: Record<never, never>; Returns: boolean };
       has_page_access: { Args: { page: string }; Returns: boolean };
     };
     Enums: Record<never, never>;

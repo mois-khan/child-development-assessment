@@ -363,3 +363,22 @@ export function IconRefresh(p: IconProps) {
     </Svg>
   );
 }
+
+export function IconSchool(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 3.5 3 8l9 4.5 9-4.5-9-4.5Z" />
+      <path d="M7 10.3v5c0 1.4 2.2 2.7 5 2.7s5-1.3 5-2.7v-5" />
+      <path d="M21 8v6.5" />
+    </Svg>
+  );
+}
+
+export function IconBell(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M6 10.5a6 6 0 1 1 12 0c0 3.4 1 5 2 6.2H4c1-1.2 2-2.8 2-6.2Z" />
+      <path d="M10 19a2 2 0 0 0 4 0" />
+    </Svg>
+  );
+}
