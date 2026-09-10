@@ -127,13 +127,13 @@ export default function AdminQuestionBankPage() {
                 ? changed === 0
                   ? "Live · no changes yet"
                   : `Live · ${changed} question${changed === 1 ? "" : "s"} changed`
-                : "Dev mode — edits save to this browser only"}
+                : "Dev mode: edits save to this browser only"}
             </Badge>
           )}
         </div>
         <p className="mt-1.5 max-w-[62ch] text-sm text-ink-3">
           Editing here doesn&rsquo;t touch{" "}
-          <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">content/items.ts</code> — your
+          <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">content/items.ts</code>; your
           changes are stored as a layer on top of it, so &ldquo;Revert&rdquo; always restores the
           booklet&rsquo;s own wording.{" "}
           {shared

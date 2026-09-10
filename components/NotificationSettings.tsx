@@ -77,10 +77,10 @@ export function NotificationSettings() {
           <p className="text-base font-extrabold text-ink">Notifications on this device</p>
           <p className="mt-1 max-w-[46ch] text-sm text-ink-3">
             {status === "denied"
-              ? "Blocked in your browser settings — this app can't ask again until you allow it there."
+              ? "Blocked in your browser settings; this app can't ask again until you allow it there."
               : status === "on"
                 ? "You'll get an alert on this device the moment a report is ready."
-                : "Get an alert on this device the moment a report is ready — no need to keep checking back."}
+                : "Get an alert on this device the moment a report is ready; no need to keep checking back."}
           </p>
           {error && <p className="mt-1 text-sm font-semibold text-[var(--st-consult)]">{error}</p>}
         </div>

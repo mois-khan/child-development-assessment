@@ -84,7 +84,7 @@ export function NotificationBell() {
           <div className="thin-scroll max-h-[24rem] overflow-y-auto">
             {items.length === 0 ? (
               <p className="px-4 py-8 text-center text-sm text-ink-3">
-                Nothing yet — check back after your next report.
+                Nothing yet; check back after your next report.
               </p>
             ) : (
               items.map((n) => (

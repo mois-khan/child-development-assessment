@@ -197,7 +197,7 @@ function AdminLoginInner() {
                 <code className="rounded bg-surface-2 px-1.5 py-0.5 text-sm">
                   .env.local
                 </code>
-                . Until then, use the dev session below to explore the admin portal — it only
+                . Until then, use the dev session below to explore the admin portal; it only
                 affects this browser and has no real access control.
               </p>
               <Button block onClick={handleDevContinue}>

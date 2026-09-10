@@ -92,7 +92,7 @@ export default function AdminLeadsPage() {
           </div>
           <p className="mt-1.5 max-w-[62ch] text-sm text-ink-3">
             Every signup shows up here as a lead worth calling, whether or not they&rsquo;ve
-            added a child yet. Log what happens on each call — the date and the verdict
+            added a child yet. Log what happens on each call: the date and the verdict
             decide when it needs following up again.
           </p>
         </div>

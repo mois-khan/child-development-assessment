@@ -196,7 +196,7 @@ export default function MilestoneVideosPage() {
                   <summary className="cursor-pointer list-none py-2 text-lg font-bold text-ink">
                     Phase {stage.roman} &middot; {domain.name}
                     {cellVideos.length === 0 && (
-                      <span className="ml-2 text-sm font-semibold text-ink-3">— no videos yet</span>
+                      <span className="ml-2 text-sm font-semibold text-ink-3">&middot; no videos yet</span>
                     )}
                   </summary>
                   <div className="mt-3 space-y-3 pl-4 border-l-2 border-line-soft">

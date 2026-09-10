@@ -62,7 +62,7 @@ export default function SchoolsPage() {
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">Schools</h1>
           <p className="mt-1 text-sm text-ink-3">
-            One login, many students. Invite a school after the deal is closed — they set
+            One login, many students. Invite a school after the deal is closed; they set
             their own password and see every student they add.
           </p>
         </div>

@@ -48,14 +48,14 @@ const STEPS: {
 }[] = [
   {
     title: "Add your child",
-    body: "Name, birthday, a photo if you like. We work out their age and pick the exact module built for it — nothing you see will be irrelevant.",
+    body: "Name, birthday, a photo if you like. We work out their age and pick the exact module built for it; nothing you see will be irrelevant.",
     image: "/images/play-blocks.jpg",
     alt: "A baby playing with wooden blocks",
     tint: "var(--sec-manual)",
   },
   {
     title: "Answer what you see today",
-    body: "Short, friendly questions — one at a time, each with a simple way to check together. Around ten minutes, and you can stop and come back.",
+    body: "Short, friendly questions, one at a time, each with a simple way to check together. Around ten minutes, and you can stop and come back.",
     image: "/images/parent-reading.jpg",
     alt: "A parent reading a book with their child",
     tint: "var(--sec-language)",
@@ -106,7 +106,7 @@ export default function Home() {
                   style={{ animationDelay: "120ms" }}
                 >
                   A ten-minute milestone check across the six areas of your child&rsquo;s brain
-                  development — with a keepsake report, videos, and the exact next step for
+                  development, with a keepsake report, videos, and the exact next step for
                   the stage they&rsquo;re in right now.
                 </p>
 
@@ -335,7 +335,7 @@ export default function Home() {
                 <SectionHeading
                   eyebrow="The report"
                   title="A keepsake, not a verdict"
-                  description="Every check ends with a report written in plain language — no jargon, no scores you have to decode. It lives on your child's profile so you can open or download it any time."
+                  description="Every check ends with a report written in plain language, no jargon, no scores you have to decode. It lives on your child's profile so you can open or download it any time."
                 />
                 <ul className="mt-7 list-none space-y-3.5 p-0">
                   {[
@@ -381,7 +381,7 @@ export default function Home() {
                 <Mascot size={78} mood="wave" className="mx-auto" />
                 <h2 className="mt-5 text-white">Ready when you are.</h2>
                 <p className="mx-auto mt-3 max-w-[46ch] text-base leading-relaxed text-white/80">
-                  Find a calm ten minutes with your child nearby — some questions ask you to
+                  Find a calm ten minutes with your child nearby; some questions ask you to
                   try something fun together.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

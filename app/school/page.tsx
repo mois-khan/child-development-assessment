@@ -203,7 +203,7 @@ export default function SchoolDashboardPage() {
                     {totals.students === 0
                       ? "Add your first student and we'll work out exactly which of the seven phases they're on."
                       : totals.inProgress > 0
-                        ? `${totals.inProgress} check${totals.inProgress === 1 ? "" : "s"} part-way through — pick up where a student stopped.`
+                        ? `${totals.inProgress} check${totals.inProgress === 1 ? "" : "s"} part-way through; pick up where a student stopped.`
                         : `${totals.reportsReady} of ${totals.students} students have a report ready.`}
                   </p>
                 )}
@@ -308,7 +308,7 @@ export default function SchoolDashboardPage() {
                   <div>
                     <p className="text-lg font-extrabold text-ink">No students yet</p>
                     <p className="mt-1 max-w-[36ch] text-sm text-ink-3">
-                      Add your first student and their guardian&rsquo;s email — that&rsquo;s all it
+                      Add your first student and their guardian&rsquo;s email, that&rsquo;s all it
                       takes to start their first check.
                     </p>
                   </div>
@@ -351,7 +351,7 @@ function StatTile({
   return (
     <Link
       href={href}
-      title={hint ? `${label} — ${hint}` : undefined}
+      title={hint ? `${label}: ${hint}` : undefined}
       aria-label={hint ? `${label}: ${value}. ${hint}.` : undefined}
       className="lift relative block overflow-hidden rounded-2xl px-5 py-6 text-white transition-transform"
       style={{ background: gradient }}

@@ -54,7 +54,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     vision: [
       {
         t: "Do your child's pupils dilate in a dark room?",
-        h: "Take them into a dark room for a minute, then look closely at the black centre of each eye — it should have grown wider.",
+        h: "Take them into a dark room for a minute, then look closely at the black centre of each eye; it should have grown wider.",
       },
     ],
     auditory: [
@@ -64,7 +64,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Does your child react appropriately to sudden sounds?",
-        h: "After the startle, watch whether they settle again — rather than staying distressed, or not reacting at all.",
+        h: "After the startle, watch whether they settle again, rather than staying distressed, or not reacting at all.",
       },
     ],
     tactile: [
@@ -76,7 +76,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     mobility: [
       {
         t: "Does your child move his arms and legs freely?",
-        h: "Watch during a nappy change — look for easy, similar movement on both sides.",
+        h: "Watch during a nappy change, look for easy, similar movement on both sides.",
       },
       {
         t: "Are his arms and/or legs too tight or too floppy?",
@@ -117,13 +117,13 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     auditory: [
       {
         t: "Does your child follow or respond to loud and threatening sounds?",
-        h: "Notice what happens with a door slam, a cooker whistle or a horn — look for turning towards it, freezing, or crying.",
+        h: "Notice what happens with a door slam, a cooker whistle or a horn; look for turning towards it, freezing, or crying.",
       },
     ],
     tactile: [
       {
         t: "Does your child have an immediate response to pain in all the areas of his body?",
-        h: "Notice their reaction to ordinary knocks in different places — arms, legs, back, feet.",
+        h: "Notice their reaction to ordinary knocks in different places: arms, legs, back, feet.",
       },
       {
         t: "Does your child have an appropriate response to hot and cold?",
@@ -141,7 +141,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Does your child crawl in a smooth cross pattern?",
-        h: "Watch which limbs move together — a cross pattern is right arm with left leg, then left arm with right leg.",
+        h: "Watch which limbs move together: a cross pattern is right arm with left leg, then left arm with right leg.",
       },
     ],
     language: [
@@ -151,7 +151,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Is his cry appropriately loud?",
-        h: "Listen from the next room — you should hear it clearly through a closed door.",
+        h: "Listen from the next room; you should hear it clearly through a closed door.",
       },
     ],
     hand: [
@@ -171,7 +171,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     vision: [
       {
         t: "Does your child recognise many familiar objects?",
-        h: "Hold up things they know — a bottle, a favourite toy, a spoon — one at a time, and watch for a change in their face or for reaching.",
+        h: "Hold up things they know (a bottle, a favourite toy, a spoon), one at a time, and watch for a change in their face or for reaching.",
       },
       {
         t: "Does your child recognise your face without any sound or touch clues?",
@@ -193,7 +193,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Does your child react appropriately to everyday noises in the house?",
-        h: "Watch their response to the doorbell, a mixer, running water — interested rather than alarmed or blank.",
+        h: "Watch their response to the doorbell, a mixer, running water: interested rather than alarmed or blank.",
       },
     ],
     tactile: [
@@ -231,13 +231,13 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Does he make the full range of sounds of a well seven-month-old?",
-        h: "Listen for babbling with consonants — 'ba', 'da', 'ma' — repeated in strings, not just vowel sounds.",
+        h: "Listen for babbling with consonants ('ba', 'da', 'ma') repeated in strings, not just vowel sounds.",
       },
     ],
     hand: [
       {
         t: "Does your child spontaneously reach out and pick up objects?",
-        h: "Put a toy within arm's reach and wait, without offering it — watch for them going for it themselves.",
+        h: "Put a toy within arm's reach and wait, without offering it; watch for them going for it themselves.",
       },
       {
         t: "Does he do so equally well with both hands?",
@@ -251,7 +251,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     vision: [
       {
         t: "Are your child's eyes consistently straight throughout the day?",
-        h: "Watch both eyes at different times — morning, after a nap, in the evening — and check they point the same way together.",
+        h: "Watch both eyes at different times (morning, after a nap, in the evening) and check they point the same way together.",
       },
       {
         t: "Even if your child is tired, sick or upset, do his eyes remain perfectly straight?",
@@ -261,7 +261,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     auditory: [
       {
         t: "Does your child consistently respond to two or more words?",
-        h: "From another part of the room, say two words they know — their name, and 'milk' — and see whether each one gets a reliable response.",
+        h: "From another part of the room, say two words they know (their name, and 'milk') and see whether each one gets a reliable response.",
       },
     ],
     tactile: [
@@ -281,7 +281,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Does your child walk across the room with his arms up in the air for balance?",
-        h: "Watch where the arms sit while they walk — at this stage they are up, at or above shoulder height.",
+        h: "Watch where the arms sit while they walk; at this stage they are up, at or above shoulder height.",
       },
       {
         t: "Does your child stand up without support?",
@@ -320,10 +320,10 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     vision: [
       {
         t: "Does your child know pictures?",
-        h: "Show a picture book and ask them to point to something they know — a dog, a car, a cup.",
+        h: "Show a picture book and ask them to point to something they know: a dog, a car, a cup.",
       },
       {
-        t: "Does your child recognise traffic signals — the difference between red, amber and green?",
+        t: "Does your child recognise traffic signals, the difference between red, amber and green?",
         h: "At a signal, or with three coloured cards, ask which one means stop and which means go.",
       },
     ],
@@ -339,7 +339,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Does your child respond to directions?",
-        h: "Give one simple instruction with no gesture — 'bring me your shoe' — and see whether they act on it.",
+        h: "Give one simple instruction with no gesture ('bring me your shoe') and see whether they act on it.",
       },
       {
         t: "Please give an example of a direction he follows",
@@ -372,7 +372,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Does your child walk with his arms down?",
-        h: "Watch the arms while they walk — hanging and swinging by the sides, not held up for balance.",
+        h: "Watch the arms while they walk: hanging and swinging by the sides, not held up for balance.",
       },
     ],
     language: [
@@ -429,7 +429,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Does he follow two or three-step instructions?",
-        h: "Ask for a chain — 'pick up your cup, put it in the sink, then come here' — without repeating yourself.",
+        h: "Ask for a chain ('pick up your cup, put it in the sink, then come here') without repeating yourself.",
       },
       {
         t: "Please give an example",
@@ -439,7 +439,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     ],
     tactile: [
       {
-        t: "Does your child determine the characteristics of objects by touch alone — hard, soft, fuzzy, sticky?",
+        t: "Does your child determine the characteristics of objects by touch alone: hard, soft, fuzzy, sticky?",
         h: "Eyes closed, hand them a stone, some cotton wool and sticky tape, and ask what each one feels like.",
       },
       {
@@ -474,7 +474,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
       },
       {
         t: "Does he speak consistently in short sentences?",
-        h: "Listen for three or more words joined with proper structure, most times they speak — not just occasionally.",
+        h: "Listen for three or more words joined with proper structure, most times they speak, not just occasionally.",
       },
       {
         t: "Please give an example",
@@ -561,7 +561,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     mobility: [
       {
         t: "Can your child balance on one foot?",
-        h: "Ask them to stand on one leg and count — several seconds without putting the other foot down.",
+        h: "Ask them to stand on one leg and count; several seconds without putting the other foot down.",
       },
       {
         t: "Which foot does he prefer?",
@@ -588,7 +588,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
     language: [
       {
         t: "Does your child speak as well as an average six-year-old?",
-        h: "Ask them to explain something that happened — listen for a full account, in order, that a stranger would follow.",
+        h: "Ask them to explain something that happened; listen for a full account, in order, that a stranger would follow.",
       },
       {
         t: "Does your child speak at his age level?",

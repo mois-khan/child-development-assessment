@@ -98,7 +98,7 @@ function ResetPasswordInner() {
                 <Mascot size={96} mood="wave" className="mx-auto" />
                 <h1 className="mt-6">This link isn&rsquo;t valid</h1>
                 <p className="prose-read mx-auto mt-3 max-w-[42ch]">
-                  It may have expired or already been used — reset links are only good for one
+                  It may have expired or already been used; reset links are only good for one
                   use. Ask for a new one from the sign-in page.
                 </p>
                 <Button className="mt-8" onClick={() => router.replace("/join?mode=signin")}>

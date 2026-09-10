@@ -128,7 +128,7 @@ export function TopBar({
           screen and stole that height from the content on every scroll. */}
       <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6">
-          <Link href="/" aria-label="Kaushalya Developmental Screening Platform — home" className="shrink-0">
+          <Link href="/" aria-label="Kaushalya Developmental Screening Platform: home" className="shrink-0">
             <Wordmark />
           </Link>
           {nav && <MainNav />}
@@ -154,7 +154,7 @@ export function Footer() {
           <div className="sm:col-span-2">
             <Wordmark height={38} />
             <p className="mt-4 max-w-[42ch] text-sm leading-relaxed text-ink-2">
-              A gentle revolution to make the world a better place — helping every child
+              A gentle revolution to make the world a better place, helping every child
               actualise the genius they were born with, in the first six golden years.
             </p>
           </div>

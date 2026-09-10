@@ -85,7 +85,7 @@ export default function AdminDashboardPage() {
             <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-white/10 px-4 py-3 backdrop-blur-sm">
               <IconShield size={16} className="mt-px shrink-0 text-white/80" />
               <p className="text-sm font-semibold text-white">
-                {urgentCount} item{urgentCount !== 1 ? "s" : ""} need attention today —{" "}
+                {urgentCount} item{urgentCount !== 1 ? "s" : ""} need attention today:{" "}
                 <Link href="/admin/leads" className="underline underline-offset-2 opacity-80 hover:opacity-100">
                   view leads
                 </Link>
@@ -155,7 +155,7 @@ export default function AdminDashboardPage() {
             <ActionCard
               value={counts.needsFollowUp}
               label="Need Attention"
-              note="Developmental concern — call them"
+              note="Developmental concern: call them"
               icon={<IconShield size={18} />}
               color="var(--st-consult)"
               soft="var(--st-consult-soft)"

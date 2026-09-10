@@ -43,7 +43,7 @@ export function summary(result: AssessmentResult, child: Child): string[] {
   paras.push(
     result.corrected
       ? `${name} is ${formatAge(result.chronologicalMonths)} old. Because ${name} was born early, this report compares them against a corrected age of ${age}, which is the standard way to read development for children born before 37 weeks.`
-      : `${name} is ${age} old. This report places them on the Developmental Profile — seven stages of brain development, checked across six areas — and compares where they are against the age the chart expects each stage to be reached.`,
+      : `${name} is ${age} old. This report places them on the Developmental Profile (seven stages of brain development, checked across six areas) and compares where they are against the age the chart expects each stage to be reached.`,
   );
 
   if (result.suppressDq) {
@@ -112,7 +112,7 @@ export function summary(result: AssessmentResult, child: Child): string[] {
           : `Every child has strengths to build on, and this report is a starting point rather than a verdict.`,
       );
       paras.push(
-        `Several areas are further behind than the chart's own range allows for. We would suggest arranging an assessment with a developmental paediatrician or a child therapist, who can look at this properly in person. This is a screening result, not a diagnosis — but it is worth acting on rather than waiting.`,
+        `Several areas are further behind than the chart's own range allows for. We would suggest arranging an assessment with a developmental paediatrician or a child therapist, who can look at this properly in person. This is a screening result, not a diagnosis, but it is worth acting on rather than waiting.`,
       );
       paras.push(
         `In the meantime, the activities below are still worth doing, and early support makes a real difference at this age.`,
@@ -132,7 +132,7 @@ export function domainNote(score: DomainScore, child: Child): string {
     return `${name} has not yet reached the first stage of the chart in ${domain}. This is the area we would most want a professional to look at properly.`;
   }
 
-  const reached = `${name} has reached stage ${stage.roman}, ${stage.name}, in ${domain} — “${score.cell.description.toLowerCase()}”`;
+  const reached = `${name} has reached stage ${stage.roman}, ${stage.name}, in ${domain}: “${score.cell.description.toLowerCase()}”`;
   const expected = `The chart expects this stage at about ${months(stage.averageMonths)}`;
 
   switch (score.status) {
@@ -182,7 +182,7 @@ export function nextSteps(result: AssessmentResult, child: Child): string[] {
 }
 
 export const DISCLAIMER =
-  "This is a developmental screening tool, not a diagnosis. It is based on parent report and is designed to show where a child may benefit from extra support or a closer look by a professional. It cannot diagnose any condition. If you have concerns about your child's development, speak to your doctor — whatever this report says.";
+  "This is a developmental screening tool, not a diagnosis. It is based on parent report and is designed to show where a child may benefit from extra support or a closer look by a professional. It cannot diagnose any condition. If you have concerns about your child's development, speak to your doctor, whatever this report says.";
 
 function capitalise(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);

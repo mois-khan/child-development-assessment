@@ -44,7 +44,7 @@ export function MilestoneVideoRow({ stageId, domain, domainName }: MilestoneVide
 
   return (
     <div className="mt-6 border-t border-line-soft pt-5">
-      <p className="eyebrow mb-3">🎬 Milestone Videos — {domainName}</p>
+      <p className="eyebrow mb-3">🎬 Milestone Videos &middot; {domainName}</p>
       <div className="flex gap-3 overflow-x-auto pb-2 no-print">
         {videos.map(video => <VideoCard key={video.id} video={video} />)}
       </div>

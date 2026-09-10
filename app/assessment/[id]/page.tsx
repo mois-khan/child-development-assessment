@@ -460,7 +460,7 @@ export default function AssessmentPage({
                 type="button"
                 onClick={() => router.push(`/children/${record.child.id}`)}
                 aria-label={`Save and exit ${record.child.name}'s check`}
-                title="Your answers are saved — come back any time"
+                title="Your answers are saved, come back any time"
                 className="btn btn-ghost !min-h-11 !min-w-11 !px-0"
               >
                 <IconClose size={18} />
@@ -636,7 +636,7 @@ function StageChange({
       <p className="lede mx-auto mt-3 max-w-[44ch]">
         {up
           ? `${childName} has everything at stage ${from.roman}. A few questions from stage ${to.roman} will show us how much further they've got.`
-          : `We haven't found ${childName}'s level yet, so we'll try stage ${to.roman}. Finding where a child actually is takes a few more questions — that's the whole point of this part.`}
+          : `We haven't found ${childName}'s level yet, so we'll try stage ${to.roman}. Finding where a child actually is takes a few more questions, and that's the whole point of this part.`}
       </p>
 
       <div className="mt-7 flex justify-center">
@@ -740,13 +740,13 @@ function SectionIntro({
       </Button>
 
       <p className="mt-6 text-sm text-ink-3">
-        Answer for what they do <em>now</em> — &ldquo;no&rdquo; is just as useful an
+        Answer for what they do <em>now</em>: &ldquo;no&rdquo; is just as useful an
         answer, and is how we find their level.
       </p>
 
       {index === 0 && (
         <p className="mt-2 text-sm text-ink-3">
-          The XP counter at the top is just a bit of fun as you go — it doesn&rsquo;t
+          The XP counter at the top is just a bit of fun as you go; it doesn&rsquo;t
           affect the result.
         </p>
       )}
@@ -973,7 +973,7 @@ function ObservationInput({
           onClick={onNext}
           className="btn btn-ghost text-sm"
         >
-          I&rsquo;m not sure — skip
+          I&rsquo;m not sure, skip
         </button>
       </div>
 
@@ -1027,7 +1027,7 @@ function SectionComplete({
       <p className="eyebrow eyebrow-accent mt-6 justify-center">Section complete</p>
       <h1 className="mt-3">{CHEERS[(starsEarned - 1) % CHEERS.length]}</h1>
       <p className="lede mx-auto mt-3 max-w-[42ch]">
-        {name} is done for {childName} — that&rsquo;s{" "}
+        {name} is done for {childName}, that&rsquo;s{" "}
         <strong className="whitespace-nowrap font-bold text-ink">
           +{XP_PER_SECTION} XP
         </strong>{" "}
@@ -1113,7 +1113,7 @@ function FinishView({
       <p className="lede mx-auto mt-3 max-w-[42ch]">
         {complete
           ? `You answered all ${answered} questions about ${childName}. Submit to build their report.`
-          : "You can submit without these — we leave them out rather than counting them as a no."}
+          : "You can submit without these; we leave them out rather than counting them as a no."}
       </p>
 
       <div className="mx-auto mt-8 grid max-w-[26rem] grid-cols-3 gap-3">
@@ -1183,7 +1183,7 @@ function Celebration({ name, xp }: { name: string; xp: number }) {
           Amazing work!
         </h1>
         <p className="lede animate-rise mt-3" style={{ animationDelay: "240ms" }}>
-          {name}&rsquo;s report is ready — {xp} XP earned.
+          {name}&rsquo;s report is ready, {xp} XP earned.
         </p>
       </div>
     </div>

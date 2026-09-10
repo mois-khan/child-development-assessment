@@ -31,32 +31,32 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
   // ── Listening & Understanding ────────────────────────────────────────────
   auditory: {
     a1: [
-      ["Sound from every side", "While your baby is calm and awake, shake a rattle softly about 30 cm away — first to the left, then the right, then above. Pause after each. You are looking for the eyes or head to turn towards it.", "A rattle, or rice in a small closed tin", 5, "Twice a day"],
-      ["Name the sound", "Whenever a sound happens — a doorbell, a pressure cooker, a bird — pause, look at your baby and name it. “That's the door!” This links sound to meaning long before words arrive.", "Nothing", 2, "Whenever it happens"],
+      ["Sound from every side", "While your baby is calm and awake, shake a rattle softly about 30 cm away: first to the left, then the right, then above. Pause after each. You are looking for the eyes or head to turn towards it.", "A rattle, or rice in a small closed tin", 5, "Twice a day"],
+      ["Name the sound", "Whenever a sound happens (a doorbell, a pressure cooker, a bird), pause, look at your baby and name it. “That's the door!” This links sound to meaning long before words arrive.", "Nothing", 2, "Whenever it happens"],
       ["Two-voice turns", "Talk to your baby face to face, then stop and count to five in your head. Whatever sound they make, answer it as though it were a sentence.", "Nothing", 5, "Three times a day"],
     ],
     a2: [
-      ["Name calling", "From just outside their line of sight, say their name once in a normal voice. Wait. If they turn, make it worth it — a big smile. If not, come into view and try again from closer.", "Nothing", 5, "Several times a day"],
+      ["Name calling", "From just outside their line of sight, say their name once in a normal voice. Wait. If they turn, make it worth it: a big smile. If not, come into view and try again from closer.", "Nothing", 5, "Several times a day"],
       ["Where's the cup?", "Put two familiar objects in front of them. Ask for one by name, without pointing or looking at it. Give them time.", "Two familiar household objects", 5, "Once a day"],
       ["Peek-a-boo with a pause", "Play peek-a-boo but wait a beat longer than usual before reappearing, so they have to anticipate and listen for you.", "A cloth or dupatta", 5, "Once a day"],
     ],
     a3: [
-      ["One instruction, no hands", "Give a single simple instruction with your hands still — “bring me your shoe”. Resist pointing. Gestures make it easy; the listening is the point.", "Nothing", 5, "A few times a day"],
+      ["One instruction, no hands", "Give a single simple instruction with your hands still: “bring me your shoe”. Resist pointing. Gestures make it easy; the listening is the point.", "Nothing", 5, "A few times a day"],
       ["Body part song", "Sing a song that names body parts and touch each one. After a week, sing it and pause before each part to let them touch it first.", "Nothing", 5, "Once a day"],
       ["Story with questions", "Read a short picture book. On each page, ask one “where is…?” question and wait for them to point.", "Any picture book", 10, "Once a day"],
     ],
     a4: [
-      ["Two-step errands", "Give two instructions together — “put the book on the shelf and close the door”. Say it once. If they do only one, say the whole thing again rather than just the missing half.", "Nothing", 5, "A few times a day"],
+      ["Two-step errands", "Give two instructions together: “put the book on the shelf and close the door”. Say it once. If they do only one, say the whole thing again rather than just the missing half.", "Nothing", 5, "A few times a day"],
       ["What happened next?", "After a story, close the book and ask three questions about it: who was in it, what happened, how it ended.", "Any story book", 10, "Once a day"],
       ["Listening walk", "Walk together and stop three times. Each time, both of you close your eyes and name everything you can hear.", "Nothing", 10, "Twice a week"],
     ],
     a5: [
-      ["Three-step challenge", "Give three instructions in one go and make it a game — “touch your nose, jump twice, then sit down”. Increase to four when three is easy.", "Nothing", 5, "Once a day"],
+      ["Three-step challenge", "Give three instructions in one go and make it a game: “touch your nose, jump twice, then sit down”. Increase to four when three is easy.", "Nothing", 5, "Once a day"],
       ["Retell it back", "Read a story, then ask them to tell it back to a sibling, a grandparent, or a toy.", "Any story book", 10, "Every other day"],
-      ["Odd one out", "Say three words, two related and one not — “apple, banana, chair”. Ask which one doesn't belong and why.", "Nothing", 5, "Once a day"],
+      ["Odd one out", "Say three words, two related and one not: “apple, banana, chair”. Ask which one doesn't belong and why.", "Nothing", 5, "Once a day"],
     ],
     a6: [
-      ["First sound game", "Say a word and ask what sound it starts with. Then swap — you guess theirs. This is the foundation of reading.", "Nothing", 5, "Once a day"],
+      ["First sound game", "Say a word and ask what sound it starts with. Then swap: you guess theirs. This is the foundation of reading.", "Nothing", 5, "Once a day"],
       ["Instructions once only", "Tell them you will only say it once, then give a three or four step instruction. Make it playful, not a test.", "Nothing", 5, "Once a day"],
       ["Long story, no pictures", "Read or tell a ten-minute story with no pictures, then ask them to retell the main events in order.", "A chapter book, or your own memory", 15, "Twice a week"],
     ],
@@ -65,9 +65,9 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
   // ── Seeing & Noticing ────────────────────────────────────────────────────
   vision: {
     a1: [
-      ["Slow arc tracking", "Hold a bright toy about 25 cm from their face. Once they lock on, move it slowly in an arc to one side, then the other. Slower than feels natural — babies lose fast movement.", "Any brightly coloured toy", 5, "Twice a day"],
+      ["Slow arc tracking", "Hold a bright toy about 25 cm from their face. Once they lock on, move it slowly in an arc to one side, then the other. Slower than feels natural; babies lose fast movement.", "Any brightly coloured toy", 5, "Twice a day"],
       ["Face time", "Hold your face 20–25 cm away, make eye contact, and slowly move your head side to side. Your face is the most interesting thing they will look at.", "Nothing", 5, "Several times a day"],
-      ["High contrast", "Show them bold black-and-white patterns — stripes, checks, a simple drawn face. Young babies see contrast long before they see subtle colour.", "Paper and a black marker", 5, "Once a day"],
+      ["High contrast", "Show them bold black-and-white patterns: stripes, checks, a simple drawn face. Young babies see contrast long before they see subtle colour.", "Paper and a black marker", 5, "Once a day"],
     ],
     a2: [
       ["Hide and find", "While they watch, cover a favourite toy with a cloth, leaving a corner showing. Ask where it went. Cover it fully once they find it easily.", "A cloth and a small toy", 5, "Once a day"],
@@ -86,12 +86,12 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
     ],
     a5: [
       ["Spot the difference", "Draw two versions of a simple picture with three small differences and ask them to find them.", "Paper and crayons", 10, "Twice a week"],
-      ["Draw a person", "Ask them to draw someone in the family. Don't correct it — instead ask questions: “where are their hands?” They'll add what's missing.", "Paper and crayons", 15, "Twice a week"],
-      ["Sorting basket", "Give them a basket of mixed household items and ask them to sort it — first by colour, then a different way. Let them pick the second rule.", "Buttons, lids, spoons", 15, "Most days"],
+      ["Draw a person", "Ask them to draw someone in the family. Don't correct it; instead ask questions: “where are their hands?” They'll add what's missing.", "Paper and crayons", 15, "Twice a week"],
+      ["Sorting basket", "Give them a basket of mixed household items and ask them to sort it: first by colour, then a different way. Let them pick the second rule.", "Buttons, lids, spoons", 15, "Most days"],
     ],
     a6: [
       ["Letter spotting", "On a walk, in a shop, or on a food packet, find and name letters. Start with the letters in their own name.", "Nothing", 10, "Once a day"],
-      ["Two-rule sorting", "Ask them to find all the big red things, then all the small blue things — two features at once.", "Buttons or blocks of different sizes and colours", 15, "Twice a week"],
+      ["Two-rule sorting", "Ask them to find all the big red things, then all the small blue things: two features at once.", "Buttons or blocks of different sizes and colours", 15, "Twice a week"],
       ["Copy the shape", "Draw a diamond or a triangle and ask them to copy it. These are harder than they look and are strong pre-writing practice.", "Paper and pencil", 10, "Most days"],
     ],
   },
@@ -104,7 +104,7 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
       ["Supported sitting", "Sit them between your legs or propped with cushions so they practise holding their head and trunk upright.", "Cushions", 10, "Twice a day"],
     ],
     a2: [
-      ["Toy just out of reach", "During floor play, put a favourite toy slightly beyond their reach. Resist handing it over. Wait — the effort is the exercise.", "Any favourite toy", 10, "Several times a day"],
+      ["Toy just out of reach", "During floor play, put a favourite toy slightly beyond their reach. Resist handing it over. Wait; the effort is the exercise.", "Any favourite toy", 10, "Several times a day"],
       ["Cruising route", "Arrange stable low furniture in a line with a toy at the far end, so they can move along holding on.", "Sofa, low table, sturdy chairs", 15, "Most days"],
       ["Pull to stand", "Kneel in front of them and hold your hands out at their chest height so they pull themselves up to you.", "Nothing", 5, "Several times a day"],
     ],
@@ -121,7 +121,7 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
     a5: [
       ["Catch, close then far", "Throw a large soft ball from one metre. When they catch it most times, step back. Say “ready” each time so they prepare.", "A large soft ball", 15, "Most days"],
       ["Flamingo game", "Both of you stand on one foot and count out loud to see who lasts longer. Swap feet.", "Nothing", 5, "Once a day"],
-      ["Animal walks", "Cross the room as different animals — bear on all fours, crab on your back, frog jumps, flamingo hops.", "Nothing", 10, "Most days"],
+      ["Animal walks", "Cross the room as different animals: bear on all fours, crab on your back, frog jumps, flamingo hops.", "Nothing", 10, "Most days"],
     ],
     a6: [
       ["Hop and skip course", "Mark squares on the ground and hop through them on one foot, then the other, then skip back.", "Chalk", 15, "Most days"],
@@ -135,7 +135,7 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
     a1: [
       ["Finger grasp", "Place your finger or a light rattle into their palm and let them grip. Gently pull back a little so they hold on.", "A light rattle", 5, "Several times a day"],
       ["Hands together", "While they are on their back, bring both their hands together over their chest and let them feel one hand with the other.", "Nothing", 5, "Twice a day"],
-      ["Textures", "Let them touch different safe textures — a cotton cloth, a wooden spoon, a cool steel katori.", "Household objects", 5, "Once a day"],
+      ["Textures", "Let them touch different safe textures: a cotton cloth, a wooden spoon, a cool steel katori.", "Household objects", 5, "Once a day"],
     ],
     a2: [
       ["Pass it over", "Hand them a toy on one side so they must reach across and, eventually, pass it hand to hand.", "Small light toys", 10, "Once a day"],
@@ -153,13 +153,13 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
       ["Dress yourself", "Build ten extra minutes into dressing so they can do it themselves. Loose trousers and open jackets first.", "Their own clothes", 10, "Daily"],
     ],
     a5: [
-      ["Tripod grip", "Break crayons into short stubs — a short crayon cannot be held in a fist, so it teaches the grip by itself.", "Broken crayons", 10, "Most days"],
+      ["Tripod grip", "Break crayons into short stubs; a short crayon cannot be held in a fist, so it teaches the grip by itself.", "Broken crayons", 10, "Most days"],
       ["Cutting practice", "Draw thick straight lines on paper and let them cut along, supervised. Then curved lines.", "Safety scissors and paper", 10, "Most days"],
       ["Pouring station", "Two small jugs and a tray. Let them pour water back and forth. Spills are part of it.", "Two small jugs, a tray", 10, "Most days"],
     ],
     a6: [
       ["Write your name", "Write their name in dots for them to trace, then in faint pencil, then let them try alone.", "Paper and pencil", 10, "Daily"],
-      ["Knots and laces", "Practise on a shoe off the foot, or laces threaded through a punched card — much easier than bending over a worn shoe.", "A shoelace and card", 10, "Most days"],
+      ["Knots and laces", "Practise on a shoe off the foot, or laces threaded through a punched card; much easier than bending over a worn shoe.", "A shoelace and card", 10, "Most days"],
       ["Count and touch", "Put out ten to fifteen small objects and count them together, touching each one. Then ask them to do it alone.", "Buttons, coins or pebbles", 10, "Daily"],
     ],
   },
@@ -167,24 +167,24 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
   // ── Talking & Communication ──────────────────────────────────────────────
   language: {
     a1: [
-      ["Wait five seconds", "Talk to your baby face to face, then stop and count to five. The pause is what teaches turn-taking — most of us fill it too fast.", "Nothing", 5, "Several times a day"],
+      ["Wait five seconds", "Talk to your baby face to face, then stop and count to five. The pause is what teaches turn-taking; most of us fill it too fast.", "Nothing", 5, "Several times a day"],
       ["Narrate the day", "Say aloud what you are doing as you do it. “Now we're washing your hands. The water is warm.” Ordinary talk, constantly.", "Nothing", 0, "All day"],
       ["Copy their sound", "When they make a sound, make the same one back, then wait. This is their first conversation.", "Nothing", 5, "Several times a day"],
     ],
     a2: [
-      ["Babble back", "When they babble “bababa”, say it back, then add one — “ba-ba-ball”. Keep it playful.", "Nothing", 5, "Several times a day"],
-      ["Name it every time", "Name objects consistently as they use them — cup, spoon, shoe. The same word each time matters more than the number of words.", "Everyday objects", 0, "All day"],
+      ["Babble back", "When they babble “bababa”, say it back, then add one: “ba-ba-ball”. Keep it playful.", "Nothing", 5, "Several times a day"],
+      ["Name it every time", "Name objects consistently as they use them: cup, spoon, shoe. The same word each time matters more than the number of words.", "Everyday objects", 0, "All day"],
       ["Songs with actions", "Sing the same three or four songs with hand actions daily. Pause before the last word and see if they fill it in.", "Nothing", 10, "Daily"],
     ],
     a3: [
-      ["Add one word", "Whatever they say, say it back with one more word. They say “milk”, you say “more milk”. Never correct — just extend.", "Nothing", 0, "All day"],
-      ["Choices, out loud", "Instead of yes/no questions, offer two named choices — “apple or banana?” They have to produce a word to get what they want.", "Nothing", 5, "At mealtimes"],
+      ["Add one word", "Whatever they say, say it back with one more word. They say “milk”, you say “more milk”. Never correct, just extend.", "Nothing", 0, "All day"],
+      ["Choices, out loud", "Instead of yes/no questions, offer two named choices: “apple or banana?” They have to produce a word to get what they want.", "Nothing", 5, "At mealtimes"],
       ["Pause the routine", "In a familiar song or routine, stop just before the part they know and look at them expectantly.", "Nothing", 5, "Daily"],
     ],
     a4: [
       ["Two-turn talk", "Ask an open question, listen, then ask a follow-up about their answer rather than moving on. Aim for four turns.", "Nothing", 10, "At mealtimes"],
       ["What happened today", "At a fixed time each day, take turns telling one thing that happened. You go first and model the detail.", "Nothing", 10, "Daily"],
-      ["Picture description", "Open a book to a busy page and take turns saying what is happening — actions, not just objects.", "Any picture book", 10, "Most days"],
+      ["Picture description", "Open a book to a busy page and take turns saying what is happening: actions, not just objects.", "Any picture book", 10, "Most days"],
     ],
     a5: [
       ["Because", "Ask “why” about ordinary things and accept any answer that uses “because”. Model it yourself often.", "Nothing", 5, "All day"],
@@ -194,7 +194,7 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
     a6: [
       ["Beginning, middle, end", "Ask for a story with those three parts named out loud. Hold up three fingers and drop one as each part arrives.", "Nothing", 10, "Every other day"],
       ["New word a day", "Use one unfamiliar word each day and see whether they ask what it means. If they don't, ask them to guess from context.", "Nothing", 5, "Daily"],
-      ["Explain it to me", "Ask them to explain how to do something they know well — brushing teeth, a game. Follow their instructions exactly, including the gaps.", "Nothing", 10, "Twice a week"],
+      ["Explain it to me", "Ask them to explain how to do something they know well: brushing teeth, a game. Follow their instructions exactly, including the gaps.", "Nothing", 10, "Twice a week"],
     ],
   },
 
@@ -203,33 +203,33 @@ const RAW: Record<DomainCode, Record<string, Row[]>> = {
   tactile: {
     a1: [
       ["Skin to skin", "Hold your baby against your bare chest for as long as you both like. Steady, whole-body contact is the first tactile input a baby organises, and everything later is built on it.", "Nothing", 20, "Daily"],
-      ["Textures on the arm", "Brush three different things slowly along one forearm — a soft cloth, a cool spoon, your fingertip. Pause between each and watch for a different reaction to each one.", "A cloth and a spoon", 5, "Once a day"],
+      ["Textures on the arm", "Brush three different things slowly along one forearm: a soft cloth, a cool spoon, your fingertip. Pause between each and watch for a different reaction to each one.", "A cloth and a spoon", 5, "Once a day"],
       ["Firm then feather", "Stroke an arm firmly, then so lightly it barely touches. You are looking for them to notice both, not just the firm one.", "Nothing", 5, "Twice a day"],
     ],
     a2: [
-      ["Warm and cool cups", "Fill one cup with cool water and one with comfortably warm water. Guide a hand to each in turn and name it — “cool”, “warm”.", "Two cups", 5, "Once a day"],
-      ["Texture basket", "A basket of safe things that feel completely different — a sponge, a wooden spoon, crumpled paper, a smooth stone too big to swallow. Let them dig.", "A basket of household objects", 15, "Most days"],
+      ["Warm and cool cups", "Fill one cup with cool water and one with comfortably warm water. Guide a hand to each in turn and name it: “cool”, “warm”.", "Two cups", 5, "Once a day"],
+      ["Texture basket", "A basket of safe things that feel completely different: a sponge, a wooden spoon, crumpled paper, a smooth stone too big to swallow. Let them dig.", "A basket of household objects", 15, "Most days"],
       ["Massage after the bath", "A few minutes of firm, slow strokes down each arm, each leg, and the back. Cover the whole body, so no part gets less attention than the rest.", "Any oil you already use", 10, "Daily"],
     ],
     a3: [
       ["Feely bag", "Put one familiar object in a cloth bag. They reach in without looking and tell you what it is. Start with things they know very well.", "A cloth bag and familiar objects", 10, "Once a day"],
-      ["Messy tray", "A tray of something to push hands through — rice, atta, wet sand. No goal, just contact. Some children need to start with a spoon before their hands.", "A tray and rice or flour", 15, "Twice a week"],
+      ["Messy tray", "A tray of something to push hands through: rice, atta, wet sand. No goal, just contact. Some children need to start with a spoon before their hands.", "A tray and rice or flour", 15, "Twice a week"],
       ["Hot, warm, cold", "At mealtimes, name the temperature of what they touch before they touch it, then ask them after. Builds the words alongside the sensation.", "Nothing", 2, "At mealtimes"],
     ],
     a4: [
       ["Same or different", "Two objects in the bag. They feel both without looking and say whether they are the same. Start obviously different, then closer.", "A cloth bag and pairs of objects", 10, "Most days"],
       ["Which hand?", "Play the feely bag with one hand at a time, so the weaker hand gets the practice it would otherwise avoid.", "A cloth bag and familiar objects", 10, "Most days"],
-      ["Barefoot paths", "Walk barefoot across three surfaces in a row — tiles, a mat, grass — and talk about how each one feels.", "Nothing", 10, "Twice a week"],
+      ["Barefoot paths", "Walk barefoot across three surfaces in a row (tiles, a mat, grass) and talk about how each one feels.", "Nothing", 10, "Twice a week"],
     ],
     a5: [
       ["Animal by touch", "Two toy animals in the bag. Eyes closed, they find the one you name. This is exactly what the assessment asks at stage V.", "Two toy animals and a bag", 10, "Most days"],
-      ["Describe it, don't name it", "They feel something hidden and describe it — hard, soft, bumpy, sticky — before guessing what it is. The describing is the skill.", "A cloth bag and household objects", 10, "Most days"],
+      ["Describe it, don't name it", "They feel something hidden and describe it (hard, soft, bumpy, sticky) before guessing what it is. The describing is the skill.", "A cloth bag and household objects", 10, "Most days"],
       ["Find the coin", "Scatter a few coins on a tray of rice. Eyes closed, they fish them out by touch alone.", "Coins and a tray of rice", 10, "Twice a week"],
     ],
     a6: [
       ["Heads or tails", "A coin in the closed hand, eyes shut, and they say which side is up. Then the same with the other hand.", "A coin", 5, "Most days"],
       ["Letters on the back", "Draw a letter or a number slowly on their back with a finger and ask them to name it.", "Nothing", 5, "Most days"],
-      ["Sort without looking", "A mixed handful of small objects and two bowls. Eyes closed, they sort by feel — smooth into one, rough into the other.", "Small household objects and two bowls", 10, "Twice a week"],
+      ["Sort without looking", "A mixed handful of small objects and two bowls. Eyes closed, they sort by feel: smooth into one, rough into the other.", "Small household objects and two bowls", 10, "Twice a week"],
     ],
   },
 };

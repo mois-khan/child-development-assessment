@@ -134,7 +134,7 @@ function JoinInner() {
             <p className="prose-read mx-auto mt-3 max-w-[42ch]">
               If there&rsquo;s an account for{" "}
               <strong className="font-bold text-ink">{email.trim()}</strong>, we&rsquo;ve sent
-              a link to reset the password — it&rsquo;s valid for a short while.
+              a link to reset the password, valid for a short while.
             </p>
             <Button
               className="mt-8"
@@ -161,11 +161,11 @@ function JoinInner() {
             <h1 className="mt-6">Check your email</h1>
             <p className="prose-read mx-auto mt-3 max-w-[42ch]">
               Your account is created. We&rsquo;ve sent a confirmation link to{" "}
-              <strong className="font-bold text-ink">{email.trim()}</strong> — open it, and
+              <strong className="font-bold text-ink">{email.trim()}</strong>. Open it, and
               you can start the check.
             </p>
             <Button className="mt-8" onClick={() => setMode("signin")}>
-              I&rsquo;ve confirmed — sign me in
+              I&rsquo;ve confirmed, sign me in
             </Button>
           </div>
         </Shell>

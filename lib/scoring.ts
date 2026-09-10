@@ -92,7 +92,7 @@ export const STATUSES: Record<StatusCode, Status> = {
   advanced: {
     code: "advanced",
     label: "Advanced development",
-    meaning: "Ahead of the chart's average for this age — this is a real strength.",
+    meaning: "Ahead of the chart's average for this age; this is a real strength.",
   },
   typical: {
     code: "typical",
