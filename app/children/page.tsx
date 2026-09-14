@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
+import { useAuth } from "@/lib/auth/provider";
 import { phaseLabel } from "@/lib/naming";
 import { stageForAge } from "@/lib/stage";
 import { assessmentsForChild, createChild, listChildren, type SavedChild } from "@/lib/store";
@@ -13,7 +14,6 @@ import {
   Blooms,
   Button,
   ButtonLink,
-  Card,
   EmptyChildArt,
   Footer,
   IconArrowRight,
@@ -39,6 +39,8 @@ const GENDERS: [Gender, string][] = [
 
 export default function ChildrenPage() {
   const router = useRouter();
+  const { profile } = useAuth();
+  const isSchool = profile?.accountType === "school";
   const [children, setChildren] = useState<SavedChild[] | null | "error">(null);
   const [showForm, setShowForm] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
@@ -104,15 +106,13 @@ export default function ChildrenPage() {
               {list !== null && list.length > 0 && (
                 <div className="flex flex-wrap items-center gap-3">
                   <FamilyCount count={list.length} />
-                  {!showForm && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => setShowForm(true)}
-                      iconLeft={<IconPlus size={17} />}
-                    >
-                      Add a child
-                    </Button>
-                  )}
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowForm(true)}
+                    iconLeft={<IconPlus size={17} />}
+                  >
+                    Add a child
+                  </Button>
                 </div>
               )}
             </div>
@@ -134,82 +134,57 @@ export default function ChildrenPage() {
                   <ChildTile key={c.id} child={c} delay={i * 60} />
                 ))}
 
-                {!showForm && (
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(true)}
-                    className="animate-rise flex min-h-[218px] flex-col items-center justify-center gap-3 rounded-[var(--radius-xl)] border-2 border-dashed p-6 transition-colors"
-                    style={{
-                      borderColor: "var(--accent-line)",
-                      background: "var(--accent-soft)",
-                      animationDelay: `${list!.length * 60}ms`,
-                    }}
-                  >
-                    <span className="grid size-14 place-items-center rounded-full bg-[var(--surface)] text-accent shadow-[var(--clay-sm)]">
-                      <IconPlus size={26} />
-                    </span>
-                    <span className="text-base font-extrabold text-accent">Add another child</span>
-                    <span className="max-w-[24ch] text-center text-sm text-ink-3">
-                      Siblings each get their own phase and report.
-                    </span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setShowForm(true)}
+                  className="animate-rise flex min-h-[218px] flex-col items-center justify-center gap-3 rounded-[var(--radius-xl)] border-2 border-dashed p-6 transition-colors"
+                  style={{
+                    borderColor: "var(--accent-line)",
+                    background: "var(--accent-soft)",
+                    animationDelay: `${list!.length * 60}ms`,
+                  }}
+                >
+                  <span className="grid size-14 place-items-center rounded-full bg-[var(--surface)] text-accent shadow-[var(--clay-sm)]">
+                    <IconPlus size={26} />
+                  </span>
+                  <span className="text-base font-extrabold text-accent">Add another child</span>
+                  <span className="max-w-[24ch] text-center text-sm text-ink-3">
+                    Siblings each get their own phase and report.
+                  </span>
+                </button>
               </div>
-            ) : null}
-
-            {/* ── add form ───────────────────────────────────────────────── */}
-            {showForm && (
-              <div
-                className={`grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] ${
-                  list && list.length > 0 ? "mt-9" : ""
-                }`}
-              >
-                <NewChildForm
-                  onCreated={(child) => router.push(`/children/${child.id}`)}
-                  onCancel={list && list.length > 0 ? () => setShowForm(false) : undefined}
-                />
-
-                <Card variant="clay" className="hidden overflow-hidden p-8 lg:block">
-                  <EmptyChildArt className="mx-auto h-auto w-full max-w-[300px]" />
-                  <h3 className="mt-6 text-center">What happens next</h3>
-                  <ol className="mt-5 list-none space-y-4 p-0">
-                    {[
-                      "We work out their exact age in months",
-                      "That picks one of the seven developmental phases",
-                      "You answer six short sections built for that phase",
-                      "Their report is saved here forever",
-                    ].map((line, i) => (
-                      <li key={line} className="flex items-start gap-3.5">
-                        <span
-                          className="grid size-7 shrink-0 place-items-center rounded-full text-xs font-extrabold text-white"
-                          style={{ background: STEP_TINTS[i] }}
-                        >
-                          {i + 1}
-                        </span>
-                        <span className="text-sm font-medium leading-relaxed text-ink-2">
-                          {line}
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
-                </Card>
+            ) : (
+              <div className="animate-rise mx-auto flex max-w-[26rem] flex-col items-center py-6 text-center">
+                <EmptyChildArt className="h-auto w-full max-w-[260px]" />
+                <Button
+                  size="lg"
+                  className="mt-8"
+                  onClick={() => setShowForm(true)}
+                  iconRight={<IconArrowRight size={18} />}
+                >
+                  Add your child
+                </Button>
               </div>
             )}
           </Shell>
         </Section>
       </main>
 
+      {showForm && (
+        <NewChildDialog
+          isSchool={isSchool}
+          onCreated={(child) => router.push(`/children/${child.id}`)}
+          onClose={() => {
+            setShowForm(false);
+            setLoadAttempt((n) => n + 1);
+          }}
+        />
+      )}
+
       <Footer />
     </>
   );
 }
-
-const STEP_TINTS = [
-  "var(--sec-manual)",
-  "var(--sec-language)",
-  "var(--sec-auditory)",
-  "var(--sec-visual)",
-];
 
 /* ══ the family count pill ═════════════════════════════════════════════════ */
 
@@ -337,25 +312,78 @@ function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
   );
 }
 
-/* ══ create a child ════════════════════════════════════════════════════════ */
+/* ══ create a child — a modal, not an inline form ══════════════════════════ */
+
+function NewChildDialog({
+  isSchool,
+  onCreated,
+  onClose,
+}: {
+  isSchool: boolean;
+  onCreated: (child: SavedChild) => void;
+  onClose: () => void;
+}) {
+  // Escape closes, and the page behind must not scroll while this is open —
+  // same contract as EditChildDialog.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    // Lock both html and body — body alone leaves html as the page's real
+    // scrolling element on some engines, so the underlying page (taller than
+    // the viewport here) stays scrollable behind the fixed overlay.
+    const previousBody = document.body.style.overflow;
+    const previousHtml = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousBody;
+      document.documentElement.style.overflow = previousHtml;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="new-child-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="my-8 w-full max-w-[32rem]">
+        <NewChildForm isSchool={isSchool} onCreated={onCreated} onCancel={onClose} />
+      </div>
+    </div>
+  );
+}
 
 function NewChildForm({
+  isSchool,
   onCreated,
   onCancel,
 }: {
+  isSchool: boolean;
   onCreated: (child: SavedChild) => void;
   onCancel?: () => void;
 }) {
   const today = todayISO();
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
-  const [phone, setPhone] = useState("");
+  const [guardianName, setGuardianName] = useState("");
   const [email, setEmail] = useState("");
-  const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
   const [gender, setGender] = useState<Gender | "">("");
   const [photoUrl, setPhotoUrl] = useState<string | undefined>();
   const [dobTouched, setDobTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // A school adds a whole class in one sitting — each save should clear the
+  // form for the next student rather than leaving the dialog, so this tracks
+  // who's gone in so far without needing to leave and reopen it per child.
+  const [added, setAdded] = useState<SavedChild[]>([]);
 
   const age = useMemo(() => {
     if (!dob) return null;
@@ -377,6 +405,17 @@ function NewChildForm({
     reader.readAsDataURL(file);
   }
 
+  function resetForNextStudent() {
+    setName("");
+    setDob("");
+    setGuardianName("");
+    setEmail("");
+    setPhone("");
+    setGender("");
+    setPhotoUrl(undefined);
+    setDobTouched(false);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setDobTouched(true);
@@ -387,11 +426,17 @@ function NewChildForm({
       dob,
       gender: gender as Gender,
       photoUrl,
-      city: city.trim() || undefined,
-      parentPhone: phone.trim() || undefined,
+      parentName: isSchool ? guardianName.trim() || undefined : undefined,
+      parentPhone: isSchool ? phone.trim() || undefined : undefined,
       parentEmail: email.trim() || undefined,
     });
-    onCreated(child);
+    if (isSchool) {
+      setAdded((prev) => [...prev, child]);
+      resetForNextStudent();
+      setSubmitting(false);
+    } else {
+      onCreated(child);
+    }
   }
 
   return (
@@ -400,8 +445,20 @@ function NewChildForm({
         className="px-6 py-5 sm:px-8"
         style={{ background: "linear-gradient(120deg, var(--brand-600), var(--brand-500))" }}
       >
-        <h2 className="!text-xl text-white">A new child</h2>
+        <h2 id="new-child-title" className="!text-xl text-white">
+          {isSchool ? "Add a student" : "A new child"}
+        </h2>
       </div>
+
+      {isSchool && added.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-line-soft bg-[var(--accent-soft)] px-6 py-3 sm:px-8">
+          <IconCheck size={15} className="shrink-0 text-accent" />
+          <p className="text-sm font-semibold text-ink-2">
+            {added.length} student{added.length === 1 ? "" : "s"} added so far:{" "}
+            <span className="font-normal text-ink-3">{added.map((c) => c.name).join(", ")}</span>
+          </p>
+        </div>
+      )}
 
       <div className="p-6 sm:p-8">
         {/* photo */}
@@ -424,7 +481,7 @@ function NewChildForm({
           <div>
             <p className="text-base font-extrabold text-ink">Add a photo</p>
             <p className="hint !mt-1 max-w-[28ch]">
-              Optional — it makes the report feel like theirs. Only you and admins reviewing
+              Optional; it makes the report feel like theirs. Only you and admins reviewing
               the account can see it.
             </p>
           </div>
@@ -471,7 +528,7 @@ function NewChildForm({
                 programme.
               </p>
             ) : (
-              <p className="hint">We work out their age and phase from this — nothing else needed.</p>
+              <p className="hint">We work out their age and phase from this; nothing else needed.</p>
             )}
           </div>
 
@@ -496,21 +553,31 @@ function NewChildForm({
             </div>
           </fieldset>
 
-          {/* Contact and city are the optional half of the form — grouped and
-              set apart so the three required fields above read as the whole
-              job, and this reads as the extra. */}
-          <div className="rounded-[var(--radius)] border border-line bg-[var(--surface-2)] p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink-3">
-              Optional
-            </p>
-
-            <div className="mt-4 space-y-5">
+          {isSchool ? (
+            // A school's own login is one account for the whole roster, so
+            // each student needs their own guardian on record — shown right
+            // here, not tucked behind an edit screen after the fact.
+            <div className="space-y-5 rounded-[var(--radius)] border border-line-soft p-4 sm:p-5">
+              <p className="text-sm font-extrabold text-ink">Guardian details</p>
               <div>
-                <label className="label" htmlFor="phone">
-                  Phone number
+                <label className="label" htmlFor="guardianName">
+                  Guardian&rsquo;s name <span className="font-normal text-ink-3">(optional)</span>
                 </label>
                 <input
-                  id="phone"
+                  id="guardianName"
+                  className="field"
+                  value={guardianName}
+                  onChange={(e) => setGuardianName(e.target.value)}
+                  placeholder="Priya Sharma"
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className="label" htmlFor="guardianPhone">
+                  Guardian&rsquo;s mobile <span className="font-normal text-ink-3">(optional)</span>
+                </label>
+                <input
+                  id="guardianPhone"
                   type="tel"
                   className="field"
                   value={phone}
@@ -518,18 +585,13 @@ function NewChildForm({
                   placeholder="98765 43210"
                   autoComplete="tel"
                 />
-                <p className="hint">
-                  So our team can reach you about {name.trim() || "your child"}&rsquo;s results — we
-                  never share it.
-                </p>
               </div>
-
               <div>
-                <label className="label" htmlFor="childEmail">
-                  Email
+                <label className="label" htmlFor="guardianEmail">
+                  Guardian&rsquo;s email <span className="font-normal text-ink-3">(optional)</span>
                 </label>
                 <input
-                  id="childEmail"
+                  id="guardianEmail"
                   type="email"
                   className="field"
                   value={email}
@@ -537,27 +599,26 @@ function NewChildForm({
                   placeholder="priya@example.com"
                   autoComplete="email"
                 />
-                <p className="hint">
-                  Where {name.trim() || "your child"}&rsquo;s report should go, if that&rsquo;s
-                  somewhere other than your own account email.
-                </p>
-              </div>
-
-              <div>
-                <label className="label" htmlFor="city">
-                  City
-                </label>
-                <input
-                  id="city"
-                  className="field"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Mumbai"
-                  autoComplete="address-level2"
-                />
+                <p className="hint">If the report should go straight to the family too.</p>
               </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <label className="label" htmlFor="childEmail">
+                Email <span className="font-normal text-ink-3">(optional)</span>
+              </label>
+              <input
+                id="childEmail"
+                type="email"
+                className="field"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="priya@example.com"
+                autoComplete="email"
+              />
+              <p className="hint">Only if the report should go somewhere other than your account.</p>
+            </div>
+          )}
         </div>
 
         {/* live confirmation — the parent sees the consequence before committing */}
@@ -570,9 +631,10 @@ function NewChildForm({
             <Mascot size={54} mood="happy" />
             <p className="text-sm leading-relaxed text-ink-2">
               <strong className="font-extrabold text-ink">
-                {name.trim() || "Your child"} is {formatAge(age.chronologicalMonths)}
+                {name.trim() || (isSchool ? "This student" : "Your child")} is{" "}
+                {formatAge(age.chronologicalMonths)}
               </strong>{" "}
-              — that&rsquo;s{" "}
+              , that&rsquo;s{" "}
               <strong className="font-extrabold text-accent">{phaseLabel(stage)}</strong>.
             </p>
           </div>
@@ -585,9 +647,14 @@ function NewChildForm({
             disabled={!canSubmit || submitting}
             iconRight={<IconArrowRight size={18} />}
           >
-            {submitting ? "Saving…" : "Save & continue"}
+            {submitting ? "Saving…" : isSchool ? "Save & add another" : "Save & continue"}
           </Button>
-          {onCancel && (
+          {isSchool && added.length > 0 && (
+            <Button type="button" variant="secondary" onClick={onCancel} iconLeft={<IconCheck size={16} />}>
+              Done — back to roster
+            </Button>
+          )}
+          {onCancel && (!isSchool || added.length === 0) && (
             <Button type="button" variant="ghost" onClick={onCancel}>
               Cancel
             </Button>

@@ -26,6 +26,7 @@ function rowToChild(d: ChildRow): SavedChild {
     gender: d.gender,
     gestationalWeeks: d.gestational_weeks ?? undefined,
     city: d.city ?? undefined,
+    parentName: d.parent_name ?? undefined,
     parentPhone: d.parent_phone ?? undefined,
     parentEmail: d.parent_email ?? undefined,
     photoUrl: d.photo_url ?? undefined,
@@ -41,6 +42,7 @@ function childToRow(patch: Partial<Child>): ChildWrite {
   if (patch.gender !== undefined) row.gender = patch.gender;
   if (patch.gestationalWeeks !== undefined) row.gestational_weeks = patch.gestationalWeeks ?? null;
   if (patch.city !== undefined) row.city = patch.city ?? null;
+  if (patch.parentName !== undefined) row.parent_name = patch.parentName ?? null;
   if (patch.parentPhone !== undefined) row.parent_phone = patch.parentPhone ?? null;
   if (patch.parentEmail !== undefined) row.parent_email = patch.parentEmail ?? null;
   if (patch.photoUrl !== undefined) row.photo_url = patch.photoUrl ?? null;

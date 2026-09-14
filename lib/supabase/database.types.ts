@@ -139,6 +139,7 @@ export interface Database {
           gender: ChildGender;
           gestational_weeks: number | null;
           city: string | null;
+          parent_name: string | null;
           parent_email: string | null;
           parent_phone: string | null;
           photo_url: string | null;
@@ -152,6 +153,7 @@ export interface Database {
           gender?: ChildGender;
           gestational_weeks?: number | null;
           city?: string | null;
+          parent_name?: string | null;
           parent_email?: string | null;
           parent_phone?: string | null;
           photo_url?: string | null;
@@ -162,6 +164,7 @@ export interface Database {
           gender?: ChildGender;
           gestational_weeks?: number | null;
           city?: string | null;
+          parent_name?: string | null;
           parent_email?: string | null;
           parent_phone?: string | null;
           photo_url?: string | null;

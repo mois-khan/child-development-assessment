@@ -31,11 +31,13 @@ const GENDERS: [Gender, string][] = [
  */
 export function EditChildDialog({
   child,
+  isSchool,
   onSaved,
   onDeleted,
   onClose,
 }: {
   child: SavedChild;
+  isSchool?: boolean;
   onSaved: (updated: SavedChild) => void;
   onDeleted: () => void;
   onClose: () => void;
@@ -44,6 +46,7 @@ export function EditChildDialog({
   const [name, setName] = useState(child.name);
   const [dob, setDob] = useState(child.dob);
   const [gender, setGender] = useState<Gender>(child.gender);
+  const [guardianName, setGuardianName] = useState(child.parentName ?? "");
   const [phone, setPhone] = useState(child.parentPhone ?? "");
   const [email, setEmail] = useState(child.parentEmail ?? "");
   const [city, setCity] = useState(child.city ?? "");
@@ -58,11 +61,17 @@ export function EditChildDialog({
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
+    // Lock both html and body — body alone leaves html as the page's real
+    // scrolling element on some engines, so the underlying page (taller than
+    // the viewport here) stays scrollable behind the fixed overlay.
+    const previousBody = document.body.style.overflow;
+    const previousHtml = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
+      document.body.style.overflow = previousBody;
+      document.documentElement.style.overflow = previousHtml;
     };
   }, [onClose]);
 
@@ -86,6 +95,7 @@ export function EditChildDialog({
         name: name.trim(),
         dob,
         gender,
+        parentName: isSchool ? guardianName.trim() || undefined : undefined,
         parentPhone: phone.trim() || undefined,
         parentEmail: email.trim() || undefined,
         city: city.trim() || undefined,
@@ -95,6 +105,7 @@ export function EditChildDialog({
         name: name.trim(),
         dob,
         gender,
+        parentName: isSchool ? guardianName.trim() || undefined : undefined,
         parentPhone: phone.trim() || undefined,
         parentEmail: email.trim() || undefined,
         city: city.trim() || undefined,
@@ -119,7 +130,7 @@ export function EditChildDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-child-title"
@@ -262,9 +273,25 @@ export function EditChildDialog({
               </div>
             </fieldset>
 
+            {isSchool && (
+              <div>
+                <label className="label" htmlFor="editGuardianName">
+                  Guardian&rsquo;s name <span className="font-normal text-ink-3">(optional)</span>
+                </label>
+                <input
+                  id="editGuardianName"
+                  className="field"
+                  value={guardianName}
+                  onChange={(e) => setGuardianName(e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
+            )}
+
             <div>
               <label className="label" htmlFor="editPhone">
-                Phone number <span className="font-normal text-ink-3">(optional)</span>
+                {isSchool ? "Guardian's mobile" : "Phone number"}{" "}
+                <span className="font-normal text-ink-3">(optional)</span>
               </label>
               <input
                 id="editPhone"
@@ -278,7 +305,8 @@ export function EditChildDialog({
 
             <div>
               <label className="label" htmlFor="editEmail">
-                Email <span className="font-normal text-ink-3">(optional)</span>
+                {isSchool ? "Guardian's email" : "Email"}{" "}
+                <span className="font-normal text-ink-3">(optional)</span>
               </label>
               <input
                 id="editEmail"

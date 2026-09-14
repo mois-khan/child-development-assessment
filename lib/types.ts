@@ -168,6 +168,12 @@ export interface Child {
   /** City the family is based in. Optional, parent-entered free text. */
   city?: string;
   /**
+   * Guardian's name for THIS child. Only meaningful when the account holder
+   * isn't the guardian — a school account — so a parent's own form never
+   * asks for it; they already gave their name when they signed up.
+   */
+  parentName?: string;
+  /**
    * Guardian's phone number for THIS child, optional and parent-entered. The
    * one field the sales follow-up system (lib/admin/leads.ts) actually needs
    * to be useful — a lead with no way to reach the family isn't one.

@@ -3,7 +3,8 @@
 import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EditChildDialog } from "@/components/EditChildDialog";
-import { DOMAIN_BY_CODE, STAGE_JOURNEY } from "@/content/domains";
+import { useAuth } from "@/lib/auth/provider";
+import { DOMAIN_BY_CODE } from "@/content/domains";
 import { stageForAge } from "@/lib/stage";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { STATUSES, scoreAssessment } from "@/lib/scoring";
@@ -17,14 +18,12 @@ import type { AssessmentResult } from "@/lib/types";
 import {
   Avatar,
   Badge,
-  BrainJourney,
   Button,
   ButtonLink,
   Card,
   Footer,
   IconArrowRight,
   IconCalendar,
-  IconChart,
   IconDownload,
   IconRefresh,
   IconSparkle,
@@ -47,6 +46,8 @@ export default function ChildProfilePage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { profile } = useAuth();
+  const isSchool = profile?.accountType === "school";
   const [child, setChild] = useState<SavedChild | null | undefined | "error">(undefined);
   const [assessments, setAssessments] = useState<StoredAssessment[]>([]);
   const [loadAttempt, setLoadAttempt] = useState(0);
@@ -221,7 +222,7 @@ export default function ChildProfilePage({
                 <Mascot size={88} mood="wave" className="mx-auto" />
                 <h3 className="mt-5 text-xl">No assessments done yet</h3>
                 <p className="mx-auto mt-2 max-w-[40ch] text-base leading-relaxed text-ink-2">
-                  Run {child.name}&rsquo;s first milestone check — about ten minutes, and their
+                  Run {child.name}&rsquo;s first milestone check, about ten minutes, and their
                   report will live right here.
                 </p>
                 <ButtonLink
@@ -349,16 +350,6 @@ export default function ChildProfilePage({
                       {formatDate(latest.assessedOn)}
                     </span>
                   </div>
-                  {!result.suppressDq && result.overallDq !== null && (
-                    <span className="flex items-center gap-2 text-sm font-semibold text-ink-3">
-                      <IconChart size={16} />
-                      Average{" "}
-                      <strong className="tnum text-base font-extrabold text-ink">
-                        {result.overallDq}
-                      </strong>
-                      <span className="text-ink-3">/ 100</span>
-                    </span>
-                  )}
                 </div>
 
                 <div className="grid gap-x-8 gap-y-5 p-6 sm:grid-cols-2">
@@ -394,32 +385,12 @@ export default function ChildProfilePage({
           </Section>
         )}
 
-        {/* ══ 3. their stage on the journey ══════════════════════════════ */}
-        <Section size="sm">
-          <Shell width="wide">
-            <p className="eyebrow eyebrow-accent">Developmental milestone ladder</p>
-            <h2 className="mt-1">Their phase on the journey</h2>
-            <p className="lede mt-2 max-w-[54ch]">
-              Each dot is one of the seven phases — the filled one is where{" "}
-              {child.name} is today.
-            </p>
-            <Card variant="clay" className="mt-5 overflow-x-auto p-6 sm:p-8">
-              <BrainJourney
-                stages={STAGE_JOURNEY}
-                current={stage.order}
-                className="h-auto w-full min-w-[680px]"
-              />
-            </Card>
-            <p className="mt-2 text-xs font-semibold text-ink-3 sm:hidden">
-              Swipe sideways to see every phase →
-            </p>
-          </Shell>
-        </Section>
       </main>
 
       {editing && (
         <EditChildDialog
           child={child}
+          isSchool={isSchool}
           onClose={() => setEditing(false)}
           onSaved={(updated) => {
             setChild(updated);
