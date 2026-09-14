@@ -351,23 +351,13 @@ export function ReportDocument({
                 solid
                 size="lg"
               />
-              {!result.suppressDq && result.overallDq !== null && (
-                <span className="text-sm font-semibold text-ink-3">
-                  Average across the six areas{" "}
-                  <strong className="tnum text-base font-extrabold text-ink">
-                    {result.overallDq}
-                  </strong>{" "}
-                  <span className="text-ink-3">(100 is on track for age)</span>
-                </span>
-              )}
             </div>
 
             <h2 className="mt-5 max-w-[24ch]">{headline(result, child)}</h2>
 
             {result.overallRaisedBy && (
               <p className="mt-3 max-w-[62ch] text-sm leading-relaxed text-ink-2">
-                The average looks healthy because most areas are strong. We have still flagged this
-                report as{" "}
+                Most areas are strong on their own. We have still flagged this report as{" "}
                 <strong className="font-bold">
                   {STATUSES[result.overallStatus].label.toLowerCase()}
                 </strong>{" "}
@@ -375,71 +365,69 @@ export function ReportDocument({
                 <strong className="font-bold">
                   {DOMAIN_BY_CODE[result.overallRaisedBy].name.toLowerCase()}
                 </strong>{" "}
-                needs attention on its own, and an average can hide that.
+                needs attention on its own, and a strong overall picture can hide that.
               </p>
             )}
 
             <Card variant="clay" className="mt-8 p-6 sm:p-8">
               <p className="eyebrow mb-2">Progress, area by area</p>
               <p className="mb-6 text-sm font-medium text-ink-3">
-                These are screening terms, not a diagnosis — see the note at the end of this
+                These are screening terms, not a diagnosis; see the note at the end of this
                 report.
               </p>
-              <div className="overflow-x-auto">
-                <div className="progress-matrix">
-                  <span aria-hidden="true" />
-                  <div className="progress-matrix-headrow">
-                    {STAGES.map((s) => (
-                      <span key={s.label} className="progress-matrix-headcell">
-                        {s.label}
-                      </span>
-                    ))}
-                  </div>
-                  {ordered.map((score) => {
-                    const d = DOMAIN_BY_CODE[score.domain];
-                    const value = score.dq === null ? score.percent * 100 : score.dq;
-                    /* Colour by RESULT, not by competence. A bar coloured by
-                       domain is decoration — every child gets the same six
-                       colours whatever their answers. Coloured by status, the
-                       bar and its length say the same thing, and a row of
-                       greens vs a row of reds reads before any label does. */
-                    const color = statusColor(score.status);
-                    const { index, frac } = stagePosition(value);
-                    const pct = ((index + frac) / STAGES.length) * 100;
-                    return (
-                      <Fragment key={score.domain}>
-                        <div className="progress-matrix-row-label">
-                          <SectionTile code={score.domain} size={34} />
-                          <span className="truncate text-sm font-extrabold text-ink">
-                            {d.name}
-                          </span>
+              <div className="progress-matrix">
+                <span aria-hidden="true" />
+                <div className="progress-matrix-headrow">
+                  {STAGES.map((s) => (
+                    <span key={s.label} className="progress-matrix-headcell">
+                      {s.label}
+                    </span>
+                  ))}
+                </div>
+                {ordered.map((score) => {
+                  const d = DOMAIN_BY_CODE[score.domain];
+                  const value = score.dq === null ? score.percent * 100 : score.dq;
+                  /* Colour by RESULT, not by competence. A bar coloured by
+                     domain is decoration — every child gets the same six
+                     colours whatever their answers. Coloured by status, the
+                     bar and its length say the same thing, and a row of
+                     greens vs a row of reds reads before any label does. */
+                  const color = statusColor(score.status);
+                  const { index, frac } = stagePosition(value);
+                  const pct = ((index + frac) / STAGES.length) * 100;
+                  return (
+                    <Fragment key={score.domain}>
+                      <div className="progress-matrix-row-label">
+                        <SectionTile code={score.domain} size={34} />
+                        <span className="truncate text-sm font-extrabold text-ink">
+                          {d.name}
+                        </span>
+                      </div>
+                      <div
+                        className="progress-matrix-row-track"
+                        role="img"
+                        aria-label={`${d.name}: ${STAGES[index].label}, score ${Math.round(value)}`}
+                      >
+                        <div className="progress-matrix-grid">
+                          {STAGES.map((s) => (
+                            <span key={s.label} className="progress-matrix-cell" />
+                          ))}
                         </div>
                         <div
-                          className="progress-matrix-row-track"
-                          role="img"
-                          aria-label={`${d.name}: ${STAGES[index].label}, score ${Math.round(value)}`}
-                        >
-                          <div className="progress-matrix-grid">
-                            {STAGES.map((s) => (
-                              <span key={s.label} className="progress-matrix-cell" />
-                            ))}
-                          </div>
-                          <div
-                            className="progress-matrix-fill grow-in"
-                            style={{
-                              width: `${pct}%`,
-                              background: `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 78%, black))`,
-                            }}
-                          />
-                          <div
-                            className="progress-matrix-dot"
-                            style={{ left: `${pct}%`, ["--dot-color" as string]: color }}
-                          />
-                        </div>
-                      </Fragment>
-                    );
-                  })}
-                </div>
+                          className="progress-matrix-fill grow-in"
+                          style={{
+                            width: `${pct}%`,
+                            background: `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 78%, black))`,
+                          }}
+                        />
+                        <div
+                          className="progress-matrix-dot"
+                          style={{ left: `${pct}%`, ["--dot-color" as string]: color }}
+                        />
+                      </div>
+                    </Fragment>
+                  );
+                })}
               </div>
             </Card>
           </Section>
@@ -498,7 +486,7 @@ export function ReportDocument({
                 <div>
                   <p className="text-base font-extrabold text-ink">Keep this report</p>
                   <p className="text-sm font-semibold text-ink-3">
-                    It stays on {child.name}&rsquo;s profile — download it any time.
+                    It stays on {child.name}&rsquo;s profile; download it any time.
                   </p>
                 </div>
               </div>
@@ -643,27 +631,6 @@ function ExecutiveSummaryCard({ result, child }: { result: AssessmentResult; chi
         </div>
       </div>
 
-      {result.overallDq !== null && !result.suppressDq && (
-        <div className="mt-5 flex items-center justify-between rounded-xl border border-[var(--brand-200)]/80 bg-[var(--brand-50)]/70 px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-lg bg-[var(--brand-600)] text-white shadow-xs">
-              <IconSparkle size={15} />
-            </span>
-            <div>
-              <p className="text-[0.82rem] font-bold text-[var(--brand-600)] leading-tight">
-                Developmental Quotient
-              </p>
-              <p className="text-[0.72rem] font-medium text-[var(--ink-2)] mt-0.5 leading-tight">
-                Score of 100 represents on-track for age
-              </p>
-            </div>
-          </div>
-          <div className="flex items-baseline gap-1">
-            <span className="tnum text-2xl font-black text-[var(--brand-600)]">{result.overallDq}</span>
-            <span className="text-xs font-bold text-[var(--brand-600)]/70">pts</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

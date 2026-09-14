@@ -20,6 +20,7 @@ import {
   Avatar,
   Button,
   Card,
+  Confetti,
   IconArrowLeft,
   IconArrowRight,
   IconBolt,
@@ -362,13 +363,18 @@ export default function AssessmentPage({
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
+  /* Straight into the first question of the next section — no second "Let's
+     go" screen in between. The Section Complete screen already previews
+     what's coming (name, blurb, question count), so a further intro screen
+     asking the parent to confirm they want to continue was a second click
+     for information they'd already been given once. */
   function nextSection() {
     const next = sectionIndex + 1;
     if (next < DOMAIN_ORDER.length) {
       setSectionIndex(next);
       setStageOrdinal(0);
       setQuestionIndex(0);
-      setPhase("intro");
+      setPhase("question");
       window.scrollTo({ top: 0, behavior: "instant" });
     } else {
       setPhase("finish");
@@ -1186,46 +1192,6 @@ function Celebration({ name, xp }: { name: string; xp: number }) {
           {name}&rsquo;s report is ready, {xp} XP earned.
         </p>
       </div>
-    </div>
-  );
-}
-
-const CONFETTI_COLORS = [
-  "var(--brand-500)",
-  "var(--sun-400)",
-  "var(--sec-tactile)",
-  "var(--sec-language)",
-  "var(--sec-visual)",
-];
-
-function Confetti({ count = 24 }: { count?: number }) {
-  const pieces = useMemo(
-    () =>
-      Array.from({ length: count }, (_, i) => ({
-        left: (i * 137.5) % 100,
-        delay: (i % 9) * 0.08,
-        duration: 1.9 + (i % 6) * 0.24,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        w: 7 + (i % 4) * 3,
-      })),
-    [count],
-  );
-  return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      {pieces.map((p, i) => (
-        <span
-          key={i}
-          className="confetti-piece"
-          style={{
-            left: `${p.left}%`,
-            width: p.w,
-            height: p.w * 0.55,
-            background: p.color,
-            animationDelay: `${p.delay}s`,
-            animationDuration: `${p.duration}s`,
-          }}
-        />
-      ))}
     </div>
   );
 }
