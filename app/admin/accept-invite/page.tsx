@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Badge, Button, Card, IconShield, Shell, Wordmark } from "@/components/ui";
 
@@ -30,6 +30,15 @@ function AcceptInviteInner() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Supabase's invite/reset link is single-use, and this effect must not
+  // consume it twice — in dev, React Strict Mode deliberately fires effects
+  // twice on mount, and the second call would reuse an already-spent code
+  // and fail. Skipping the second call outright isn't enough on its own: it
+  // would race ahead to getSession() before the first (real) call has
+  // finished, and see no session yet. Sharing one promise between both
+  // invocations means the second one just waits for the same in-flight call
+  // instead of racing it or repeating it.
+  const verifyRef = useRef<Promise<{ error: { message: string } | null }> | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -37,10 +46,61 @@ function AcceptInviteInner() {
       const { getSupabaseBrowserClient } = await import("@/lib/supabase/client");
       const supabase = getSupabaseBrowserClient();
 
+      // Confirmed against a real generated invite link: Supabase's
+      // invite/recovery email lands here with the tokens in the URL HASH —
+      // #access_token=...&refresh_token=...&type=invite — an implicit-grant
+      // callback, not a `code` or `token_hash` query param. That matters
+      // because @supabase/ssr's browser client hardcodes flowType: "pkce"
+      // (not overridable), and supabase-js's own automatic URL detection
+      // explicitly REFUSES to process an implicit-grant URL while the
+      // client is in PKCE mode — it throws internally during client init,
+      // silently, so no session is ever established and getSession() below
+      // always came back empty. The fix is to read the hash and set the
+      // session ourselves rather than rely on that auto-detection.
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const tokenHash = searchParams.get("token_hash");
+      const type = searchParams.get("type");
       const code = searchParams.get("code");
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (accessToken && refreshToken) {
+        if (!verifyRef.current) {
+          verifyRef.current = supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+        }
+        const { error: setSessionError } = await verifyRef.current;
+        if (setSessionError) {
+          console.error("accept-invite: setSession failed", setSessionError);
+          if (active) setStatus("invalid");
+          return;
+        }
+        // Matches supabase-js's own behaviour for a successful implicit
+        // callback — the access/refresh tokens shouldn't linger in the URL
+        // bar or browser history once they've done their job.
+        window.history.replaceState(null, "", window.location.pathname);
+      } else if (tokenHash && type) {
+        if (!verifyRef.current) {
+          verifyRef.current = supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type as "invite" | "recovery" | "email" | "email_change" | "magiclink" | "signup",
+          });
+        }
+        const { error: verifyError } = await verifyRef.current;
+        if (verifyError) {
+          console.error("accept-invite: verifyOtp failed", verifyError);
+          if (active) setStatus("invalid");
+          return;
+        }
+      } else if (code) {
+        if (!verifyRef.current) {
+          verifyRef.current = supabase.auth.exchangeCodeForSession(code);
+        }
+        const { error: exchangeError } = await verifyRef.current;
         if (exchangeError) {
+          console.error("accept-invite: code exchange failed", exchangeError);
           if (active) setStatus("invalid");
           return;
         }
@@ -72,7 +132,26 @@ function AcceptInviteInner() {
         setError(updateError.message);
         return;
       }
-      router.replace("/admin");
+
+      // This page is the shared landing spot for staff invites, school
+      // invites, and admin password resets — the right home afterward
+      // depends on which kind of account this is.
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: adminRow } = await supabase
+        .from("admin_users")
+        .select("id")
+        .eq("id", user!.id)
+        .maybeSingle();
+      if (adminRow) {
+        router.replace("/admin");
+        return;
+      }
+      const { data: schoolRow } = await supabase
+        .from("schools")
+        .select("id")
+        .eq("id", user!.id)
+        .maybeSingle();
+      router.replace(schoolRow ? "/school" : "/admin/login?error=not_admin");
     } finally {
       setSubmitting(false);
     }

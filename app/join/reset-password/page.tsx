@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/provider";
 import { Button, Card, Footer, Mascot, Section, Shell, TopBar } from "@/components/ui";
@@ -29,6 +29,15 @@ function ResetPasswordInner() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Supabase's reset link is single-use, and this effect must not consume
+  // it twice — in dev, React Strict Mode deliberately fires effects twice on
+  // mount, and the second call would reuse an already-spent code and fail.
+  // Skipping the second call outright isn't enough on its own: it would race
+  // ahead to getSession() before the first (real) call has finished, and see
+  // no session yet. Sharing one promise between both invocations means the
+  // second one just waits for the same in-flight call instead of racing it
+  // or repeating it.
+  const verifyRef = useRef<Promise<{ error: { message: string } | null }> | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -36,10 +45,59 @@ function ResetPasswordInner() {
       const { getSupabaseBrowserClient } = await import("@/lib/supabase/client");
       const supabase = getSupabaseBrowserClient();
 
+      // Confirmed against a real generated invite link (accept-invite uses
+      // the identical landing pattern): Supabase's email links land here
+      // with the tokens in the URL HASH — #access_token=...&refresh_token=
+      // ...&type=recovery — an implicit-grant callback, not a `code` or
+      // `token_hash` query param. That matters because @supabase/ssr's
+      // browser client hardcodes flowType: "pkce" (not overridable), and
+      // supabase-js's own automatic URL detection explicitly REFUSES to
+      // process an implicit-grant URL while the client is in PKCE mode — it
+      // throws internally during client init, silently, so no session was
+      // ever established and getSession() below always came back empty.
+      // The fix is to read the hash and set the session ourselves rather
+      // than rely on that auto-detection.
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const tokenHash = searchParams.get("token_hash");
+      const type = searchParams.get("type");
       const code = searchParams.get("code");
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (accessToken && refreshToken) {
+        if (!verifyRef.current) {
+          verifyRef.current = supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+        }
+        const { error: setSessionError } = await verifyRef.current;
+        if (setSessionError) {
+          console.error("reset-password: setSession failed", setSessionError);
+          if (active) setStatus("invalid");
+          return;
+        }
+        window.history.replaceState(null, "", window.location.pathname);
+      } else if (tokenHash && type) {
+        if (!verifyRef.current) {
+          verifyRef.current = supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type as "invite" | "recovery" | "email" | "email_change" | "magiclink" | "signup",
+          });
+        }
+        const { error: verifyError } = await verifyRef.current;
+        if (verifyError) {
+          console.error("reset-password: verifyOtp failed", verifyError);
+          if (active) setStatus("invalid");
+          return;
+        }
+      } else if (code) {
+        if (!verifyRef.current) {
+          verifyRef.current = supabase.auth.exchangeCodeForSession(code);
+        }
+        const { error: exchangeError } = await verifyRef.current;
         if (exchangeError) {
+          console.error("reset-password: code exchange failed", exchangeError);
           if (active) setStatus("invalid");
           return;
         }
