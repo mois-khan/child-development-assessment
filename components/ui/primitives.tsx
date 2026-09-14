@@ -13,6 +13,11 @@ import {
   type IconProps,
 } from "./icons";
 
+/** The brand gradient — the one bold, unmistakably-us background used for a
+ * page's hero moments (greeting banners, funnel panels, hero cards). */
+export const BRAND_GRADIENT =
+  "linear-gradient(135deg, var(--brand-600) 0%, var(--brand-500) 55%, var(--coral-500) 100%)";
+
 /* ══ buttons ═══════════════════════════════════════════════════════════════ */
 
 type ButtonVariant = "primary" | "sun" | "secondary" | "soft" | "ghost";

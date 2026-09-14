@@ -1,6 +1,9 @@
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { type AssessmentResult, type StatusCode } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { formatAge, summariseAge, todayISO } from "@/lib/age";
+import { stageForAge } from "@/lib/stage";
+import { phaseLabel } from "@/lib/naming";
 
 export type LeadStatus = "new" | "contacted" | "interested" | "follow_up" | "converted" | "not_interested" | "lost";
 export type InteractionChannel = "phone" | "whatsapp" | "email" | "sms" | "in_person" | "other";
@@ -27,6 +30,8 @@ export interface LeadChild {
   id: string;
   name: string;
   dob: string;
+  ageLabel: string;
+  stageLabel: string;
   assessments: LeadChildAssessment[];
 }
 
@@ -58,6 +63,23 @@ export interface LeadStats {
   open: number;
 }
 
+/** A child row from either children query, shaped into what the lead views need. */
+function toLeadChild(child: any): LeadChild {
+  const age = summariseAge(child.dob, todayISO(), child.gestational_weeks ?? undefined);
+  return {
+    id: child.id,
+    name: child.name,
+    dob: child.dob,
+    ageLabel: formatAge(age.chronologicalMonths),
+    stageLabel: phaseLabel(stageForAge(age.assessedMonths)),
+    assessments: (child.assessments || []).map((a: any) => ({
+      id: a.id,
+      assessedOn: a.assessed_on,
+      completedAt: a.completed_at || undefined,
+    })),
+  };
+}
+
 export async function adminListLeads(): Promise<Lead[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = getSupabaseBrowserClient();
@@ -77,26 +99,17 @@ export async function adminListLeads(): Promise<Lead[]> {
   const { data: childrenData, error: childErr } = await (supabase
     .from("children")
     .select(`
-      id, profile_id, name, dob,
+      id, profile_id, name, dob, gestational_weeks,
       assessments ( id, assessed_on, completed_at )
     ` as any)
     .in("profile_id", profileIds.length > 0 ? profileIds : ["00000000-0000-0000-0000-000000000000"]) as any);
-    
+
   if (childErr) throw new Error("Children query failed: " + (childErr.message || JSON.stringify(childErr)));
 
   const childrenByProfile = new Map<string, LeadChild[]>();
   for (const child of childrenData || []) {
     if (!childrenByProfile.has(child.profile_id)) childrenByProfile.set(child.profile_id, []);
-    childrenByProfile.get(child.profile_id)!.push({
-      id: child.id,
-      name: child.name,
-      dob: child.dob,
-      assessments: (child.assessments || []).map((a: any) => ({
-        id: a.id,
-        assessedOn: a.assessed_on,
-        completedAt: a.completed_at || undefined,
-      }))
-    });
+    childrenByProfile.get(child.profile_id)!.push(toLeadChild(child));
   }
 
   return leadsData.map((l: any): Lead => ({
@@ -134,23 +147,14 @@ export async function adminGetLead(id: string): Promise<Lead | null> {
   const { data: childrenData } = await (supabase
     .from("children")
     .select(`
-      id, profile_id, name, dob,
+      id, profile_id, name, dob, gestational_weeks,
       assessments ( id, assessed_on, completed_at )
     ` as any)
     .eq("profile_id", l.profile_id) as any);
 
-  const children: LeadChild[] = (childrenData || []).map((child: any) => ({
-    id: child.id,
-    name: child.name,
-    dob: child.dob,
-    assessments: (child.assessments || []).map((a: any) => ({
-      id: a.id,
-      assessedOn: a.assessed_on,
-      completedAt: a.completed_at || undefined,
-    }))
-  }));
+  const children: LeadChild[] = (childrenData || []).map(toLeadChild);
 
-  const { data: interactionsData } = await (supabase
+  const { data: interactionsData, error: interactionsErr } = await (supabase
     .from("interactions")
     .select(`
       id, occurred_at, channel, outcome, remarks, next_follow_up_at,
@@ -158,6 +162,7 @@ export async function adminGetLead(id: string): Promise<Lead | null> {
     ` as any)
     .eq("lead_id", l.id)
     .order("occurred_at", { ascending: false }) as any);
+  if (interactionsErr) throw new Error("Interactions query failed: " + interactionsErr.message);
 
   const interactions: Interaction[] = (interactionsData || []).map((i: any) => ({
     id: i.id,

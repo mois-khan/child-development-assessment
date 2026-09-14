@@ -11,7 +11,7 @@ import {
   deleteMilestoneVideo,
   toggleMilestoneVideoActive
 } from "@/lib/data/milestone-videos";
-import { Card, Button, Badge, ConfirmDeleteButton, IconClose, InlineBanner, useBanner } from "@/components/ui";
+import { Card, Button, Badge, ConfirmDeleteButton, IconChevronRight, IconClose, IconPlus, InlineBanner, useBanner } from "@/components/ui";
 
 export default function MilestoneVideosPage() {
   const [videos, setVideos] = useState<MilestoneVideo[]>([]);
@@ -142,7 +142,7 @@ export default function MilestoneVideosPage() {
   });
 
   return (
-    <>
+    <div className="space-y-6 pb-10">
       <InlineBanner message={banner.message} onDismiss={banner.clear} />
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
@@ -151,14 +151,14 @@ export default function MilestoneVideosPage() {
             Shown inside each domain card of the report, matched to the child&apos;s stage.
           </p>
         </div>
-        <Button onClick={() => openAddDrawer()} variant="primary">
-          + Add Video
+        <Button onClick={() => openAddDrawer()} variant="primary" iconLeft={<IconPlus size={16} />}>
+          Add Video
         </Button>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-4">
-        <select 
-          className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm"
+      <div className="flex flex-wrap gap-3">
+        <select
+          className="field !w-auto min-w-[14rem]"
           value={filterStage}
           onChange={e => setFilterStage(e.target.value)}
         >
@@ -167,8 +167,8 @@ export default function MilestoneVideosPage() {
             <option key={s.id} value={s.id}>Phase {s.roman} - {s.name}</option>
           ))}
         </select>
-        <select 
-          className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm"
+        <select
+          className="field !w-auto min-w-[12rem]"
           value={filterDomain}
           onChange={e => setFilterDomain(e.target.value)}
         >
@@ -179,68 +179,97 @@ export default function MilestoneVideosPage() {
         </select>
       </div>
 
-      <div className="mt-8 space-y-6">
+      <div className="space-y-4">
         {loading ? (
-          <p className="text-ink-3">Loading videos...</p>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-16 animate-pulse rounded-2xl bg-surface-3" />
+            ))}
+          </div>
         ) : (
-          BRAIN_STAGES.map(stage => (
-            (filterStage === "all" || filterStage === stage.id) && DOMAINS.map(domain => {
-              if (filterDomain !== "all" && filterDomain !== domain.code) return null;
-              
-              const key = `${stage.id}-${domain.code}`;
-              const cellVideos = groups.get(key) || [];
+          BRAIN_STAGES.filter(stage => filterStage === "all" || filterStage === stage.id).map(stage => {
+            const stageDomains = DOMAINS.filter(d => filterDomain === "all" || filterDomain === d.code);
+            const stageVideoCount = stageDomains.reduce(
+              (n, d) => n + (groups.get(`${stage.id}-${d.code}`)?.length ?? 0),
+              0,
+            );
 
-              return (
-                <details key={key} className="group" open={cellVideos.length > 0}>
-                  <summary className="cursor-pointer list-none py-2 text-lg font-bold text-ink">
-                    Phase {stage.roman} &middot; {domain.name}
-                    {cellVideos.length === 0 && (
-                      <span className="ml-2 text-sm font-semibold text-ink-3">&middot; no videos yet</span>
-                    )}
+            return (
+              <Card key={stage.id} className="overflow-hidden !p-0">
+                <details className="group" open>
+                  <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-4 transition-colors hover:bg-surface-2">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <IconChevronRight size={16} className="shrink-0 text-ink-3 transition-transform group-open:rotate-90" />
+                      <span className="text-base font-extrabold text-ink">
+                        Phase {stage.roman} · {stage.name}
+                      </span>
+                    </span>
+                    <Badge size="sm" tone={stageVideoCount > 0 ? "accent" : "neutral"}>
+                      {stageVideoCount} video{stageVideoCount === 1 ? "" : "s"}
+                    </Badge>
                   </summary>
-                  <div className="mt-3 space-y-3 pl-4 border-l-2 border-line-soft">
-                    {cellVideos.map(video => (
-                      <Card key={video.id} variant="clay" className="flex items-center gap-4 p-4">
-                        {video.thumbnail_url ? (
-                          <img src={video.thumbnail_url} alt="" className="h-12 w-12 rounded object-cover bg-surface-2 shrink-0" />
-                        ) : (
-                          <div className="h-12 w-12 rounded bg-surface-3 flex items-center justify-center shrink-0">▶️</div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-ink truncate">{video.title}</h4>
-                          <p className="text-sm text-ink-3 truncate">{video.description || "No description"}</p>
+
+                  <div className="divide-y divide-line-soft border-t border-line-soft">
+                    {stageDomains.map(domain => {
+                      const cellVideos = groups.get(`${stage.id}-${domain.code}`) || [];
+                      return (
+                        <div key={domain.code} className="px-5 py-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-bold text-ink">{domain.name}</p>
+                            <button
+                              onClick={() => openAddDrawer(stage.id, domain.code)}
+                              className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-accent hover:underline"
+                            >
+                              <IconPlus size={13} />
+                              Add
+                            </button>
+                          </div>
+
+                          {cellVideos.length === 0 ? (
+                            <p className="mt-1 text-xs text-ink-3">No videos yet</p>
+                          ) : (
+                            <div className="mt-3 space-y-2">
+                              {cellVideos.map(video => (
+                                <Card key={video.id} variant="clay" className="flex items-center gap-4 p-3.5">
+                                  {video.thumbnail_url ? (
+                                    <img src={video.thumbnail_url} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-surface-2 object-cover" />
+                                  ) : (
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface-3">▶️</div>
+                                  )}
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className="truncate font-bold text-ink">{video.title}</h4>
+                                    <p className="truncate text-sm text-ink-3">{video.description || "No description"}</p>
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-2.5">
+                                    <button
+                                      onClick={() => handleToggleActive(video.id, video.is_active)}
+                                      className={`rounded-full px-2 py-1 text-xs font-semibold ${video.is_active ? "bg-green-100 text-green-700" : "bg-surface-3 text-ink-3"}`}
+                                    >
+                                      {video.is_active ? "Active" : "Inactive"}
+                                    </button>
+                                    <Button size="sm" variant="ghost" onClick={() => openEditDrawer(video)}>Edit</Button>
+                                    <ConfirmDeleteButton onConfirm={() => handleDelete(video.id)} />
+                                  </div>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <div className="shrink-0 flex items-center gap-3">
-                          <button 
-                            onClick={() => handleToggleActive(video.id, video.is_active)}
-                            className={`text-xs px-2 py-1 rounded-full font-semibold ${video.is_active ? 'bg-green-100 text-green-700' : 'bg-surface-3 text-ink-3'}`}
-                          >
-                            {video.is_active ? 'Active' : 'Inactive'}
-                          </button>
-                          <Button size="sm" variant="ghost" onClick={() => openEditDrawer(video)}>Edit</Button>
-                          <ConfirmDeleteButton onConfirm={() => handleDelete(video.id)} />
-                        </div>
-                      </Card>
-                    ))}
-                    <button 
-                      onClick={() => openAddDrawer(stage.id, domain.code)}
-                      className="text-sm font-semibold text-accent hover:underline mt-2"
-                    >
-                      + Add video to this cell
-                    </button>
+                      );
+                    })}
                   </div>
                 </details>
-              );
-            })
-          ))
+              </Card>
+            );
+          })
         )}
       </div>
 
-      {/* Drawer Overlay */}
+      {/* Add/Edit dialog */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => !saving && setDrawerOpen(false)} />
-          <div className="relative w-full max-w-md bg-[var(--surface)] shadow-2xl flex flex-col animate-slide-in-right h-full overflow-y-auto">
+          <div className="animate-rise relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-[var(--surface)] shadow-2xl">
             <div className="flex items-center justify-between border-b border-line p-5">
               <h2 className="text-lg font-bold">{editingVideo ? "Edit Video" : "Add Video"}</h2>
               <button onClick={() => !saving && setDrawerOpen(false)} className="p-2 text-ink-3 hover:bg-surface-2 rounded-full">
@@ -248,11 +277,11 @@ export default function MilestoneVideosPage() {
               </button>
             </div>
             
-            <form onSubmit={handleSave} className="p-5 space-y-5 flex-1">
+            <form onSubmit={handleSave} className="flex-1 space-y-5 overflow-y-auto p-5">
               <div>
-                <label className="block text-sm font-semibold text-ink-2 mb-1">Phase</label>
-                <select 
-                  className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"
+                <label className="label">Phase</label>
+                <select
+                  className="field"
                   value={drawerStageId}
                   onChange={e => setDrawerStageId(e.target.value)}
                   disabled={saving}
@@ -262,9 +291,9 @@ export default function MilestoneVideosPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-ink-2 mb-1">Domain</label>
-                <select 
-                  className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"
+                <label className="label">Domain</label>
+                <select
+                  className="field"
                   value={drawerDomain}
                   onChange={e => setDrawerDomain(e.target.value as import("@/lib/supabase/database.types").MilestoneVideoDomain)}
                   disabled={saving}
@@ -274,11 +303,12 @@ export default function MilestoneVideosPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-ink-2 mb-1">Title *</label>
-                <input 
-                  type="text" 
+                <label className="label">Title *</label>
+                <input
+                  type="text"
                   required
-                  className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"
+                  placeholder="e.g. Encouraging tummy time"
+                  className="field"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   disabled={saving}
@@ -286,9 +316,9 @@ export default function MilestoneVideosPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-ink-2 mb-1">Description</label>
-                <textarea 
-                  className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm h-20 resize-none"
+                <label className="label">Description</label>
+                <textarea
+                  className="field"
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   disabled={saving}
@@ -296,44 +326,46 @@ export default function MilestoneVideosPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-ink-2 mb-1">Thumbnail URL</label>
-                <input 
-                  type="url" 
-                  className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"
+                <label className="label">Thumbnail URL</label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  className="field"
                   value={thumbnailUrl}
                   onChange={e => setThumbnailUrl(e.target.value)}
                   disabled={saving}
                 />
                 {thumbnailUrl && (
-                  <div className="mt-2 h-20 w-32 bg-surface-2 rounded overflow-hidden">
-                    <img src={thumbnailUrl} alt="Preview" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                  <div className="mt-2 h-20 w-32 overflow-hidden rounded-lg border border-line-soft bg-surface-2">
+                    <img src={thumbnailUrl} alt="Preview" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-ink-2 mb-1">Redirect URL *</label>
-                <input 
-                  type="url" 
+                <label className="label">Redirect URL *</label>
+                <input
+                  type="url"
                   required
-                  className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"
+                  placeholder="https://..."
+                  className="field"
                   value={redirectUrl}
                   onChange={e => setRedirectUrl(e.target.value)}
                   disabled={saving}
                 />
+                <p className="hint">Where tapping the video takes a parent — usually a YouTube link.</p>
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
-                <input 
-                  type="checkbox" 
-                  id="isActive"
+              <label className="flex cursor-pointer items-center gap-2.5 pt-1">
+                <input
+                  type="checkbox"
                   checked={isActive}
                   onChange={e => setIsActive(e.target.checked)}
                   disabled={saving}
-                  className="h-4 w-4 rounded border-line"
+                  className="size-4 rounded border-line-strong accent-[var(--accent)]"
                 />
-                <label htmlFor="isActive" className="text-sm font-semibold text-ink-2">Active</label>
-              </div>
+                <span className="text-sm font-semibold text-ink-2">Active — visible to parents</span>
+              </label>
 
               <div className="pt-6 border-t border-line flex gap-3 justify-end">
                 <Button type="button" variant="ghost" onClick={() => setDrawerOpen(false)} disabled={saving}>
@@ -347,6 +379,6 @@ export default function MilestoneVideosPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

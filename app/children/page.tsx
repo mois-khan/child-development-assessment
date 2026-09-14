@@ -346,7 +346,7 @@ function NewChildDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="new-child-title"
@@ -354,7 +354,7 @@ function NewChildDialog({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="my-8 w-full max-w-[32rem]">
+      <div className="w-full max-w-[32rem] lg:max-w-[38rem]">
         <NewChildForm isSchool={isSchool} onCreated={onCreated} onCancel={onClose} />
       </div>
     </div>
@@ -440,9 +440,13 @@ function NewChildForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="clay animate-rise overflow-hidden !p-0">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="clay animate-rise flex max-h-[90vh] flex-col overflow-hidden !p-0"
+    >
       <div
-        className="px-6 py-5 sm:px-8"
+        className="shrink-0 px-6 py-5 sm:px-8"
         style={{ background: "linear-gradient(120deg, var(--brand-600), var(--brand-500))" }}
       >
         <h2 id="new-child-title" className="!text-xl text-white">
@@ -451,7 +455,7 @@ function NewChildForm({
       </div>
 
       {isSchool && added.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-line-soft bg-[var(--accent-soft)] px-6 py-3 sm:px-8">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-line-soft bg-[var(--accent-soft)] px-6 py-3 sm:px-8">
           <IconCheck size={15} className="shrink-0 text-accent" />
           <p className="text-sm font-semibold text-ink-2">
             {added.length} student{added.length === 1 ? "" : "s"} added so far:{" "}
@@ -460,7 +464,7 @@ function NewChildForm({
         </div>
       )}
 
-      <div className="p-6 sm:p-8">
+      <div className="min-h-0 flex-1 overflow-y-auto p-6 sm:p-8">
         {/* photo */}
         <div className="flex items-center gap-5">
           <label
@@ -639,32 +643,32 @@ function NewChildForm({
             </p>
           </div>
         )}
+      </div>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Button
-            type="submit"
-            size="lg"
-            disabled={!canSubmit || submitting}
-            iconRight={<IconArrowRight size={18} />}
-          >
-            {submitting ? "Saving…" : isSchool ? "Save & add another" : "Save & continue"}
+      <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-line-soft bg-[var(--surface)] p-6 sm:px-8 sm:py-5">
+        <Button
+          type="submit"
+          size="lg"
+          disabled={!canSubmit || submitting}
+          iconRight={<IconArrowRight size={18} />}
+        >
+          {submitting ? "Saving…" : isSchool ? "Save & add another" : "Save & continue"}
+        </Button>
+        {isSchool && added.length > 0 && (
+          <Button type="button" variant="secondary" onClick={onCancel} iconLeft={<IconCheck size={16} />}>
+            Done — back to roster
           </Button>
-          {isSchool && added.length > 0 && (
-            <Button type="button" variant="secondary" onClick={onCancel} iconLeft={<IconCheck size={16} />}>
-              Done — back to roster
-            </Button>
-          )}
-          {onCancel && (!isSchool || added.length === 0) && (
-            <Button type="button" variant="ghost" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-          {!canSubmit && (
-            <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-3">
-              <IconSparkle size={15} /> Name, birthday and gender
-            </span>
-          )}
-        </div>
+        )}
+        {onCancel && (!isSchool || added.length === 0) && (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+        {!canSubmit && (
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-3">
+            <IconSparkle size={15} /> Name, birthday and gender
+          </span>
+        )}
       </div>
     </form>
   );

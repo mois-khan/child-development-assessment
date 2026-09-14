@@ -54,6 +54,7 @@ export interface AdminDashboardCounts {
   completedAssessments: number;
   inProgressAssessments: number;
   totalPurchases: number;
+  totalRevenuePaise: number;
   needsFollowUp: number;
 }
 
@@ -63,10 +64,10 @@ export async function adminDashboardCounts(): Promise<AdminDashboardCounts> {
 
     const [
       { count: parentsCount, error: pErr },
-      { count: purchasesCount, error: pyErr },
+      { data: paidPayments, error: pyErr },
     ] = await Promise.all([
       supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("payments").select("*", { count: "exact", head: true }).eq("status", "paid"),
+      supabase.from("payments").select("amount_paise").eq("status", "paid"),
     ]);
 
     if (pErr) throw new Error("profiles count failed: " + pErr.message);
@@ -82,7 +83,8 @@ export async function adminDashboardCounts(): Promise<AdminDashboardCounts> {
       totalAssessments: submissions.length,
       completedAssessments: submissions.filter((s) => s.assessment.completedAt).length,
       inProgressAssessments: submissions.filter((s) => !s.assessment.completedAt).length,
-      totalPurchases: purchasesCount ?? 0,
+      totalPurchases: paidPayments?.length ?? 0,
+      totalRevenuePaise: (paidPayments ?? []).reduce((sum, p) => sum + p.amount_paise, 0),
       needsFollowUp: submissions.filter((s) => {
         const st = s.result?.overallStatus;
         return st === "significant" || st === "delay";

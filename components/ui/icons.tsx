@@ -391,3 +391,12 @@ export function IconBell(p: IconProps) {
     </Svg>
   );
 }
+
+export function IconEdit(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M14.2 4.8 19.2 9.8 8 21H3v-5L14.2 4.8Z" />
+      <path d="M12.3 6.7 17.3 11.7" />
+    </Svg>
+  );
+}

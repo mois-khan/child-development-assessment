@@ -24,11 +24,13 @@ export function ConfirmDeleteButton({
   label = "Delete",
   confirmLabel = "Click again to delete",
   size = "sm",
+  className,
 }: {
   onConfirm: () => void;
   label?: string;
   confirmLabel?: string;
   size?: "sm" | "md" | "lg";
+  className?: string;
 }) {
   const [armed, setArmed] = useState(false);
 
@@ -43,6 +45,7 @@ export function ConfirmDeleteButton({
       type="button"
       size={size}
       variant="ghost"
+      className={className}
       onClick={() => {
         if (armed) {
           setArmed(false);

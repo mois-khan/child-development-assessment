@@ -12,9 +12,13 @@ import {
   Avatar,
   Badge,
   Card,
+  IconBolt,
   IconCalendar,
   IconPhone,
+  IconShield,
+  IconTrophy,
 } from "@/components/ui";
+import type { ReactNode } from "react";
 
 type QuickFilter = "worklist" | "new" | "won" | "lost" | "all";
 
@@ -85,29 +89,13 @@ export default function AdminLeadsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="!text-2xl">Leads</h1>
-          </div>
-          <p className="mt-1.5 max-w-[62ch] text-sm text-ink-3">
-            Every signup shows up here as a lead worth calling, whether or not they&rsquo;ve
-            added a child yet. Log what happens on each call: the date and the verdict
-            decide when it needs following up again.
-          </p>
-        </div>
-      </div>
+      <h1 className="!text-2xl">Leads</h1>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <QuickStat
-          label="Overdue"
-          value={counts.overdue}
-          color="var(--st-consult)"
-          active={false}
-        />
-        <QuickStat label="Due today" value={counts.dueToday} color="var(--st-emerging)" active={false} />
-        <QuickStat label="New" value={counts.new} color="var(--accent)" active={false} />
-        <QuickStat label="Won" value={counts.won} color="var(--st-on-track)" active={false} />
+        <QuickStat label="Overdue" value={counts.overdue} icon={<IconShield size={16} />} color="var(--st-consult)" />
+        <QuickStat label="Due Today" value={counts.dueToday} icon={<IconCalendar size={16} />} color="var(--st-emerging)" />
+        <QuickStat label="New" value={counts.new} icon={<IconBolt size={16} />} color="var(--accent)" />
+        <QuickStat label="Won" value={counts.won} icon={<IconTrophy size={16} />} color="var(--st-on-track)" />
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -164,13 +152,11 @@ export default function AdminLeadsPage() {
           </p>
         </Card>
       ) : (
-        <Card className="overflow-hidden !p-0">
-          <div className="divide-y divide-line">
-            {filtered.map((lead) => (
-              <LeadRow key={lead.id} lead={lead} today={today} />
-            ))}
-          </div>
-        </Card>
+        <div className="space-y-3">
+          {filtered.map((lead) => (
+            <LeadRow key={lead.id} lead={lead} today={today} />
+          ))}
+        </div>
       )}
     </div>
   );
@@ -179,17 +165,25 @@ export default function AdminLeadsPage() {
 function QuickStat({
   label,
   value,
+  icon,
   color,
 }: {
   label: string;
   value: number;
+  icon: ReactNode;
   color: string;
-  active: boolean;
 }) {
   return (
-    <Card variant="tint" tint={color} className="!p-4">
-      <p className="tnum text-2xl font-extrabold leading-none text-ink">{value}</p>
-      <p className="mt-1 text-xs font-semibold text-ink-3">{label}</p>
+    <Card className="!p-4">
+      <div className="flex items-center gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl text-white" style={{ background: color }}>
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <p className="tnum text-2xl font-extrabold leading-none text-ink">{value}</p>
+          <p className="mt-1 text-xs font-semibold text-ink-3">{label}</p>
+        </div>
+      </div>
     </Card>
   );
 }
@@ -197,21 +191,21 @@ function QuickStat({
 function LeadRow({ lead, today }: { lead: Lead; today: string }) {
   const overdue = !!lead.nextFollowUpAt && lead.nextFollowUpAt < today && lead.status !== "converted" && lead.status !== "lost" && lead.status !== "not_interested";
   const dueToday = !!lead.nextFollowUpAt && lead.nextFollowUpAt.startsWith(today);
-  const childText = lead.children.length === 1 ? `Child: ${lead.children[0].name}` : `${lead.children.length} children`;
+  const childText = lead.children.length === 0 ? "No children yet" : lead.children.length === 1 ? `Child: ${lead.children[0].name}` : `${lead.children.length} children`;
 
   return (
     <Link
       href={`/admin/leads/${lead.id}`}
-      className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-surface-2 sm:flex-row sm:items-center sm:gap-4"
+      className="clay flex flex-col gap-3 rounded-2xl bg-[var(--surface)] p-4 transition-all hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:gap-4 sm:p-5"
     >
       <div className="flex min-w-0 flex-1 items-center gap-4">
-        <Avatar name={lead.parentName || "Unknown"} size={40} />
+        <Avatar name={lead.parentName || "Unknown"} size={44} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-bold text-ink">
             {lead.parentName || "Unnamed Parent"}
             <span className="ml-1.5 font-medium text-ink-3">· {childText}</span>
           </p>
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-3">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-3">
             {lead.phone ? (
               <span className="flex items-center gap-1">
                 <IconPhone size={12} /> {lead.phone}
@@ -223,15 +217,25 @@ function LeadRow({ lead, today }: { lead: Lead; today: string }) {
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2.5 pl-[56px] sm:pl-0">
+      <div className="flex shrink-0 items-center gap-2 pl-[60px] sm:pl-0">
         {lead.nextFollowUpAt && (lead.status === "new" || lead.status === "contacted" || lead.status === "follow_up" || lead.status === "interested") && (
-          <span
-            className="flex items-center gap-1.5 text-xs font-bold"
-            style={{ color: overdue ? "var(--st-consult)" : dueToday ? "var(--st-emerging)" : "var(--ink-3)" }}
-          >
-            <IconCalendar size={13} />
-            {overdue ? "Overdue" : dueToday ? "Due today" : new Date(lead.nextFollowUpAt).toLocaleDateString()}
-          </span>
+          overdue || dueToday ? (
+            <span
+              className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold"
+              style={
+                overdue
+                  ? { background: "var(--st-consult-soft)", color: "var(--st-consult-ink)" }
+                  : { background: "var(--st-emerging-soft)", color: "var(--st-emerging-ink)" }
+              }
+            >
+              <IconCalendar size={12} className="shrink-0" />
+              {overdue ? "Overdue" : "Due today"}
+            </span>
+          ) : (
+            <span className="text-xs font-medium text-ink-3">
+              Follow-up {new Date(lead.nextFollowUpAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+            </span>
+          )
         )}
         <Badge tone={STATUS_TONE[lead.status]}>{STATUS_LABEL[lead.status]}</Badge>
       </div>

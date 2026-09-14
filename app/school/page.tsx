@@ -13,6 +13,7 @@ import type { AssessmentResult, StatusCode } from "@/lib/types";
 import {
   Avatar,
   Badge,
+  Button,
   ButtonLink,
   Card,
   Footer,
@@ -21,6 +22,7 @@ import {
   IconCheck,
   IconChevronRight,
   IconClock,
+  IconLock,
   IconPlus,
   IconSchool,
   IconStarFilled,
@@ -51,13 +53,46 @@ interface StudentSummary {
 }
 
 export default function SchoolDashboardPage() {
-  const { profile, loading: authLoading } = useAuth();
+  const { profile, loading: authLoading, updatePassword } = useAuth();
 
   const [children, setChildren] = useState<SavedChild[] | null>(null);
   const [assessments, setAssessments] = useState<StoredAssessment[] | null>(null);
   const [bankReady, setBankReady] = useState(itemBankReady());
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
+
+  const [passwordFormOpen, setPasswordFormOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordMsg(null);
+    if (newPassword.length < 8) {
+      setPasswordMsg({ text: "Password must be at least 8 characters.", ok: false });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ text: "Passwords don't match.", ok: false });
+      return;
+    }
+    setChangingPassword(true);
+    const { error } = await updatePassword(newPassword);
+    setChangingPassword(false);
+    if (error) {
+      setPasswordMsg({ text: error, ok: false });
+      return;
+    }
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordMsg({ text: "Password updated.", ok: true });
+    setTimeout(() => {
+      setPasswordFormOpen(false);
+      setPasswordMsg(null);
+    }, 1500);
+  }
 
   useEffect(() => {
     let active = true;
@@ -266,6 +301,62 @@ export default function SchoolDashboardPage() {
               </>
             )}
           </div>
+        </Shell>
+
+        {/* ══ account ══════════════════════════════════════════════════════ */}
+        <Shell width="wide">
+          <Card variant="clay" className="mt-6 !p-5">
+            <button
+              type="button"
+              onClick={() => setPasswordFormOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-3"
+            >
+              <span className="flex items-center gap-2.5 text-sm font-bold text-ink">
+                <IconLock size={17} className="text-ink-3" /> Change password
+              </span>
+              <span className="text-xs font-semibold text-accent">
+                {passwordFormOpen ? "Cancel" : "Change"}
+              </span>
+            </button>
+
+            {passwordFormOpen && (
+              <form onSubmit={handleChangePassword} className="mt-4 max-w-sm space-y-3 border-t border-line-soft pt-4">
+                <div>
+                  <label className="label" htmlFor="new-password">New password</label>
+                  <input
+                    id="new-password"
+                    type="password"
+                    className="field"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    disabled={changingPassword}
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div>
+                  <label className="label" htmlFor="confirm-password">Confirm new password</label>
+                  <input
+                    id="confirm-password"
+                    type="password"
+                    className="field"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={changingPassword}
+                    autoComplete="new-password"
+                  />
+                </div>
+                {passwordMsg && (
+                  <p className={`text-sm font-semibold ${passwordMsg.ok ? "text-[var(--st-on-track)]" : "text-[var(--st-consult)]"}`}>
+                    {passwordMsg.text}
+                  </p>
+                )}
+                <Button type="submit" size="sm" disabled={changingPassword}>
+                  {changingPassword ? "Saving…" : "Save new password"}
+                </Button>
+              </form>
+            )}
+          </Card>
         </Shell>
 
         {/* ══ roster ═══════════════════════════════════════════════════════ */}

@@ -3,9 +3,14 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 /**
- * Invites a school account, the same way app/api/admin/invite invites
- * staff: Supabase's admin invite API, with metadata that
- * handle_new_user() (0007_schools.sql) reads to create the right rows.
+ * Creates a school account with a password the admin sets, using Supabase's
+ * admin "create user" API (not the email-based /auth/v1/invite Supabase
+ * flow — that depends on the invite email actually arriving, which has been
+ * unreliable). The account is created with email_confirm: true and the
+ * given password already set, so the school can sign in at /join
+ * immediately; no email has to be delivered for that to work. The same
+ * metadata shape as before is passed through so handle_new_user()
+ * (0007_schools.sql) still creates the right profiles/schools rows.
  *
  * Schools are never self-serve (see the migration's header note) — only an
  * admin with the "schools" page grant can call this. The UI already hides
@@ -14,9 +19,12 @@ import { cookies } from "next/headers";
  */
 export async function POST(request: Request) {
   try {
-    const { email, schoolName, contactName, contactPhone } = await request.json();
+    const { email, password, schoolName, contactName, contactPhone } = await request.json();
     if (!email || !schoolName) {
       return NextResponse.json({ error: "email and schoolName required" }, { status: 400 });
+    }
+    if (!password || password.length < 8) {
+      return NextResponse.json({ error: "password must be at least 8 characters" }, { status: 400 });
     }
 
     const cookieStore = await cookies();
@@ -41,13 +49,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden: schools access required" }, { status: 403 });
     }
 
-    // Same redirect target as staff invites and password resets — the
-    // screen that exchanges the invite link's code for a session and lets
-    // whoever it belongs to set a password.
-    const redirectTo = `${new URL(request.url).origin}/admin/accept-invite`;
-
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/invite?redirect_to=${encodeURIComponent(redirectTo)}`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`,
       {
         method: "POST",
         headers: {
@@ -57,7 +60,9 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           email,
-          data: {
+          password,
+          email_confirm: true,
+          user_metadata: {
             account_type: "school",
             school_name: schoolName,
             contact_name: contactName ?? "",
@@ -69,7 +74,7 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const err = await response.json();
-      return NextResponse.json({ error: err.msg || "Failed to invite school" }, { status: response.status });
+      return NextResponse.json({ error: err.msg || "Failed to create school account" }, { status: response.status });
     }
 
     return NextResponse.json({ success: true });

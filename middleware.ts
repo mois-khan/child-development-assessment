@@ -9,8 +9,10 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
  * gated page, e.g. /admin/leads/[id] falls under "leads").
  */
 const PAGE_GATE: Record<string, string> = {
-  "/admin/analytics":        "analytics",
-  "/admin/parents":          "parents",
+  // /admin/analytics and /admin/parents are now redirect-only stubs (their
+  // content lives on the dashboard and the leads page, respectively) — left
+  // ungated so an old bookmark always reaches the redirect instead of
+  // bouncing an admin who lacks the retired grant to /admin/unauthorized.
   "/admin/children":         "children",
   "/admin/assessments":      "assessments",
   "/admin/purchases":        "purchases",
