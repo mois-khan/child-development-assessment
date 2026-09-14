@@ -37,6 +37,7 @@ function isDivider(e: NavEntry): e is NavDivider {
  */
 const NAV: NavEntry[] = [
   { href: "/admin",              label: "Dashboard",      icon: <IconChart size={18} /> },
+  { href: "/admin/analytics",    label: "Analytics",      icon: <IconChart size={18} /> },
   { href: "/admin/parents",      label: "Parents",        icon: <IconUsers size={18} /> },
   { href: "/admin/children",     label: "Children",       icon: <IconUsers size={18} /> },
   { href: "/admin/assessments",  label: "Assessments",    icon: <IconTrophy size={18} /> },

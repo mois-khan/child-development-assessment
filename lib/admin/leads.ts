@@ -230,14 +230,37 @@ export async function adminAssignLead(id: string, adminUserId: string | null): P
  * in adminLogInteraction(). Exists for the two cases the interaction-outcome
  * mapping can never reach on its own: marking a lead "lost" (no interaction
  * outcome maps to it) and reopening a closed lead so it can be worked again.
+ *
+ * Also logs an interaction row alongside the direct update — the leads
+ * table update alone left no record of who changed a lead's status or when,
+ * unlike every outcome-driven change (which flows through the
+ * interactions_sync_lead trigger and so is logged automatically).
+ *
+ * The interaction is logged BEFORE the explicit status update, not after:
+ * inserting it fires interactions_sync_lead, which computes its own guess at
+ * `leads.status` from the outcome — and neither "lost" nor "reopened" is
+ * something any outcome maps to. Doing the explicit update second means it
+ * always has the final say over whatever the trigger just set.
  */
-export async function adminSetLeadStatus(id: string, status: LeadStatus): Promise<Lead> {
+export async function adminSetLeadStatus(id: string, status: LeadStatus, loggedByUserId: string): Promise<Lead> {
   const supabase = getSupabaseBrowserClient();
+
+  if (loggedByUserId) {
+    await supabase.from("interactions").insert({
+      lead_id: id,
+      channel: "other",
+      outcome: status === "lost" ? "not_interested" : "other",
+      remarks: status === "lost" ? "Marked as lost." : `Reopened (status set to ${status}).`,
+      logged_by: loggedByUserId,
+    });
+  }
+
   const { error } = await supabase
     .from("leads")
     .update({ status })
     .eq("id", id);
   if (error) throw error;
+
   return adminGetLead(id) as Promise<Lead>;
 }
 

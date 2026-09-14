@@ -199,6 +199,19 @@ export async function updateAdminUserRole(
     throw new Error(`Failed to update role for user ${userId}: ${error.message}`);
 }
 
+/**
+ * Removes an admin_users row — revoking admin-panel access (the matching
+ * admin_page_access rows cascade-delete with it). Does not touch the
+ * underlying auth.users account, so the person can no longer reach the
+ * admin panel but their login otherwise still exists. Super-admin only,
+ * enforced by the admin_users_delete RLS policy.
+ */
+export async function removeAdminUser(userId: string): Promise<void> {
+  const supabase = getSupabaseBrowserClient();
+  const { error } = await supabase.from("admin_users").delete().eq("id", userId);
+  if (error) throw new Error(`Failed to remove admin user ${userId}: ${error.message}`);
+}
+
 // ---------------------------------------------------------------------------
 // Invite
 // ---------------------------------------------------------------------------

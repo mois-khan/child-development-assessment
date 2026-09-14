@@ -15,7 +15,7 @@ import {
   type ItemStatus,
 } from "@/lib/admin/content";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import type { DomainCode, ItemSource } from "@/lib/types";
+import type { DomainCode, ItemKind, ItemSource } from "@/lib/types";
 import {
   Badge,
   Button,
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui";
 
 const SOURCES: ItemSource[] = ["ACE", "AUTHORED"];
+const KINDS: ItemKind[] = ["yesno", "choice", "count", "percent", "text"];
 
 const STATUS_BADGE: Record<ItemStatus, { label: string; tone: "neutral" | "accent" | "warn" | "success" } | null> = {
   base: null,
@@ -367,9 +368,22 @@ function ItemForm({
   const [text, setText] = useState(existing?.text ?? "");
   const [how, setHow] = useState(existing?.how ?? "");
   const [source, setSource] = useState<ItemSource>(existing?.source ?? "AUTHORED");
+  const [kind, setKind] = useState<ItemKind>(existing?.kind ?? "yesno");
+  const [invert, setInvert] = useState(existing?.invert ?? false);
+  const [choice0, setChoice0] = useState(existing?.choices?.[0] ?? "");
+  const [choice1, setChoice1] = useState(existing?.choices?.[1] ?? "");
+  const [unit, setUnit] = useState(existing?.unit ?? "");
+  const [minAgeMonths, setMinAgeMonths] = useState(
+    existing?.minAgeMonths !== undefined ? String(existing.minAgeMonths) : "",
+  );
   const [saving, setSaving] = useState(false);
 
-  const valid = text.trim().length > 0 && how.trim().length > 0;
+  const needsChoices = kind === "choice";
+  const needsUnit = kind === "count" || kind === "percent";
+  const valid =
+    text.trim().length > 0 &&
+    how.trim().length > 0 &&
+    (!needsChoices || (choice0.trim().length > 0 && choice1.trim().length > 0));
 
   async function save() {
     if (!valid || saving) return;
@@ -381,10 +395,12 @@ function ItemForm({
         stage,
         text: text.trim(),
         how: how.trim(),
-        kind: existing?.kind ?? "yesno",
+        kind,
         source,
-        invert: existing?.invert,
-        minAgeMonths: existing?.minAgeMonths,
+        invert: kind === "yesno" && invert ? true : undefined,
+        minAgeMonths: minAgeMonths.trim() ? Number(minAgeMonths) : undefined,
+        choices: needsChoices ? [choice0.trim(), choice1.trim()] : undefined,
+        unit: needsUnit && unit.trim() ? unit.trim() : undefined,
       });
     } catch {
       // The page above already showed the message; just let the admin retry.
@@ -437,14 +453,97 @@ function ItemForm({
               ))}
             </select>
           </div>
-          <div className="ml-auto flex gap-2">
-            <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={save} disabled={!valid || saving}>
-              {saving ? "Saving…" : "Save"}
-            </Button>
+          <div>
+            <label className="label" htmlFor="item-kind">
+              Answer type
+            </label>
+            <select
+              id="item-kind"
+              className="field !w-auto"
+              value={kind}
+              onChange={(e) => setKind(e.target.value as ItemKind)}
+            >
+              {KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {k}
+                </option>
+              ))}
+            </select>
           </div>
+          <div>
+            <label className="label" htmlFor="item-min-age">
+              Min age (months) <span className="font-normal text-ink-3">optional</span>
+            </label>
+            <input
+              id="item-min-age"
+              type="number"
+              min={0}
+              className="field !w-24"
+              value={minAgeMonths}
+              onChange={(e) => setMinAgeMonths(e.target.value)}
+            />
+          </div>
+          {kind === "yesno" && (
+            <label className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-ink-2">
+              <input
+                type="checkbox"
+                checked={invert}
+                onChange={(e) => setInvert(e.target.checked)}
+              />
+              Invert (a &ldquo;no&rdquo; is the pass)
+            </label>
+          )}
+        </div>
+
+        {needsChoices && (
+          <div className="flex flex-wrap gap-3">
+            <div className="min-w-[10rem] flex-1">
+              <label className="label" htmlFor="item-choice-0">
+                Choice A
+              </label>
+              <input
+                id="item-choice-0"
+                className="field"
+                value={choice0}
+                onChange={(e) => setChoice0(e.target.value)}
+              />
+            </div>
+            <div className="min-w-[10rem] flex-1">
+              <label className="label" htmlFor="item-choice-1">
+                Choice B
+              </label>
+              <input
+                id="item-choice-1"
+                className="field"
+                value={choice1}
+                onChange={(e) => setChoice1(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
+        {needsUnit && (
+          <div className="max-w-[12rem]">
+            <label className="label" htmlFor="item-unit">
+              Unit
+            </label>
+            <input
+              id="item-unit"
+              className="field"
+              placeholder="e.g. words, %"
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+            />
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
+            Cancel
+          </Button>
+          <Button size="sm" onClick={save} disabled={!valid || saving}>
+            {saving ? "Saving…" : "Save"}
+          </Button>
         </div>
       </div>
     </Card>

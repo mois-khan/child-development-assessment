@@ -10,7 +10,7 @@ import {
   deleteCourseRecommendation,
   toggleCourseRecommendationActive
 } from "@/lib/data/course-recommendations";
-import { Card, Button, Badge, IconClose, InlineBanner, useBanner } from "@/components/ui";
+import { Card, Button, Badge, ConfirmDeleteButton, IconClose, InlineBanner, useBanner } from "@/components/ui";
 
 export default function CourseRecommendationsPage() {
   const [courses, setCourses] = useState<CourseRecommendation[]>([]);
@@ -111,7 +111,6 @@ export default function CourseRecommendationsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this course recommendation?")) return;
     try {
       await deleteCourseRecommendation(id);
       fetchCourses();
@@ -211,7 +210,7 @@ export default function CourseRecommendationsPage() {
                               
                               <div className="flex gap-2">
                                 <Button size="sm" variant="ghost" onClick={() => openEditDrawer(course)}>Edit</Button>
-                                <Button size="sm" variant="ghost" onClick={() => handleDelete(course.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50">Delete</Button>
+                                <ConfirmDeleteButton onConfirm={() => handleDelete(course.id)} />
                               </div>
                             </div>
                           </div>

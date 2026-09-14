@@ -19,8 +19,15 @@ import type { BrainStage } from "./types";
  * must not break — the instrument itself — through a rename for the sake of
  * a caption. So "phase" is a display word, and it is applied here.
  *
- * The rule: anything a parent or school can read says Phase, and gets it from
- * this file. Anything the engine reasons about stays a stage.
+ * The same split applies to the score. The engine computes a developmental
+ * quotient and calls it `dq` — that is the standard term for what it is, a
+ * neurological age divided by a real age. But "quotient" is a statistician's
+ * word, and a parent reading it has to be taught what it means before the
+ * number helps them. Parents see "development score" instead.
+ *
+ * The rule: anything a parent or school can read says Phase and development
+ * score, and gets those words from this file. Anything the engine reasons
+ * about stays a stage and a dq.
  * ──────────────────────────────────────────────────────────────────────────*/
 
 /** The platform's full name, as it appears on the cover and in metadata. */
@@ -34,6 +41,16 @@ export const PROGRAMME_NAME = "Kaushalya Genius Kid Program";
 
 /** Parent-facing word for what the code calls a stage. */
 export const PHASE_WORD = "Phase";
+
+/** Parent-facing name for what the code calls the developmental quotient. */
+export const SCORE_WORD = "Development score";
+
+/**
+ * The one line that explains the score, wherever it is shown. Every place the
+ * number appears has to carry it — a bare "121" is unreadable without knowing
+ * that 100 is the middle.
+ */
+export const SCORE_HINT = "100 is on track for age";
 
 /**
  * A phase named the way a parent reads it: "Phase IV · Initial Cortex".

@@ -42,6 +42,24 @@ export async function POST(req: Request) {
 
       if (error) {
         console.error("Webhook failed to mark payment paid:", error);
+        // Non-2xx so Razorpay retries — a 200 here would let a transient DB
+        // error silently swallow a captured payment forever.
+        return NextResponse.json({ error: "Failed to update payment" }, { status: 500 });
+      }
+    } else if (payload.event === "payment.failed") {
+      // Without this, a declined/abandoned checkout stays at "created"
+      // forever — indistinguishable from one still in progress.
+      const paymentEntity = payload.payload.payment.entity;
+      const supabase = getSupabaseServiceRoleClient();
+      const { error } = await supabase
+        .from("payments")
+        .update({ status: "failed" })
+        .eq("razorpay_order_id", paymentEntity.order_id)
+        .eq("status", "created");
+
+      if (error) {
+        console.error("Webhook failed to mark payment failed:", error);
+        return NextResponse.json({ error: "Failed to update payment" }, { status: 500 });
       }
     }
 

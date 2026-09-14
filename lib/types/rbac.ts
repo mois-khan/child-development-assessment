@@ -6,7 +6,8 @@
  * manager     — operational access; page grants configured by super_admin.
  * sales       — lead pipeline only; page grants configured by super_admin.
  */
-export type AdminRole = 'super_admin' | 'admin' | 'manager' | 'sales';
+export const ADMIN_ROLES = ['super_admin', 'admin', 'manager', 'sales'] as const;
+export type AdminRole = (typeof ADMIN_ROLES)[number];
 
 export interface AdminUser {
   id: string;

@@ -48,6 +48,10 @@ export interface ItemInput {
   source: ItemSource;
   invert?: boolean;
   minAgeMonths?: number;
+  /** Only meaningful when kind is "choice". */
+  choices?: [string, string];
+  /** Only meaningful when kind is "count" or "percent". */
+  unit?: string;
 }
 
 export interface OverlayEntry extends Item {
@@ -242,6 +246,8 @@ export async function adminSaveItem(input: ItemInput): Promise<void> {
     source: input.source,
     ...(input.invert ? { invert: true as const } : {}),
     ...(input.minAgeMonths !== undefined ? { minAgeMonths: input.minAgeMonths } : {}),
+    ...(input.choices ? { choices: input.choices } : {}),
+    ...(input.unit ? { unit: input.unit } : {}),
   };
 
   if (!isSupabaseConfigured()) {
@@ -262,6 +268,8 @@ export async function adminSaveItem(input: ItemInput): Promise<void> {
       source: input.source,
       invert: input.invert ?? false,
       min_age_months: input.minAgeMonths ?? null,
+      choices: input.choices ?? null,
+      unit: input.unit ?? null,
       deleted: false,
     });
   if (error) throw new Error(`Couldn't save that question: ${error.message}`);
@@ -302,6 +310,8 @@ export async function adminDeleteItem(id: string): Promise<void> {
       source: current.source,
       invert: current.invert ?? false,
       min_age_months: current.minAgeMonths ?? null,
+      choices: current.choices ?? null,
+      unit: current.unit ?? null,
       deleted: true,
     });
     if (error) throw new Error(`Couldn't retire that question: ${error.message}`);

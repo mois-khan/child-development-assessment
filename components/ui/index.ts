@@ -8,6 +8,7 @@
 export * from "./icons";
 export * from "./illustrations";
 export * from "./primitives";
+export * from "./client";
 export * from "./layout";
 export * from "./confirm-delete-button";
 export * from "./error-state";

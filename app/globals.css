@@ -913,10 +913,9 @@ select.field {
 
 .progress-matrix {
   display: grid;
-  grid-template-columns: minmax(12.5rem, 14rem) 1fr;
+  grid-template-columns: minmax(7rem, 14rem) 1fr;
   align-items: center;
-  gap: var(--space-3) var(--space-6);
-  min-width: 44rem;
+  gap: var(--space-3) var(--space-4);
 }
 .progress-matrix-headrow {
   display: grid;

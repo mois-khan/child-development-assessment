@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Avatar, Badge, Card } from "@/components/ui";
+import { ParentProfileModal } from "@/components/ParentProfileModal";
+import { Avatar, Badge, Card, IconChevronRight } from "@/components/ui";
 
 type LeadStatus = "new" | "contacted" | "interested" | "follow_up" | "converted" | "not_interested" | "lost";
 
@@ -40,6 +41,7 @@ export default function AdminParentsPage() {
   const [parents, setParents] = useState<ParentRow[] | null>(null);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [openProfileId, setOpenProfileId] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -102,18 +104,26 @@ export default function AdminParentsPage() {
         {filtered?.map((p) => {
           const lead = p.leads?.[0];
           return (
-            <Card key={p.id} className="!p-5">
+            <Card key={p.id} className="!p-5 transition-shadow hover:shadow-md">
               <div className="flex flex-wrap items-center gap-4">
-                <Avatar name={p.full_name || p.email || "?"} size={44} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-ink">{p.full_name || "—"}</p>
-                  <p className="mt-0.5 text-sm text-ink-3">
-                    {p.email || "No email"} · {p.phone || "No phone"}
-                  </p>
-                  <p className="mt-0.5 text-xs text-ink-3">
-                    Joined {new Date(p.created_at).toLocaleDateString()}
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setOpenProfileId(p.id)}
+                  className="flex min-w-0 flex-1 items-center gap-4 rounded-lg text-left"
+                  aria-label={`View profile for ${p.full_name || p.email || "this parent"}`}
+                >
+                  <Avatar name={p.full_name || p.email || "?"} size={44} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-ink">{p.full_name || "—"}</p>
+                    <p className="mt-0.5 text-sm text-ink-3">
+                      {p.email || "No email"} · {p.phone || "No phone"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-ink-3">
+                      Joined {new Date(p.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <IconChevronRight size={18} className="shrink-0 text-ink-3" />
+                </button>
                 <div className="flex items-center gap-3">
                   {lead && (
                     <Badge tone={STATUS_TONE[lead.status]}>
@@ -134,6 +144,10 @@ export default function AdminParentsPage() {
           );
         })}
       </div>
+
+      {openProfileId && (
+        <ParentProfileModal profileId={openProfileId} onClose={() => setOpenProfileId(null)} />
+      )}
     </div>
   );
 }

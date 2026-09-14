@@ -105,6 +105,15 @@ export function IconCheck(p: IconProps) {
   );
 }
 
+export function IconCopy(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="8.5" y="8.5" width="11" height="11" rx="2" />
+      <path d="M15.5 8.5V6.5A2 2 0 0 0 13.5 4.5h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </Svg>
+  );
+}
+
 export function IconClose(p: IconProps) {
   return (
     <Svg {...p} strokeWidth={2.2}>

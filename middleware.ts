@@ -9,6 +9,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
  * gated page, e.g. /admin/leads/[id] falls under "leads").
  */
 const PAGE_GATE: Record<string, string> = {
+  "/admin/analytics":        "analytics",
   "/admin/parents":          "parents",
   "/admin/children":         "children",
   "/admin/assessments":      "assessments",
@@ -19,6 +20,10 @@ const PAGE_GATE: Record<string, string> = {
   "/admin/courses":          "courses",
   "/admin/users":            "users",
   "/admin/schools":          "schools",
+  // No dedicated "report" page exists in admin_pages — a report is scoped
+  // to one assessment, so it rides on the assessments grant instead of
+  // needing its own row.
+  "/admin/report":           "assessments",
 };
 
 /**

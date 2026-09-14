@@ -13,6 +13,7 @@ import {
   ButtonLink,
   Card,
   ChildCard,
+  Confetti,
   Footer,
   IconArrowRight,
   IconCheck,
@@ -51,9 +52,11 @@ export default function PayPage({
   const [child, setChild] = useState<SavedChild | null | undefined | "error">(undefined);
   const [coupon, setCoupon] = useState("");
   const [applied, setApplied] = useState(false);
+  const [showCoupon, setShowCoupon] = useState(false);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [celebrating, setCelebrating] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -105,12 +108,39 @@ export default function PayPage({
       } else {
         const body = await res.json().catch(() => ({}));
         setError(body?.error === "Invalid coupon code"
-          ? "That code doesn't look right — check and try again."
+          ? "That code doesn't look right; check and try again."
           : "Couldn't apply that code. Please try again.");
       }
     } catch {
       setError("Couldn't apply that code. Please try again.");
     } finally {
+      setStarting(false);
+    }
+  }
+
+  /* The payment (or coupon) just landed — worth a beat of "that worked" before
+     dropping the parent straight into ten minutes of questions. The record is
+     created up front so the celebration and the navigation it leads to never
+     race each other.
+
+     Payment/coupon has already succeeded by the time either caller reaches
+     this — a failure here means money moved (or a coupon got burned) with
+     nothing to show for it, so this can't fail silently or leave the button
+     stuck on "Preparing…" forever. */
+  async function celebrateThenGo() {
+    if (!child || child === "error" || !age || !startStage) return;
+    try {
+      const stagesByDomain = Object.fromEntries(
+        DOMAINS.map((d) => [d.code, [startStage.id]]),
+      ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
+      const record = await createAssessment(child, today, stagesByDomain);
+      setCelebrating(true);
+      window.setTimeout(() => router.push(`/assessment/${record.id}`), 1700);
+    } catch (err) {
+      console.error(err);
+      setError(
+        "That went through, but we couldn't start the check. Please contact support — don't pay again.",
+      );
       setStarting(false);
     }
   }
@@ -123,11 +153,7 @@ export default function PayPage({
     if (applied) {
       // Coupon already redeemed server-side in applyCoupon() — the payments
       // row that unlocks assessment creation already exists.
-      const stagesByDomain = Object.fromEntries(
-        DOMAINS.map((d) => [d.code, [startStage.id]]),
-      ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
-      const record = await createAssessment(child, today, stagesByDomain);
-      router.push(`/assessment/${record.id}`);
+      await celebrateThenGo();
       return;
     }
 
@@ -148,23 +174,30 @@ export default function PayPage({
         description: "Genius Milestone Check",
         order_id: order.id,
         handler: async function (response: any) {
-          const verifyRes = await fetch("/api/payments/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            }),
-          });
-          if (verifyRes.ok) {
-            const stagesByDomain = Object.fromEntries(
-              DOMAINS.map((d) => [d.code, [startStage.id]]),
-            ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
-            const record = await createAssessment(child, today, stagesByDomain);
-            router.push(`/assessment/${record.id}`);
-          } else {
-            setError("Payment verification failed. Please contact support.");
+          // The payment already succeeded on Razorpay's side by the time this
+          // fires — a network drop here must not leave the parent staring at
+          // a stuck "Preparing…" button with a charge they can't account for.
+          try {
+            const verifyRes = await fetch("/api/payments/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            if (verifyRes.ok) {
+              await celebrateThenGo();
+            } else {
+              setError("Payment verification failed. Please contact support.");
+              setStarting(false);
+            }
+          } catch (err) {
+            console.error(err);
+            setError(
+              "Payment went through, but we couldn't confirm it here. Please contact support — don't pay again.",
+            );
             setStarting(false);
           }
         },
@@ -174,8 +207,19 @@ export default function PayPage({
         theme: {
           color: "#E24A7F", // brand accent
         },
+        modal: {
+          // Closing the checkout without paying fires neither `handler` nor
+          // `payment.failed` — without this, the button stays stuck on
+          // "Preparing…" until a full page reload.
+          ondismiss: () => setStarting(false),
+        },
       };
 
+      if (typeof (window as any).Razorpay !== "function") {
+        setError("Payment is still loading — give it a moment and try again.");
+        setStarting(false);
+        return;
+      }
       const rzp1 = new (window as any).Razorpay(options);
       rzp1.on("payment.failed", function (response: any) {
         setError(response.error.description || "Payment failed");
@@ -225,6 +269,9 @@ export default function PayPage({
       </>
     );
   }
+  if (celebrating) {
+    return <PaymentCelebration childName={child.name} />;
+  }
 
   return (
     <>
@@ -238,7 +285,7 @@ export default function PayPage({
                 <p className="eyebrow eyebrow-accent">Genius Milestone Check</p>
                 <h1 className="mt-3">Start {child.name}&rsquo;s check</h1>
                 <p className="lede mt-3 max-w-[46ch]">
-                  Built for {child.name}&rsquo;s exact phase — Phase {startStage.roman},{" "}
+                  Built for {child.name}&rsquo;s exact phase: Phase {startStage.roman},{" "}
                   {startStage.name}.
                 </p>
               </div>
@@ -250,29 +297,92 @@ export default function PayPage({
             </div>
 
             <Card variant="clay" className="clay-lg mt-8 overflow-hidden">
-              <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-7">
-                <div className="flex flex-wrap gap-2">
-                  <Badge tone="accent" size="lg">
-                    <IconSparkle size={14} /> Phase {startStage.roman} · {startStage.name}
-                  </Badge>
-                  <Badge tone="neutral">from {questionCount} questions</Badge>
-                  <Badge tone="neutral">
-                    <IconClock size={14} /> ~10 min
-                  </Badge>
-                </div>
-                <div className="text-right">
-                  <p
-                    className="tnum text-3xl font-extrabold leading-none text-ink"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {applied ? "₹0" : `₹${PRICE}`}
-                  </p>
-                  {applied && (
-                    <p className="tnum mt-1 text-sm font-bold text-ink-3 line-through">
-                      ₹{PRICE}
+              <div className="p-6 sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge tone="accent" size="lg">
+                      <IconSparkle size={14} /> Phase {startStage.roman} · {startStage.name}
+                    </Badge>
+                    <Badge tone="neutral">from {questionCount} questions</Badge>
+                    <Badge tone="neutral">
+                      <IconClock size={14} /> ~10 min
+                    </Badge>
+                  </div>
+                  <div className="text-right">
+                    <p
+                      className="tnum text-3xl font-extrabold leading-none text-ink"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {applied ? "₹0" : `₹${PRICE}`}
                     </p>
+                    {applied && (
+                      <p className="tnum mt-1 text-sm font-bold text-ink-3 line-through">
+                        ₹{PRICE}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {applied && (
+                  <div className="animate-rise mt-5 flex items-center gap-4 rounded-[var(--radius)] bg-[var(--st-on-track-soft)] p-4">
+                    <span className="animate-pop grid size-11 shrink-0 place-items-center rounded-full bg-[var(--surface)] text-[var(--st-on-track)]">
+                      <IconCheck size={22} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-extrabold text-[var(--st-on-track-ink)]">
+                        Code applied, this one&rsquo;s on us
+                      </p>
+                      <p className="text-xs font-semibold text-ink-3">
+                        Coupon {coupon.trim().toUpperCase()} · launch offer
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* the payment decision, answered immediately — no scrolling
+                    needed to find the one button that matters */}
+                <div className="mt-6 flex flex-wrap items-center gap-4">
+                  <Button
+                    size="lg"
+                    disabled={starting}
+                    onClick={startAssessment}
+                    iconRight={<IconArrowRight size={18} />}
+                  >
+                    {starting ? "Preparing…" : applied ? "Start the check" : `Pay ₹${PRICE} & Start`}
+                  </Button>
+                  {!applied && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCoupon((v) => !v)}
+                      className="text-sm font-bold text-accent hover:underline"
+                    >
+                      Have a coupon code?
+                    </button>
                   )}
                 </div>
+
+                {!applied && showCoupon && (
+                  <form onSubmit={applyCoupon} className="animate-rise mt-4 flex flex-wrap items-start gap-3">
+                    <div className="min-w-[13rem] flex-1">
+                      <input
+                        className={`field ${error ? "field-error" : ""}`}
+                        placeholder="Enter coupon code"
+                        value={coupon}
+                        onChange={(e) => {
+                          setCoupon(e.target.value);
+                          setError("");
+                        }}
+                        autoComplete="off"
+                        aria-label="Coupon code"
+                        autoFocus
+                      />
+                      {error && <p className="hint hint-error">{error}</p>}
+                    </div>
+                    <Button type="submit" variant="secondary" size="lg" disabled={starting}>
+                      {starting ? "Checking…" : "Apply"}
+                    </Button>
+                  </form>
+                )}
               </div>
 
               {/* what's inside — the "which check" question, answered rather
@@ -298,69 +408,14 @@ export default function PayPage({
                   ))}
                 </ul>
               </div>
-
-              <div className="border-t border-line-soft p-6 sm:p-7">
-                {applied ? (
-                  <div className="flex items-center gap-4">
-                    <span className="animate-pop grid size-12 shrink-0 place-items-center rounded-full bg-[var(--st-on-track-soft)] text-[var(--st-on-track)]">
-                      <IconCheck size={26} />
-                    </span>
-                    <div>
-                      <p className="text-base font-extrabold text-ink">
-                        Code applied — this one&rsquo;s on us
-                      </p>
-                      <p className="text-sm font-semibold text-ink-3">
-                        Coupon {coupon.trim().toUpperCase()} · launch offer
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-sm font-medium leading-relaxed text-ink-2">
-                      Online payment is arriving shortly. During launch, use your coupon code to
-                      unlock the check for free.
-                    </p>
-                    <form onSubmit={applyCoupon} className="mt-4 flex flex-wrap items-start gap-3">
-                      <div className="min-w-[13rem] flex-1">
-                        <input
-                          className={`field ${error ? "field-error" : ""}`}
-                          placeholder="Enter coupon code"
-                          value={coupon}
-                          onChange={(e) => {
-                            setCoupon(e.target.value);
-                            setError("");
-                          }}
-                          autoComplete="off"
-                          aria-label="Coupon code"
-                        />
-                        {error && <p className="hint hint-error">{error}</p>}
-                      </div>
-                      <Button type="submit" variant="secondary" size="lg" disabled={starting}>
-                        {starting ? "Checking…" : "Apply"}
-                      </Button>
-                    </form>
-                  </>
-                )}
-              </div>
             </Card>
-
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Button
-                size="lg"
-                disabled={starting}
-                onClick={startAssessment}
-                iconRight={<IconArrowRight size={18} />}
-              >
-                {starting ? "Preparing…" : applied ? "Start the check" : `Pay ₹${PRICE} & Start`}
-              </Button>
-            </div>
 
             <div className="mt-8 flex items-start gap-3 rounded-[var(--radius)] border border-line bg-[var(--surface)] p-4">
               <span className="mt-0.5 text-accent">
                 <IconShield size={20} />
               </span>
               <p className="text-sm leading-relaxed text-ink-2">
-                Payments are handled by Razorpay — we never see or store your card details.
+                Payments are handled by Razorpay; we never see or store your card details.{" "}
                 {child.name}&rsquo;s answers are saved securely to your account so you can pick
                 up the check on any device.
               </p>
@@ -371,5 +426,34 @@ export default function PayPage({
 
       <Footer />
     </>
+  );
+}
+
+/* ══ celebration ═══════════════════════════════════════════════════════════ */
+
+function PaymentCelebration({ childName }: { childName: string }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center overflow-hidden px-6 text-center"
+      style={{ background: "var(--ground)" }}
+      role="status"
+      aria-live="polite"
+    >
+      <Confetti count={44} />
+      <div>
+        <span
+          className="celebrate-ring mx-auto grid size-32 place-items-center rounded-full"
+          style={{ background: "var(--st-on-track-soft)", color: "var(--st-on-track)" }}
+        >
+          <IconCheck size={64} />
+        </span>
+        <h1 className="animate-rise mt-8" style={{ animationDelay: "160ms" }}>
+          You&rsquo;re in!
+        </h1>
+        <p className="lede animate-rise mt-3" style={{ animationDelay: "240ms" }}>
+          Let&rsquo;s find {childName}&rsquo;s stage.
+        </p>
+      </div>
+    </div>
   );
 }

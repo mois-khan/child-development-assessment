@@ -11,7 +11,7 @@ import {
   deleteMilestoneVideo,
   toggleMilestoneVideoActive
 } from "@/lib/data/milestone-videos";
-import { Card, Button, Badge, IconClose, InlineBanner, useBanner } from "@/components/ui";
+import { Card, Button, Badge, ConfirmDeleteButton, IconClose, InlineBanner, useBanner } from "@/components/ui";
 
 export default function MilestoneVideosPage() {
   const [videos, setVideos] = useState<MilestoneVideo[]>([]);
@@ -110,7 +110,6 @@ export default function MilestoneVideosPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this video?")) return;
     try {
       await deleteMilestoneVideo(id);
       fetchVideos();
@@ -219,7 +218,7 @@ export default function MilestoneVideosPage() {
                             {video.is_active ? 'Active' : 'Inactive'}
                           </button>
                           <Button size="sm" variant="ghost" onClick={() => openEditDrawer(video)}>Edit</Button>
-                          <Button size="sm" variant="ghost" onClick={() => handleDelete(video.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50">Delete</Button>
+                          <ConfirmDeleteButton onConfirm={() => handleDelete(video.id)} />
                         </div>
                       </Card>
                     ))}

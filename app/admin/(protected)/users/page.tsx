@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { AdminUser, AdminPage, AdminRole } from "@/lib/types/rbac";
-import { 
-  listAdminUsers, 
-  listAdminPages, 
-  setPageAccess, 
-  updateAdminUserRole, 
-  inviteAdminUser 
+import { useAdminSession } from "@/lib/admin/auth";
+import {
+  listAdminUsers,
+  listAdminPages,
+  setPageAccess,
+  updateAdminUserRole,
+  inviteAdminUser,
+  removeAdminUser,
 } from "@/lib/data/rbac";
-import { Card, Button, Badge, IconClose, InlineBanner, useBanner } from "@/components/ui";
+import { Card, Button, Badge, ConfirmDeleteButton, IconClose, InlineBanner, useBanner } from "@/components/ui";
 
 export default function UserManagementPage() {
+  const { session } = useAdminSession();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [pages, setPages] = useState<AdminPage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +85,21 @@ export default function UserManagementPage() {
       banner.showSuccess("User updated.");
     } catch (err: any) {
       banner.showError("Failed to save user: " + err.message);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!editingUser) return;
+    setSavingEdit(true);
+    try {
+      await removeAdminUser(editingUser.id);
+      setEditDrawerOpen(false);
+      fetchData();
+      banner.showSuccess("Admin access removed.");
+    } catch (err: any) {
+      banner.showError("Failed to remove access: " + err.message);
     } finally {
       setSavingEdit(false);
     }
@@ -252,13 +270,20 @@ export default function UserManagementPage() {
               </div>
             </div>
 
-            <div className="p-5 border-t border-line flex gap-3 justify-end">
-              <Button type="button" variant="ghost" onClick={() => setEditDrawerOpen(false)} disabled={savingEdit}>
-                Cancel
-              </Button>
-              <Button type="button" variant="primary" onClick={handleSaveEdit} disabled={savingEdit}>
-                {savingEdit ? "Saving..." : "Save Changes"}
-              </Button>
+            <div className="p-5 border-t border-line flex items-center justify-between gap-3">
+              {editingUser.id !== session?.id ? (
+                <ConfirmDeleteButton onConfirm={handleRemove} label="Remove access" />
+              ) : (
+                <span className="text-xs text-ink-3">Can&rsquo;t remove your own access.</span>
+              )}
+              <div className="flex gap-3">
+                <Button type="button" variant="ghost" onClick={() => setEditDrawerOpen(false)} disabled={savingEdit}>
+                  Cancel
+                </Button>
+                <Button type="button" variant="primary" onClick={handleSaveEdit} disabled={savingEdit}>
+                  {savingEdit ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

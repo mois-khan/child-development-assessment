@@ -8,9 +8,9 @@ import { cookies } from "next/headers";
  * handle_new_user() (0007_schools.sql) reads to create the right rows.
  *
  * Schools are never self-serve (see the migration's header note) — only an
- * admin can call this, matching the invite-admin route's own gate. Unlike
- * that route this isn't restricted to super_admin: any signed-in admin can
- * onboard a school, since doing so grants no admin-panel access at all.
+ * admin with the "schools" page grant can call this. The UI already hides
+ * /admin/schools from an admin without that grant; this check makes calling
+ * the endpoint directly no more privileged than clicking through the page.
  */
 export async function POST(request: Request) {
   try {
@@ -36,14 +36,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: adminRow } = await supabase
-      .from("admin_users")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (!adminRow) {
-      return NextResponse.json({ error: "Forbidden: admin access required" }, { status: 403 });
+    const { data: hasAccess } = await supabase.rpc("has_page_access", { page: "schools" });
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Forbidden: schools access required" }, { status: 403 });
     }
 
     // Same redirect target as staff invites and password resets — the

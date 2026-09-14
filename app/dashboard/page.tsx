@@ -26,11 +26,9 @@ import {
   IconPlus,
   IconSparkle,
   IconStarFilled,
-  IconTrophy,
   LoadError,
   Mascot,
   Meter,
-  ProgressRing,
   Section,
   SectionTile,
   Shell,
@@ -137,11 +135,7 @@ export default function DashboardPage() {
   const totals = useMemo(() => {
     const done = summaries.reduce((n, s) => n + s.completed.length, 0);
     const open = summaries.filter((s) => s.inProgress).length;
-    const scored = summaries.filter((s) => s.latest?.result.overallDq != null);
-    const avgDq = scored.length
-      ? Math.round(scored.reduce((n, s) => n + (s.latest!.result.overallDq ?? 0), 0) / scored.length)
-      : null;
-    return { children: summaries.length, done, open, avgDq };
+    return { children: summaries.length, done, open };
   }, [summaries]);
 
   const resumable = summaries.filter((s) => s.inProgress);
@@ -212,7 +206,7 @@ export default function DashboardPage() {
                     {totals.children === 0
                       ? "Add your child and we'll work out exactly which of the seven phases they're on."
                       : resumable.length > 0
-                        ? `${resumable[0].child.name}'s check is part-way through — pick it up where you stopped.`
+                        ? `${resumable[0].child.name}'s check is part-way through; pick it up where you stopped.`
                         : totals.done === 0
                           ? "Everything's set up. A calm ten minutes is all the first check takes."
                           : `${totals.done} check${totals.done === 1 ? "" : "s"} saved across your family.`}
@@ -264,7 +258,7 @@ export default function DashboardPage() {
 
         {/* ══ the numbers ══════════════════════════════════════════════════ */}
         <Shell width="wide">
-          <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-3">
             {loading ? (
               [...Array(4)].map((_, i) => (
                 <div key={i} className="h-[124px] animate-pulse rounded-2xl bg-surface-3" />
@@ -291,13 +285,6 @@ export default function DashboardPage() {
                   icon={<IconClock size={19} />}
                   gradient="linear-gradient(135deg, var(--sun-500), var(--coral-500))"
                   href={resumable[0] ? `/assessment/${resumable[0].inProgress!.id}` : "/children"}
-                />
-                <StatTile
-                  value={totals.avgDq ?? "—"}
-                  label="Average quotient"
-                  icon={<IconTrophy size={19} />}
-                  gradient="linear-gradient(135deg, var(--sec-auditory), var(--sec-visual))"
-                  href="/profile"
                 />
               </>
             )}
@@ -370,7 +357,7 @@ export default function DashboardPage() {
                 <Mascot size={86} mood="happy" className="mx-auto" />
                 <h3 className="mt-5 text-xl">No children yet</h3>
                 <p className="mx-auto mt-2 max-w-[42ch] text-base leading-relaxed text-ink-2">
-                  Name, birthday and gender — that&rsquo;s all it takes to find their phase.
+                  Name, birthday and gender, that&rsquo;s all it takes to find their phase.
                 </p>
                 <ButtonLink
                   href="/children"
@@ -412,10 +399,10 @@ export default function DashboardPage() {
                       {best ? (
                         <>
                           <Meter
-                            value={best.percent}
+                            value={Math.min(100, best.value)}
                             color={domainColor(d.code)}
                             className="mt-2"
-                            label={`${d.short}: ${Math.round(best.percent)} percent`}
+                            label={`${d.short}: ${Math.round(best.value)}`}
                           />
                           <p className="mt-1.5 text-xs font-semibold text-ink-3">
                             {best.childName} · {best.cell}
@@ -538,16 +525,21 @@ function StatTile({
   icon,
   gradient,
   href,
+  hint,
 }: {
   value: number | string;
   label: string;
   icon: React.ReactNode;
   gradient: string;
   href: string;
+  /** Shown on hover and to assistive tech, for a number that needs a scale. */
+  hint?: string;
 }) {
   return (
     <Link
       href={href}
+      title={hint ? `${label}: ${hint}` : undefined}
+      aria-label={hint ? `${label}: ${value}. ${hint}.` : undefined}
       className="lift relative block overflow-hidden rounded-2xl px-5 py-6 text-white transition-transform"
       style={{ background: gradient }}
     >
@@ -570,7 +562,6 @@ function StatTile({
 function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: number }) {
   const { child, ageMonths, phase, completed, inProgress, latest } = summary;
   const status: StatusCode | null = latest?.result.overallStatus ?? null;
-  const dq = latest?.result.overallDq ?? null;
 
   return (
     <Card
@@ -598,16 +589,6 @@ function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: numbe
             </p>
             <p className="text-sm font-semibold text-ink-3">{formatAge(ageMonths)}</p>
           </div>
-          {dq !== null && (
-            <ProgressRing
-              value={Math.min(100, dq)}
-              size={52}
-              stroke={5}
-              color={status ? statusColor(status) : "var(--accent)"}
-            >
-              <span className="tnum text-sm font-extrabold text-ink">{Math.round(dq)}</span>
-            </ProgressRing>
-          )}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -620,6 +601,16 @@ function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: numbe
             <Badge tone="neutral">No checks yet</Badge>
           )}
         </div>
+
+        {latest?.result.overallRaisedBy && (
+          <p className="mt-2 text-xs font-medium leading-snug text-ink-3">
+            Most areas look strong, but{" "}
+            <strong className="font-bold text-ink-2">
+              {domainName(latest.result.overallRaisedBy)}
+            </strong>{" "}
+            needs attention on its own.
+          </p>
+        )}
 
         {latest && (
           <div
@@ -672,25 +663,50 @@ function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: numbe
  * Must not mutate `summaries`; return a new array.
  */
 function rankChildren(summaries: ChildSummary[]): ChildSummary[] {
-  // TODO(human): decide and implement the ordering.
-  return summaries;
+  // Most actionable first: an unfinished check is one tap away from
+  // "Resume", so it leads. Next, a child never assessed at all — nothing to
+  // show yet, but the clearest next action ("Start check"). Checked children
+  // sort last, oldest completed check first, so a family with one child
+  // overdue for a recheck and one freshly checked sees the overdue one first.
+  return [...summaries].sort(
+    (a, b) => urgency(a) - urgency(b) || oldestCompletedFirst(a, b),
+  );
+}
+
+function urgency(s: ChildSummary): number {
+  if (s.inProgress) return 0;
+  if (!s.latest) return 1;
+  return 2;
+}
+
+function oldestCompletedFirst(a: ChildSummary, b: ChildSummary): number {
+  const aAt = a.latest?.assessment.completedAt ? new Date(a.latest.assessment.completedAt).getTime() : 0;
+  const bAt = b.latest?.assessment.completedAt ? new Date(b.latest.assessment.completedAt).getTime() : 0;
+  return aAt - bAt;
 }
 
 /**
  * The best result any child has for one competence, so the six-areas strip
  * shows the family's own data rather than six identical blurbs. Returns null
  * until someone has completed a check.
+ *
+ * The number shown is the same one the report bar shows: the development
+ * score (the engine's `dq`) when there is one, and the raw pass-rate only
+ * when the child is too young for a score to mean anything. Note that
+ * DomainScore.percent is a 0-1 RATIO, not a percentage — the ×100 is not
+ * decoration.
  */
 function bestFor(
   summaries: ChildSummary[],
   domain: DomainCode,
-): { percent: number; childName: string; cell: string } | null {
-  let best: { percent: number; childName: string; cell: string } | null = null;
+): { value: number; childName: string; cell: string } | null {
+  let best: { value: number; childName: string; cell: string } | null = null;
   for (const s of summaries) {
     const score = s.latest?.result.domainScores.find((d) => d.domain === domain);
     if (!score) continue;
-    if (!best || score.percent > best.percent) {
-      best = { percent: score.percent, childName: s.child.name, cell: score.cell.description };
+    const value = score.dq === null ? score.percent * 100 : score.dq;
+    if (!best || value > best.value) {
+      best = { value, childName: s.child.name, cell: score.cell.description };
     }
   }
   return best;

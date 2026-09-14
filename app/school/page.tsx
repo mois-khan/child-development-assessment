@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { useAuth } from "@/lib/auth/provider";
 import { itemBankReady, primeItemBank } from "@/lib/item-bank";
-import { SCORE_HINT, phaseLabel } from "@/lib/naming";
+import { phaseLabel } from "@/lib/naming";
 import { scoreAssessment } from "@/lib/scoring";
 import { stageForAge } from "@/lib/stage";
 import { listAssessments, listChildren, type SavedChild, type StoredAssessment } from "@/lib/store";
@@ -24,7 +24,6 @@ import {
   IconPlus,
   IconSchool,
   IconStarFilled,
-  IconTrophy,
   LoadError,
   Section,
   Shell,
@@ -133,11 +132,7 @@ export default function SchoolDashboardPage() {
   const totals = useMemo(() => {
     const reportsReady = summaries.filter((s) => s.completedCount > 0).length;
     const inProgress = summaries.filter((s) => s.inProgress).length;
-    const scored = summaries.filter((s) => s.latest?.result.overallDq != null);
-    const avgScore = scored.length
-      ? Math.round(scored.reduce((n, s) => n + (s.latest!.result.overallDq ?? 0), 0) / scored.length)
-      : null;
-    return { students: summaries.length, reportsReady, inProgress, avgScore };
+    return { students: summaries.length, reportsReady, inProgress };
   }, [summaries]);
 
   const schoolName = profile?.school?.name || "Your school";
@@ -240,7 +235,7 @@ export default function SchoolDashboardPage() {
 
         {/* ══ the numbers ══════════════════════════════════════════════════ */}
         <Shell width="wide">
-          <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-3">
             {loading ? (
               [...Array(4)].map((_, i) => (
                 <div key={i} className="h-[124px] animate-pulse rounded-2xl bg-surface-3" />
@@ -266,14 +261,6 @@ export default function SchoolDashboardPage() {
                   label="In progress"
                   icon={<IconClock size={19} />}
                   gradient="linear-gradient(135deg, var(--sun-500), var(--coral-500))"
-                  href="/children"
-                />
-                <StatTile
-                  value={totals.avgScore ?? "—"}
-                  label="Average score"
-                  hint={SCORE_HINT}
-                  icon={<IconTrophy size={19} />}
-                  gradient="linear-gradient(135deg, var(--sec-auditory), var(--sec-visual))"
                   href="/children"
                 />
               </>

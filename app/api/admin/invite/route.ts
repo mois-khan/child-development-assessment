@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-
-const VALID_ROLES = ["super_admin", "admin", "manager", "sales"];
+import { ADMIN_ROLES } from "@/lib/types/rbac";
 
 export async function POST(request: Request) {
   try {
@@ -10,7 +9,7 @@ export async function POST(request: Request) {
     if (!email || !role) {
       return NextResponse.json({ error: "email and role required" }, { status: 400 });
     }
-    if (!VALID_ROLES.includes(role)) {
+    if (!ADMIN_ROLES.includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 

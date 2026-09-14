@@ -22,6 +22,7 @@ import {
   Badge,
   Button,
   Card,
+  ConfirmDeleteButton,
   IconArrowLeft,
   IconCalendar,
   IconCheck,
@@ -164,7 +165,7 @@ export default function AdminLeadDetailPage({
               <Badge tone={STATUS_TONE[lead.status]} size="lg">
                 {STATUS_LABEL[lead.status]}
               </Badge>
-              <LeadStatusAction lead={lead} onChanged={refresh} />
+              <LeadStatusAction lead={lead} loggedByUserId={session?.id ?? ""} onChanged={refresh} />
             </div>
             {isOverdue && (
               <span className="flex items-center gap-1.5 rounded-full bg-[var(--st-consult-soft)] px-3 py-1.5 text-xs font-bold text-[var(--st-consult-ink)] shadow-sm border border-[var(--st-consult-soft)]">
@@ -494,14 +495,22 @@ function AssignedToRow({ lead, onChanged }: { lead: Lead; onChanged: () => void 
 
 /* ── Status override (Lost / Reopen) ────────────────────────────────────── */
 
-function LeadStatusAction({ lead, onChanged }: { lead: Lead; onChanged: () => void }) {
+function LeadStatusAction({
+  lead,
+  loggedByUserId,
+  onChanged,
+}: {
+  lead: Lead;
+  loggedByUserId: string;
+  onChanged: () => void;
+}) {
   const [saving, setSaving] = useState(false);
   const isClosed = ["converted", "lost", "not_interested"].includes(lead.status);
 
   async function setStatus(status: LeadStatus) {
     setSaving(true);
     try {
-      await adminSetLeadStatus(lead.id, status);
+      await adminSetLeadStatus(lead.id, status, loggedByUserId);
       onChanged();
     } finally {
       setSaving(false);
@@ -510,16 +519,20 @@ function LeadStatusAction({ lead, onChanged }: { lead: Lead; onChanged: () => vo
 
   if (isClosed) {
     return (
-      <Button size="sm" variant="ghost" disabled={saving} onClick={() => setStatus("new")}>
-        {saving ? "Reopening…" : "Reopen lead"}
-      </Button>
+      <ConfirmDeleteButton
+        onConfirm={() => setStatus("new")}
+        label={saving ? "Reopening…" : "Reopen lead"}
+        confirmLabel="Click again to reopen"
+      />
     );
   }
 
   return (
-    <Button size="sm" variant="ghost" disabled={saving} onClick={() => setStatus("lost")}>
-      {saving ? "Saving…" : "Mark as lost"}
-    </Button>
+    <ConfirmDeleteButton
+      onConfirm={() => setStatus("lost")}
+      label={saving ? "Saving…" : "Mark as lost"}
+      confirmLabel="Click again to confirm"
+    />
   );
 }
 
