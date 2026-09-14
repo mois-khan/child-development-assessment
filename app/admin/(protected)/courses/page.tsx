@@ -160,9 +160,10 @@ export default function CourseRecommendationsPage() {
             
             return (
               <details key={stage.id} className="group" open>
-                <summary className="cursor-pointer list-none py-2 border-b border-line-soft flex items-center justify-between">
-                  <span className="text-xl font-bold text-ink">
-                    Phase {stage.roman} · {stage.name} <span className="text-sm font-normal text-ink-3 ml-2">({stage.averageMonths} months avg)</span>
+                <summary className="cursor-pointer list-none py-2 border-b border-line-soft flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <span className="min-w-0 text-xl font-bold text-ink">
+                    Phase {stage.roman} · {stage.name}{" "}
+                    <span className="whitespace-nowrap text-sm font-normal text-ink-3">({stage.averageMonths} months avg)</span>
                   </span>
                   <Badge size="sm" tone="neutral">{stageCourses.length} courses</Badge>
                 </summary>

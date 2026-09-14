@@ -77,7 +77,7 @@ export default function AdminProtectedLayout({ children }: { children: ReactNode
       : (pathname?.startsWith(href) ?? false);
 
   return (
-    <div className="flex min-h-screen bg-[var(--ground-2)]">
+    <div className="flex min-h-screen flex-col bg-[var(--ground-2)] md:flex-row">
       {/* ── desktop sidebar ─────────────────────────────────────────────── */}
       {/* sticky + its own scroll: the sidebar stays put while `main` scrolls,
           instead of scrolling away with the page content underneath it. */}
@@ -114,7 +114,7 @@ export default function AdminProtectedLayout({ children }: { children: ReactNode
             onClick={() => setMobileOpen(false)}
             className="absolute inset-0 bg-black/40"
           />
-          <aside className="animate-slide-in-left absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-[var(--surface)] px-4 py-6 shadow-2xl">
+          <aside className="animate-slide-in-left absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col overflow-y-auto bg-[var(--surface)] px-4 py-6 shadow-2xl">
             <div className="mb-8 flex items-center justify-between px-2">
               <Wordmark height={30} />
               <button

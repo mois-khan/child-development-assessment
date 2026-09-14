@@ -132,15 +132,6 @@ export default function AdminQuestionBankPage() {
             </Badge>
           )}
         </div>
-        <p className="mt-1.5 max-w-[62ch] text-sm text-ink-3">
-          Editing here doesn&rsquo;t touch{" "}
-          <code className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">content/items.ts</code>; your
-          changes are stored as a layer on top of it, so &ldquo;Revert&rdquo; always restores the
-          booklet&rsquo;s own wording.{" "}
-          {shared
-            ? "A saved edit is live for every parent immediately, on every device."
-            : "Without Supabase credentials these stay in this browser and are not shared."}
-        </p>
       </div>
 
       <InlineBanner
@@ -327,7 +318,7 @@ function ItemRow({
 }) {
   const badge = STATUS_BADGE[item.status];
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4 px-5 py-4">
+    <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold text-ink">{item.text}</p>

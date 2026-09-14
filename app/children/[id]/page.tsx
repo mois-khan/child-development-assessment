@@ -158,7 +158,7 @@ export default function ChildProfilePage({
               className="bloom"
               style={{ width: 300, height: 300, top: -140, right: "6%", "--bloom-color": "var(--sun-400)", opacity: 0.3 } as React.CSSProperties}
             />
-            <div className="relative flex flex-wrap items-center justify-between gap-6">
+            <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-5">
                 <Avatar name={child.name} photoUrl={child.photoUrl} size={88} ring />
                 <div>
@@ -168,8 +168,8 @@ export default function ChildProfilePage({
                     {child.gender === "girl" ? "Girl" : child.gender === "boy" ? "Boy" : "—"}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-bold text-white backdrop-blur">
-                      <IconSparkle size={15} />
+                    <span className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-3.5 py-1.5 text-sm font-bold leading-snug text-white backdrop-blur">
+                      <IconSparkle size={15} className="shrink-0" />
                       Phase {stage.roman} of VII · {stage.name}
                     </span>
                     <button
@@ -236,7 +236,57 @@ export default function ChildProfilePage({
               </Card>
             ) : (
               <div className="mt-6 overflow-hidden rounded-[var(--radius-xl)] border border-line bg-[var(--surface)] shadow-[var(--clay-sm)]">
-                <div className="overflow-x-auto">
+                {/* ── cards, below md ── */}
+                <div className="divide-y divide-line-soft md:hidden">
+                  {assessments.map((a) => (
+                    <div key={a.id} className="p-5">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="grid size-10 shrink-0 place-items-center rounded-xl"
+                          style={{
+                            background: a.completedAt ? "var(--st-on-track-soft)" : "var(--sun-100)",
+                            color: a.completedAt ? "var(--st-on-track)" : "var(--sun-700)",
+                          }}
+                        >
+                          {a.completedAt ? <IconStarFilled size={18} /> : <IconRefresh size={18} />}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-base font-extrabold text-ink">Genius Milestone Check</p>
+                          <p className="text-xs font-semibold text-ink-2">
+                            {formatDateTime(a.completedAt || (a as any).createdAt || a.assessedOn)}
+                          </p>
+                        </div>
+                        <Badge tone={a.completedAt ? "success" : "sun"}>
+                          {a.completedAt ? "Completed" : "In progress"}
+                        </Badge>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                        {a.completedAt ? (
+                          <>
+                            <ButtonLink href={`/report/${a.id}`} variant="secondary" size="sm" className="flex-1">
+                              View Report
+                            </ButtonLink>
+                            <ButtonLink
+                              href={`/report/${a.id}?download=1`}
+                              size="sm"
+                              iconLeft={<IconDownload size={15} />}
+                              className="flex-1"
+                            >
+                              Download
+                            </ButtonLink>
+                          </>
+                        ) : (
+                          <ButtonLink href={`/assessment/${a.id}`} size="sm" className="w-full">
+                            Resume Check
+                          </ButtonLink>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ── table, md and up ── */}
+                <div className="hidden overflow-x-auto md:block">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-line bg-[var(--surface-2)]">

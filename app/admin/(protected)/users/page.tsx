@@ -155,7 +155,8 @@ export default function UserManagementPage() {
           <p className="text-ink-3">Loading users...</p>
         ) : (
           <Card variant="clay" className="overflow-hidden">
-            <div className="overflow-x-auto">
+            {/* ── table, md and up ── */}
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-line-soft bg-surface-2 text-ink-3">
                   <tr>
@@ -175,8 +176,8 @@ export default function UserManagementPage() {
                         <Badge tone={getRoleBadgeTone(user.role)}>{formatRole(user.role)}</Badge>
                       </td>
                       <td className="px-6 py-4 text-ink-3">
-                        {user.role === "super_admin" 
-                          ? "All pages" 
+                        {user.role === "super_admin"
+                          ? "All pages"
                           : `${(user.page_access || []).length} / ${pages.length} pages`}
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -195,6 +196,31 @@ export default function UserManagementPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* ── cards, below md ── */}
+            <div className="divide-y divide-line-soft md:hidden">
+              {users.map(user => (
+                <div key={user.id} className="flex items-center justify-between gap-3 p-5">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-ink">{user.email}</p>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <Badge tone={getRoleBadgeTone(user.role)}>{formatRole(user.role)}</Badge>
+                      <span className="text-xs text-ink-3">
+                        {user.role === "super_admin"
+                          ? "All pages"
+                          : `${(user.page_access || []).length} / ${pages.length} pages`}
+                      </span>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => openEditDrawer(user)}>
+                    Edit
+                  </Button>
+                </div>
+              ))}
+              {users.length === 0 && (
+                <p className="px-5 py-8 text-center text-sm text-ink-3">No users found.</p>
+              )}
             </div>
           </Card>
         )}

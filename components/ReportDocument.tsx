@@ -375,8 +375,9 @@ export function ReportDocument({
                 These are screening terms, not a diagnosis; see the note at the end of this
                 report.
               </p>
+              <div className="progress-matrix-scroll">
               <div className="progress-matrix">
-                <span aria-hidden="true" />
+                <span aria-hidden="true" className="progress-matrix-corner" />
                 <div className="progress-matrix-headrow">
                   {STAGES.map((s) => (
                     <span key={s.label} className="progress-matrix-headcell">
@@ -428,6 +429,7 @@ export function ReportDocument({
                     </Fragment>
                   );
                 })}
+              </div>
               </div>
             </Card>
           </Section>
@@ -569,11 +571,11 @@ function ExecutiveSummaryCard({ result, child }: { result: AssessmentResult; chi
         </div>
 
         <div className="mt-5">
-          <div className="mb-2.5 flex items-center justify-between">
+          <div className="mb-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <h4 className="text-[1.02rem] font-extrabold tracking-tight text-[var(--ink)]">
               Developmental Profile Verdict
             </h4>
-            <span className="text-[0.7rem] font-bold uppercase tracking-wider text-[var(--brand-600)]">
+            <span className="whitespace-nowrap text-[0.7rem] font-bold uppercase tracking-wider text-[var(--brand-600)]">
               6 Areas Analyzed
             </span>
           </div>

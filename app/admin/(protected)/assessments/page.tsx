@@ -97,18 +97,20 @@ export default function AdminAssessmentsPage() {
 
           return (
             <Card key={a.id} className="!p-5">
-              <div className="flex flex-wrap items-center gap-4">
-                <Avatar name={child?.name ?? "?"} size={40} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-ink">{child?.name ?? "Unknown child"}</p>
-                  <p className="mt-0.5 text-xs text-ink-3">
-                    Parent: {profiles?.full_name || profiles?.email || "—"}
-                  </p>
-                  <p className="mt-0.5 text-xs text-ink-3">
-                    Assessed on {a.assessed_on}
-                  </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                <div className="flex min-w-0 flex-1 items-center gap-4">
+                  <Avatar name={child?.name ?? "?"} size={40} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-ink">{child?.name ?? "Unknown child"}</p>
+                    <p className="mt-0.5 text-xs text-ink-3">
+                      Parent: {profiles?.full_name || profiles?.email || "—"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-ink-3">
+                      Assessed on {a.assessed_on}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-3 pl-[56px] sm:pl-0">
                   {a.completed_at ? (
                     <>
                       <Badge tone="success">Completed</Badge>

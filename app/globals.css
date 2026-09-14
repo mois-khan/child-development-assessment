@@ -911,11 +911,18 @@ select.field {
 
 /* ── progress matrix (report: section × developmental stage) ─────────────── */
 
+.progress-matrix-scroll {
+  overflow-x: auto;
+}
 .progress-matrix {
   display: grid;
   grid-template-columns: minmax(7rem, 14rem) 1fr;
   align-items: center;
   gap: var(--space-3) var(--space-4);
+  /* The 5-stage headrow needs real width to stay legible; below that this
+     scrolls as a unit (row-label pinned via position: sticky below) rather
+     than squeezing the 1fr track column past its content's min-width. */
+  min-width: 38rem;
 }
 .progress-matrix-headrow {
   display: grid;
@@ -934,11 +941,22 @@ select.field {
   color: var(--ink-3);
   text-wrap: balance;
 }
+.progress-matrix-corner {
+  position: sticky;
+  left: 0;
+  background: var(--surface);
+  z-index: 1;
+}
 .progress-matrix-row-label {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-width: 0;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  padding-right: var(--space-2);
 }
 .progress-matrix-row-track {
   position: relative;
@@ -1848,24 +1866,14 @@ summary::marker {
   }
 }
 
-/* ── thin scrollbar ────────────────────────────────────────────────────────
-   For containers that scroll their own content (the admin sidebar) rather
-   than the page itself — a full-width browser scrollbar there reads as a
-   bug, not a feature. */
-.thin-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
+/* ── hidden scrollbars, everywhere ────────────────────────────────────────
+   Scrolling stays fully functional; only the visible track/thumb is
+   suppressed, on the page itself and on every element that scrolls its own
+   content (sidebar, drawers, horizontally-scrolling tables/charts). */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge/IE */
 }
-.thin-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-.thin-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-.thin-scroll::-webkit-scrollbar-thumb {
-  background-color: var(--line-strong);
-  border-radius: 999px;
-}
-.thin-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: var(--ink-3);
+*::-webkit-scrollbar {
+  display: none; /* Chromium/WebKit */
 }

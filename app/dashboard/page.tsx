@@ -444,23 +444,26 @@ export default function DashboardPage() {
                 {recentReports(summaries).map(({ child, assessment }) => (
                   <div
                     key={assessment.id}
-                    className="flex flex-wrap items-center gap-4 rounded-[var(--radius-xl)] border border-line bg-[var(--surface)] px-5 py-4"
+                    className="flex flex-col gap-4 rounded-[var(--radius-xl)] border border-line bg-[var(--surface)] px-5 py-4 sm:flex-row sm:items-center"
                   >
-                    <Avatar name={child.name} photoUrl={child.photoUrl} size={42} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-extrabold text-ink">{child.name}</p>
-                      <p className="text-sm font-semibold text-ink-3">
-                        {formatDateTime(assessment.completedAt)}
-                      </p>
+                    <div className="flex min-w-0 flex-1 items-center gap-4">
+                      <Avatar name={child.name} photoUrl={child.photoUrl} size={42} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-extrabold text-ink">{child.name}</p>
+                        <p className="text-sm font-semibold text-ink-3">
+                          {formatDateTime(assessment.completedAt)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2.5">
-                      <ButtonLink href={`/report/${assessment.id}`} variant="secondary" size="sm">
+                    <div className="flex shrink-0 items-center gap-2.5 pl-[58px] sm:pl-0">
+                      <ButtonLink href={`/report/${assessment.id}`} variant="secondary" size="sm" className="flex-1 sm:flex-initial">
                         View
                       </ButtonLink>
                       <ButtonLink
                         href={`/report/${assessment.id}?download=1`}
                         size="sm"
                         iconLeft={<IconDownload size={15} />}
+                        className="flex-1 sm:flex-initial"
                       >
                         Download
                       </ButtonLink>

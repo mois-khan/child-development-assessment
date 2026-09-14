@@ -66,7 +66,7 @@ export function NotificationBell() {
       {open && (
         <div
           role="menu"
-          className="clay absolute right-0 top-[calc(100%+10px)] z-50 w-[22rem] max-w-[90vw] overflow-hidden !p-0"
+          className="clay fixed inset-x-4 top-16 z-50 overflow-hidden !p-0 sm:absolute sm:inset-x-auto sm:top-[calc(100%+10px)] sm:right-0 sm:w-[22rem] sm:max-w-[90vw]"
         >
           <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
             <p className="text-sm font-extrabold text-ink">Notifications</p>

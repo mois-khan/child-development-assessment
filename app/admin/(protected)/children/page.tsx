@@ -90,23 +90,25 @@ export default function AdminChildrenPage() {
 
           return (
             <Card key={c.id} className="!p-5">
-              <div className="flex flex-wrap items-start gap-4">
-                <Avatar name={c.name} size={44} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-bold text-ink">{c.name}</p>
-                    <span className="text-xs text-ink-3 bg-surface-2 rounded px-1.5 py-0.5 capitalize">
-                      {c.gender}
-                    </span>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                <div className="flex min-w-0 flex-1 items-start gap-4">
+                  <Avatar name={c.name} size={44} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-bold text-ink">{c.name}</p>
+                      <span className="text-xs text-ink-3 bg-surface-2 rounded px-1.5 py-0.5 capitalize">
+                        {c.gender}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-sm text-ink-3">
+                      {formatAge(ageMonths)} · Born {c.dob}
+                    </p>
+                    <p className="mt-0.5 text-xs text-ink-3">
+                      Parent: <span className="font-semibold text-ink-2">{c.profiles?.full_name || c.profiles?.email || "—"}</span>
+                    </p>
                   </div>
-                  <p className="mt-0.5 text-sm text-ink-3">
-                    {formatAge(ageMonths)} · Born {c.dob}
-                  </p>
-                  <p className="mt-0.5 text-xs text-ink-3">
-                    Parent: <span className="font-semibold text-ink-2">{c.profiles?.full_name || c.profiles?.email || "—"}</span>
-                  </p>
                 </div>
-                <div className="flex flex-col items-end gap-2 text-right">
+                <div className="flex shrink-0 flex-row flex-wrap items-center gap-2 pl-[60px] sm:flex-col sm:items-end sm:gap-2 sm:pl-0 sm:text-right">
                   <div className="flex items-center gap-2">
                     {completed > 0 && (
                       <Badge tone="success">{completed} completed</Badge>

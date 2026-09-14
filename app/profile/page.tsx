@@ -598,7 +598,55 @@ function ProfileInner() {
               <p className="mt-6 text-ink-3 font-semibold">Loading assessments…</p>
             ) : assessments && assessments.length > 0 ? (
               <div className="mt-6 overflow-hidden rounded-[var(--radius-xl)] border border-line bg-[var(--surface)] shadow-[var(--clay-sm)]">
-                <div className="overflow-x-auto">
+                {/* ── cards, below md ── */}
+                <div className="divide-y divide-line-soft md:hidden">
+                  {assessments.map((a) => (
+                    <div key={a.id} className="p-5">
+                      <Link href={`/children/${a.childId}`} className="group flex items-center gap-3">
+                        <Avatar name={a.childName} photoUrl={a.childPhotoUrl} size={36} />
+                        <span className="font-extrabold text-ink transition-colors group-hover:text-accent">
+                          {a.childName}
+                        </span>
+                      </Link>
+                      <div className="mt-3 flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-bold text-ink">Genius Milestone Check</p>
+                          <p className="text-xs text-ink-3">6 developmental areas</p>
+                        </div>
+                        <Badge tone={a.completedAt ? "success" : "sun"}>
+                          {a.completedAt ? "Completed" : "In progress"}
+                        </Badge>
+                      </div>
+                      <p className="mt-2 text-xs font-semibold text-ink-2">
+                        {formatDateTime(a.completedAt || a.createdAt || a.assessedOn)}
+                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                        {a.completedAt ? (
+                          <>
+                            <ButtonLink href={`/report/${a.id}`} variant="secondary" size="sm" className="flex-1">
+                              View Report
+                            </ButtonLink>
+                            <ButtonLink
+                              href={`/report/${a.id}?download=1`}
+                              size="sm"
+                              iconLeft={<IconDownload size={15} />}
+                              className="flex-1"
+                            >
+                              Download
+                            </ButtonLink>
+                          </>
+                        ) : (
+                          <ButtonLink href={`/assessment/${a.id}`} size="sm" className="w-full">
+                            Resume Check
+                          </ButtonLink>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ── table, md and up ── */}
+                <div className="hidden overflow-x-auto md:block">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-line bg-[var(--surface-2)]">

@@ -76,7 +76,8 @@ export default function SchoolsPage() {
           <p className="text-ink-3">Loading schools...</p>
         ) : (
           <Card variant="clay" className="overflow-hidden">
-            <div className="overflow-x-auto">
+            {/* ── table, md and up ── */}
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-line-soft bg-surface-2 text-ink-3">
                   <tr>
@@ -116,6 +117,35 @@ export default function SchoolsPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* ── cards, below md ── */}
+            <div className="divide-y divide-line-soft md:hidden">
+              {schools.map((s) => (
+                <div key={s.id} className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-ink">{s.schoolName}</p>
+                      {s.city && <p className="text-xs text-ink-3">{s.city}</p>}
+                    </div>
+                    <Badge tone={s.studentCount > 0 ? "success" : "neutral"}>
+                      {s.studentCount} {s.studentCount === 1 ? "student" : "students"}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 space-y-1 text-sm">
+                    <p className="text-ink-2">
+                      {s.contactName || "—"}
+                      {s.contactPhone && <span className="text-ink-3"> · {s.contactPhone}</span>}
+                    </p>
+                    <p className="break-all font-mono text-xs text-ink-3">{s.email}</p>
+                  </div>
+                </div>
+              ))}
+              {schools.length === 0 && (
+                <p className="px-5 py-8 text-center text-sm text-ink-3">
+                  No schools yet. Invite one to get started.
+                </p>
+              )}
             </div>
           </Card>
         )}

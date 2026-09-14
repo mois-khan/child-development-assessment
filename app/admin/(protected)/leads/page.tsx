@@ -202,26 +202,28 @@ function LeadRow({ lead, today }: { lead: Lead; today: string }) {
   return (
     <Link
       href={`/admin/leads/${lead.id}`}
-      className="flex flex-wrap items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-2"
+      className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-surface-2 sm:flex-row sm:items-center sm:gap-4"
     >
-      <Avatar name={lead.parentName || "Unknown"} size={40} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-bold text-ink">
-          {lead.parentName || "Unnamed Parent"}
-          <span className="ml-1.5 font-medium text-ink-3">· {childText}</span>
-        </p>
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-3">
-          {lead.phone ? (
-            <span className="flex items-center gap-1">
-              <IconPhone size={12} /> {lead.phone}
-            </span>
-          ) : (
-            <span className="italic">No phone</span>
-          )}
-          {lead.lastInteractionAt && <span>Last interaction: {new Date(lead.lastInteractionAt).toLocaleDateString()}</span>}
-        </p>
+      <div className="flex min-w-0 flex-1 items-center gap-4">
+        <Avatar name={lead.parentName || "Unknown"} size={40} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-base font-bold text-ink">
+            {lead.parentName || "Unnamed Parent"}
+            <span className="ml-1.5 font-medium text-ink-3">· {childText}</span>
+          </p>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-3">
+            {lead.phone ? (
+              <span className="flex items-center gap-1">
+                <IconPhone size={12} /> {lead.phone}
+              </span>
+            ) : (
+              <span className="italic">No phone</span>
+            )}
+            {lead.lastInteractionAt && <span>Last interaction: {new Date(lead.lastInteractionAt).toLocaleDateString()}</span>}
+          </p>
+        </div>
       </div>
-      <div className="flex items-center gap-2.5">
+      <div className="flex shrink-0 items-center gap-2.5 pl-[56px] sm:pl-0">
         {lead.nextFollowUpAt && (lead.status === "new" || lead.status === "contacted" || lead.status === "follow_up" || lead.status === "interested") && (
           <span
             className="flex items-center gap-1.5 text-xs font-bold"
