@@ -31,7 +31,17 @@ export default function UserManagementPage() {
   const [inviteDrawerOpen, setInviteDrawerOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<AdminRole>("sales");
+  const [invitePageAccess, setInvitePageAccess] = useState<Set<string>>(new Set());
   const [inviting, setInviting] = useState(false);
+
+  const toggleInvitePageAccess = (pageId: string) => {
+    setInvitePageAccess((prev) => {
+      const next = new Set(prev);
+      if (next.has(pageId)) next.delete(pageId);
+      else next.add(pageId);
+      return next;
+    });
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -109,11 +119,18 @@ export default function UserManagementPage() {
     e.preventDefault();
     setInviting(true);
     try {
-      await inviteAdminUser(inviteEmail, inviteRole);
+      const warning = await inviteAdminUser(
+        inviteEmail,
+        inviteRole,
+        inviteRole === "super_admin" ? [] : Array.from(invitePageAccess),
+      );
       setInviteEmail("");
+      setInviteRole("sales");
+      setInvitePageAccess(new Set());
       setInviteDrawerOpen(false);
       fetchData();
-      banner.showSuccess("Invite sent successfully!");
+      if (warning) banner.showError(warning);
+      else banner.showSuccess("Invite sent successfully!");
     } catch (err: any) {
       banner.showError("Failed to send invite: " + err.message);
     } finally {
@@ -140,7 +157,7 @@ export default function UserManagementPage() {
       <InlineBanner message={banner.message} onDismiss={banner.clear} />
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-ink tracking-tight">User Management</h1>
+          <h1 className="text-2xl font-bold text-ink tracking-tight">Roles &amp; Responsibilities</h1>
           <p className="mt-1 text-sm text-ink-3">
             Only super admins can change page access.
           </p>
@@ -319,7 +336,7 @@ export default function UserManagementPage() {
       {inviteDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/40" onClick={() => !inviting && setInviteDrawerOpen(false)} />
-          <div className="relative w-full max-w-sm bg-[var(--surface)] shadow-2xl flex flex-col animate-slide-in-right h-full">
+          <div className="relative w-full max-w-sm bg-[var(--surface)] shadow-2xl flex flex-col animate-slide-in-right h-full overflow-y-auto">
             <div className="flex items-center justify-between border-b border-line p-5">
               <h2 className="text-lg font-bold">Invite User</h2>
               <button onClick={() => !inviting && setInviteDrawerOpen(false)} className="p-2 text-ink-3 hover:bg-surface-2 rounded-full">
@@ -342,7 +359,7 @@ export default function UserManagementPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-ink-2 mb-1">Role *</label>
-                <select 
+                <select
                   className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"
                   value={inviteRole}
                   onChange={e => setInviteRole(e.target.value as AdminRole)}
@@ -353,7 +370,43 @@ export default function UserManagementPage() {
                   <option value="admin">Admin</option>
                   <option value="super_admin">Super Admin</option>
                 </select>
-                <p className="mt-1 text-xs text-ink-3">Page access can be configured after the invite is sent.</p>
+              </div>
+
+              <div className="pt-2">
+                <h3 className="text-sm font-extrabold tracking-widest uppercase text-ink-3 mb-4">Page Access</h3>
+
+                {inviteRole === "super_admin" ? (
+                  <div className="rounded-md bg-surface-2 p-4 text-sm text-ink-2 text-center border border-line-soft">
+                    Super admins always have access to all pages.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pages.map(page => {
+                      const checked = invitePageAccess.has(page.id);
+                      return (
+                        <div key={page.id} className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-ink">{page.label}</div>
+                            <div className="text-xs text-ink-3">{page.description}</div>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={checked}
+                            onClick={() => toggleInvitePageAccess(page.id)}
+                            disabled={inviting}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${checked ? 'bg-[var(--accent)]' : 'bg-[var(--surface-3)]'} ${inviting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {pages.length === 0 && (
+                      <p className="text-sm text-ink-3">No pages registered yet.</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="pt-6 mt-auto border-t border-line flex gap-3 justify-end">

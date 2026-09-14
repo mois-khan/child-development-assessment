@@ -225,20 +225,26 @@ export async function removeAdminUser(userId: string): Promise<void> {
  *
  * Throws if the server responds with a non-2xx status.
  */
+/** Returns a warning string when the account was created but its initial
+ *  page grants couldn't be attached (still a success — see the API route). */
 export async function inviteAdminUser(
   email: string,
-  role: AdminRole
-): Promise<void> {
+  role: AdminRole,
+  pageAccess: string[] = []
+): Promise<string | undefined> {
   const response = await fetch("/api/admin/invite", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, role }),
+    body: JSON.stringify({ email, role, pageAccess }),
   });
 
+  const body = await response.json().catch(() => ({}));
+
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
     throw new Error(
       `Failed to invite admin user: ${body?.error ?? response.statusText}`
     );
   }
+
+  return body?.warning;
 }

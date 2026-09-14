@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { useAuth } from "@/lib/auth/provider";
 import { phaseLabel } from "@/lib/naming";
@@ -38,7 +38,21 @@ const GENDERS: [Gender, string][] = [
 ];
 
 export default function ChildrenPage() {
+  return (
+    <Suspense fallback={null}>
+      <ChildrenPageInner />
+    </Suspense>
+  );
+}
+
+function ChildrenPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // A parent clicking "Add a child" elsewhere in the app (their profile, an
+  // empty dashboard) wants the creation form, not this list with one more
+  // click still between them and it — so `?new=1` opens it immediately, the
+  // moment the roster load below confirms whether it's even needed.
+  const openOnLoad = searchParams.get("new") === "1";
   const { profile } = useAuth();
   const isSchool = profile?.accountType === "school";
   const [children, setChildren] = useState<SavedChild[] | null | "error">(null);
@@ -52,12 +66,13 @@ export default function ChildrenPage() {
       .then(list => {
         if (!active) return;
         setChildren(list);
-        setShowForm(list.length === 0);
+        setShowForm(list.length === 0 || openOnLoad);
       })
       .catch(() => {
         if (active) setChildren("error");
       });
     return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadAttempt]);
 
   const list = children !== null && children !== "error" ? children : null;
@@ -177,6 +192,9 @@ export default function ChildrenPage() {
           onClose={() => {
             setShowForm(false);
             setLoadAttempt((n) => n + 1);
+            // Drop `?new=1` once the dialog's been seen, so a later visit to
+            // this same URL (back button, a bookmark) doesn't reopen it.
+            if (openOnLoad) router.replace("/children");
           }}
         />
       )}

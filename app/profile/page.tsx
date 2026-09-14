@@ -19,8 +19,10 @@ import {
   IconArrowRight,
   IconCheck,
   IconDownload,
+  IconLock,
   IconPlus,
   IconRefresh,
+  IconSchool,
   IconShield,
   IconSparkle,
   IconCalendar,
@@ -67,7 +69,8 @@ export default function ProfilePage() {
 
 function ProfileInner() {
   const router = useRouter();
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile, updatePassword } = useAuth();
+  const isSchool = profile?.accountType === "school";
 
   const [children, setChildren] = useState<SavedChild[] | null>(null);
   const [assessments, setAssessments] = useState<AssessmentRow[] | null>(null);
@@ -81,8 +84,49 @@ function ProfileInner() {
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  // School-only fields — the schools table extends profiles with these
+  // (see 0007_schools.sql), so a school edits a different row underneath
+  // the same "Edit details" form a parent uses.
+  const [editSchoolName, setEditSchoolName] = useState("");
+  const [editContactName, setEditContactName] = useState("");
+  const [editContactPhone, setEditContactPhone] = useState("");
+  const [editCity, setEditCity] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState<string | null>(null);
+
+  // Change password
+  const [passwordFormOpen, setPasswordFormOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordMsg(null);
+    if (newPassword.length < 8) {
+      setPasswordMsg({ text: "Password must be at least 8 characters.", ok: false });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ text: "Passwords don't match.", ok: false });
+      return;
+    }
+    setChangingPassword(true);
+    const { error } = await updatePassword(newPassword);
+    setChangingPassword(false);
+    if (error) {
+      setPasswordMsg({ text: error, ok: false });
+      return;
+    }
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordMsg({ text: "Password updated.", ok: true });
+    setTimeout(() => {
+      setPasswordFormOpen(false);
+      setPasswordMsg(null);
+    }, 1500);
+  }
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -180,6 +224,10 @@ function ProfileInner() {
       setEditName(profile.fullName || "");
       setEditPhone(profile.phone || "");
       setEditEmail(profile.email || "");
+      setEditSchoolName(profile.school?.name || "");
+      setEditContactName(profile.school?.contactName || "");
+      setEditContactPhone(profile.school?.contactPhone || "");
+      setEditCity(profile.school?.city || "");
     }
   }, [profile]);
 
@@ -191,6 +239,26 @@ function ProfileInner() {
 
     try {
       const supabase = getSupabaseBrowserClient();
+
+      if (isSchool) {
+        const { error } = await supabase
+          .from("schools")
+          .update({
+            school_name: editSchoolName.trim(),
+            contact_name: editContactName.trim(),
+            contact_phone: editContactPhone.trim(),
+            city: editCity.trim(),
+          })
+          .eq("id", user.id);
+        if (error) throw error;
+
+        await refreshProfile();
+        setEditing(false);
+        setProfileMsg("School details updated successfully!");
+        setTimeout(() => setProfileMsg(null), 3000);
+        return;
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -247,9 +315,13 @@ function ProfileInner() {
     );
   }
 
-  const parentName = profile?.fullName || user?.user_metadata?.full_name || "Parent";
+  const parentName = isSchool
+    ? profile?.school?.name || "Your school"
+    : profile?.fullName || user?.user_metadata?.full_name || "Parent";
   const parentEmail = profile?.email || user?.email || "";
-  const parentPhone = profile?.phone || user?.user_metadata?.phone || "";
+  const parentPhone = isSchool
+    ? profile?.school?.contactPhone || ""
+    : profile?.phone || user?.user_metadata?.phone || "";
   const joinedDate = profile?.createdAt ? formatDate(profile.createdAt) : "Recently";
 
   return (
@@ -308,11 +380,13 @@ function ProfileInner() {
                 <div>
                   <div className="flex items-center gap-2.5">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur">
-                      <IconShield size={13} /> Parent Account
+                      {isSchool ? <IconSchool size={13} /> : <IconShield size={13} />}
+                      {isSchool ? "School Account" : "Parent Account"}
                     </span>
                   </div>
                   <h1 className="mt-2 text-white">{parentName}</h1>
                   <p className="mt-1 text-sm font-semibold text-white/80">
+                    {isSchool && profile?.school?.contactName ? `${profile.school.contactName} · ` : ""}
                     {parentEmail} {parentPhone ? `· ${parentPhone}` : ""}
                   </p>
                 </div>
@@ -321,7 +395,11 @@ function ProfileInner() {
               <div className="flex flex-wrap gap-3">
                 <HeroCount
                   value={children ? children.length : "—"}
-                  label={children?.length === 1 ? "Child" : "Children"}
+                  label={
+                    isSchool
+                      ? children?.length === 1 ? "Student" : "Students"
+                      : children?.length === 1 ? "Child" : "Children"
+                  }
                   icon={<IconStarFilled size={14} />}
                 />
                 <HeroCount
@@ -345,7 +423,7 @@ function ProfileInner() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="eyebrow eyebrow-accent">Account Details</p>
-                <h2 className="mt-1">Parent profile</h2>
+                <h2 className="mt-1">{isSchool ? "School profile" : "Parent profile"}</h2>
               </div>
               <Button
                 variant={editing ? "ghost" : "secondary"}
@@ -376,56 +454,116 @@ function ProfileInner() {
             <Card variant="clay" className="mt-5 p-6 sm:p-7">
               {editing ? (
                 <form onSubmit={handleSaveProfile} className="space-y-4 max-w-lg">
-                  <div>
-                    <label className="label" htmlFor="edit-name">
-                      Full Name
-                    </label>
-                    <input
-                      id="edit-name"
-                      className="field"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="label" htmlFor="edit-phone">
-                      Mobile Number
-                    </label>
-                    <input
-                      id="edit-phone"
-                      type="tel"
-                      className="field"
-                      value={editPhone}
-                      onChange={(e) => setEditPhone(e.target.value)}
-                      placeholder="98765 43210"
-                    />
-                  </div>
-                  <div>
-                    <label className="label" htmlFor="edit-email">
-                      Email
-                    </label>
-                    <input
-                      id="edit-email"
-                      type="email"
-                      className="field"
-                      value={editEmail}
-                      onChange={(e) => setEditEmail(e.target.value)}
-                      placeholder="priya@example.com"
-                      autoComplete="email"
-                    />
-                    {/* This is the address they sign in with, so a change is
-                        not a profile edit — it goes through auth and both the
-                        old and new inboxes have to confirm it. Saying so here
-                        stops it looking broken when the field appears not to
-                        have changed after saving. */}
-                    <p className="hint">
-                      {editEmail.trim().toLowerCase() !==
-                      (profile?.email || "").trim().toLowerCase()
-                        ? "You'll get a confirmation link at both your old and new address. The change applies once you open it."
-                        : "This is the address you sign in with."}
-                    </p>
-                  </div>
+                  {isSchool ? (
+                    <>
+                      <div>
+                        <label className="label" htmlFor="edit-school-name">
+                          School Name
+                        </label>
+                        <input
+                          id="edit-school-name"
+                          className="field"
+                          value={editSchoolName}
+                          onChange={(e) => setEditSchoolName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="label" htmlFor="edit-contact-name">
+                          Contact Person
+                        </label>
+                        <input
+                          id="edit-contact-name"
+                          className="field"
+                          value={editContactName}
+                          onChange={(e) => setEditContactName(e.target.value)}
+                          placeholder="Priya Sharma"
+                        />
+                      </div>
+                      <div>
+                        <label className="label" htmlFor="edit-contact-phone">
+                          Contact Phone
+                        </label>
+                        <input
+                          id="edit-contact-phone"
+                          type="tel"
+                          className="field"
+                          value={editContactPhone}
+                          onChange={(e) => setEditContactPhone(e.target.value)}
+                          placeholder="98765 43210"
+                        />
+                      </div>
+                      <div>
+                        <label className="label" htmlFor="edit-city">
+                          City
+                        </label>
+                        <input
+                          id="edit-city"
+                          className="field"
+                          value={editCity}
+                          onChange={(e) => setEditCity(e.target.value)}
+                          placeholder="Bengaluru"
+                        />
+                      </div>
+                      <p className="hint">
+                        The login email ({parentEmail || "—"}) can&rsquo;t be changed here — contact
+                        support if it needs to change.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="label" htmlFor="edit-name">
+                          Full Name
+                        </label>
+                        <input
+                          id="edit-name"
+                          className="field"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="label" htmlFor="edit-phone">
+                          Mobile Number
+                        </label>
+                        <input
+                          id="edit-phone"
+                          type="tel"
+                          className="field"
+                          value={editPhone}
+                          onChange={(e) => setEditPhone(e.target.value)}
+                          placeholder="98765 43210"
+                        />
+                      </div>
+                      <div>
+                        <label className="label" htmlFor="edit-email">
+                          Email
+                        </label>
+                        <input
+                          id="edit-email"
+                          type="email"
+                          className="field"
+                          value={editEmail}
+                          onChange={(e) => setEditEmail(e.target.value)}
+                          placeholder="priya@example.com"
+                          autoComplete="email"
+                        />
+                        {/* This is the address they sign in with, so a change is
+                            not a profile edit — it goes through auth and both the
+                            old and new inboxes have to confirm it. Saying so here
+                            stops it looking broken when the field appears not to
+                            have changed after saving. */}
+                        <p className="hint">
+                          {editEmail.trim().toLowerCase() !==
+                          (profile?.email || "").trim().toLowerCase()
+                            ? "You'll get a confirmation link at both your old and new address. The change applies once you open it."
+                            : "This is the address you sign in with."}
+                        </p>
+                      </div>
+                    </>
+                  )}
                   <div className="pt-2 flex items-center gap-3">
                     <Button type="submit" disabled={savingProfile}>
                       {savingProfile ? "Saving…" : "Save Changes"}
@@ -438,12 +576,45 @@ function ProfileInner() {
                         setEditName(profile?.fullName || "");
                         setEditPhone(profile?.phone || "");
                         setEditEmail(profile?.email || "");
+                        setEditSchoolName(profile?.school?.name || "");
+                        setEditContactName(profile?.school?.contactName || "");
+                        setEditContactPhone(profile?.school?.contactPhone || "");
+                        setEditCity(profile?.school?.city || "");
                       }}
                     >
                       Cancel
                     </Button>
                   </div>
                 </form>
+              ) : isSchool ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <DetailTile
+                    label="School name"
+                    value={parentName}
+                    icon={<IconSchool size={17} />}
+                    color="var(--brand-500)"
+                  />
+                  <DetailTile
+                    label="Contact person"
+                    value={profile?.school?.contactName || "Not provided"}
+                    muted={!profile?.school?.contactName}
+                    icon={<IconUser size={17} />}
+                    color="var(--sec-auditory)"
+                  />
+                  <DetailTile
+                    label="Login email"
+                    value={parentEmail || "—"}
+                    icon={<IconMail size={17} />}
+                    color="var(--sec-language)"
+                  />
+                  <DetailTile
+                    label="Contact phone"
+                    value={parentPhone || "Not provided"}
+                    muted={!parentPhone}
+                    icon={<IconPhone size={17} />}
+                    color="var(--sun-500)"
+                  />
+                </div>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <DetailTile
@@ -475,6 +646,63 @@ function ProfileInner() {
               )}
             </Card>
 
+            {/* ══ Change password ═══════════════════════════════════════════ */}
+            <Card variant="clay" className="mt-5 !p-5">
+              <button
+                type="button"
+                onClick={() => setPasswordFormOpen((v) => !v)}
+                className="flex w-full items-center justify-between gap-3"
+              >
+                <span className="flex items-center gap-2.5 text-sm font-bold text-ink">
+                  <IconLock size={17} className="text-ink-3" /> Change password
+                </span>
+                <span className="text-xs font-semibold text-accent">
+                  {passwordFormOpen ? "Cancel" : "Change"}
+                </span>
+              </button>
+
+              {passwordFormOpen && (
+                <form
+                  onSubmit={handleChangePassword}
+                  className="animate-rise mt-4 max-w-sm space-y-3 border-t border-line-soft pt-4"
+                >
+                  <div>
+                    <label className="label" htmlFor="new-password">New password</label>
+                    <input
+                      id="new-password"
+                      type="password"
+                      className="field"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="At least 8 characters"
+                      disabled={changingPassword}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div>
+                    <label className="label" htmlFor="confirm-password">Confirm new password</label>
+                    <input
+                      id="confirm-password"
+                      type="password"
+                      className="field"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={changingPassword}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  {passwordMsg && (
+                    <p className={`text-sm font-semibold ${passwordMsg.ok ? "text-[var(--st-on-track)]" : "text-[var(--st-consult)]"}`}>
+                      {passwordMsg.text}
+                    </p>
+                  )}
+                  <Button type="submit" size="sm" disabled={changingPassword}>
+                    {changingPassword ? "Saving…" : "Save new password"}
+                  </Button>
+                </form>
+              )}
+            </Card>
+
             <NotificationSettings />
           </Shell>
         </Section>
@@ -484,11 +712,11 @@ function ProfileInner() {
           <Shell width="wide">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="eyebrow eyebrow-accent">Your Family</p>
-                <h2 className="mt-1">Your children</h2>
+                <p className="eyebrow eyebrow-accent">{isSchool ? "Your Roster" : "Your Family"}</p>
+                <h2 className="mt-1">{isSchool ? "Your students" : "Your children"}</h2>
               </div>
-              <ButtonLink href="/children" size="sm" iconLeft={<IconPlus size={16} />}>
-                Add a child
+              <ButtonLink href="/children?new=1" size="sm" iconLeft={<IconPlus size={16} />}>
+                {isSchool ? "Add a student" : "Add a child"}
               </ButtonLink>
             </div>
 
@@ -563,12 +791,16 @@ function ProfileInner() {
             ) : (
               <Card variant="clay" className="mt-6 p-8 text-center sm:p-12">
                 <Mascot size={80} mood="wave" className="mx-auto" />
-                <h3 className="mt-5 text-xl">No children added yet</h3>
+                <h3 className="mt-5 text-xl">
+                  {isSchool ? "No students added yet" : "No children added yet"}
+                </h3>
                 <p className="mx-auto mt-2 max-w-[40ch] text-base leading-relaxed text-ink-2">
-                  Add your child&rsquo;s details to start tracking their developmental milestones and unlock phase-based reports.
+                  {isSchool
+                    ? "Add your first student's details to start tracking their developmental milestones and unlock phase-based reports."
+                    : "Add your child's details to start tracking their developmental milestones and unlock phase-based reports."}
                 </p>
-                <ButtonLink href="/children" size="lg" className="mt-6" iconLeft={<IconPlus size={18} />}>
-                  Add your first child
+                <ButtonLink href="/children?new=1" size="lg" className="mt-6" iconLeft={<IconPlus size={18} />}>
+                  {isSchool ? "Add your first student" : "Add your first child"}
                 </ButtonLink>
               </Card>
             )}

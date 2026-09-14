@@ -14,6 +14,8 @@ import {
   IconMenu,
   IconPhone,
   IconSchool,
+  IconShield,
+  IconSparkle,
   IconTrophy,
   IconUsers,
   Wordmark,
@@ -37,17 +39,17 @@ function isDivider(e: NavEntry): e is NavDivider {
  */
 const NAV: NavEntry[] = [
   { href: "/admin",              label: "Dashboard",      icon: <IconChart size={18} /> },
+  { href: "/admin/leads",        label: "Parents",        icon: <IconPhone size={18} /> },
   { href: "/admin/children",     label: "Children",       icon: <IconUsers size={18} /> },
+  { href: "/admin/schools",      label: "Schools",        icon: <IconSchool size={18} /> },
   { href: "/admin/assessments",  label: "Assessments",    icon: <IconTrophy size={18} /> },
   { href: "/admin/purchases",    label: "Purchases",      icon: <IconBolt size={18} /> },
-  { href: "/admin/leads",        label: "Leads",          icon: <IconPhone size={18} /> },
-  { href: "/admin/item-bank",    label: "Question Bank",  icon: <IconBolt size={18} /> },
-  { href: "/admin/schools",      label: "Schools",        icon: <IconSchool size={18} /> },
   { divider: true,               label: "CMS" },
-  { href: "/admin/milestone-videos", label: "Milestone Videos",  icon: <IconTrophy size={18} /> },
-  { href: "/admin/courses",          label: "Course Recs",       icon: <IconBolt size={18} /> },
+  { href: "/admin/item-bank",        label: "Question Bank",         icon: <IconBolt size={18} /> },
+  { href: "/admin/milestone-videos", label: "Milestone Videos",      icon: <IconTrophy size={18} /> },
+  { href: "/admin/courses",          label: "Course Recommendations", icon: <IconSparkle size={18} /> },
   { divider: true,               label: "Settings" },
-  { href: "/admin/users",            label: "User Management",   icon: <IconUsers size={18} /> },
+  { href: "/admin/users",            label: "Roles & Responsibilities", icon: <IconShield size={18} /> },
 ];
 
 export default function AdminProtectedLayout({ children }: { children: ReactNode }) {

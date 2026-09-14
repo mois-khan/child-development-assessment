@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { getSchoolDetail, type AdminSchoolDetail } from "@/lib/data/schools";
+import { exportSchoolRoster } from "@/lib/export/schools-xlsx";
 import { completedMonths, formatAge } from "@/lib/age";
-import { Avatar, Badge, Card, IconChevronRight, InlineBanner, useBanner } from "@/components/ui";
+import { Avatar, Badge, Button, Card, IconChevronRight, IconDownload, InlineBanner, useBanner } from "@/components/ui";
 
 export default function SchoolDetailPage() {
   const params = useParams<{ id: string }>();
@@ -13,6 +14,7 @@ export default function SchoolDetailPage() {
   const banner = useBanner();
 
   const [school, setSchool] = useState<AdminSchoolDetail | null | undefined>(undefined);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     getSchoolDetail(params.id)
@@ -59,9 +61,29 @@ export default function SchoolDetailPage() {
           </p>
           <p className="mt-0.5 font-mono text-xs text-ink-3">{school.email}</p>
         </div>
-        <Badge tone={school.students.length > 0 ? "success" : "neutral"}>
-          {school.students.length} {school.students.length === 1 ? "student" : "students"}
-        </Badge>
+        <div className="flex shrink-0 items-center gap-3">
+          <Badge tone={school.students.length > 0 ? "success" : "neutral"}>
+            {school.students.length} {school.students.length === 1 ? "student" : "students"}
+          </Badge>
+          <Button
+            variant="secondary"
+            size="sm"
+            iconLeft={<IconDownload size={14} />}
+            disabled={downloading || school.students.length === 0}
+            onClick={async () => {
+              setDownloading(true);
+              try {
+                await exportSchoolRoster(school);
+              } catch (err: any) {
+                banner.showError("Failed to download roster: " + err.message);
+              } finally {
+                setDownloading(false);
+              }
+            }}
+          >
+            {downloading ? "Preparing…" : "Download roster"}
+          </Button>
+        </div>
       </div>
 
       {school.students.length === 0 ? (

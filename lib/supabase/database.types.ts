@@ -45,6 +45,13 @@ export type MilestoneVideoDomain =
 export type ItemBankKind = "yesno" | "choice" | "count" | "percent" | "text";
 export type ItemBankSource = "ACE" | "AUTHORED";
 export type AccountType = "parent" | "school";
+/** Which business a row belongs to. Mirrors public.account_channel() in
+ *  0016 — a family that came through the sales funnel, or a student on a
+ *  school roster that never entered it. */
+export type Channel = "direct" | "school";
+/** Real money versus a coupon redemption, which is also a payments row but
+ *  at amount_paise = 0 (see app/api/payments/coupon). */
+export type PaymentKind = "cash" | "coupon";
 export type NotificationType = "report_ready" | "reminder" | "broadcast";
 
 
@@ -480,12 +487,101 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      analytics_events: {
+        Row: {
+          id: string;
+          profile_id: string | null;
+          child_id: string | null;
+          assessment_id: string | null;
+          name: string;
+          props: Record<string, unknown>;
+          occurred_at: string;
+        };
+        Insert: {
+          profile_id: string;
+          child_id?: string | null;
+          assessment_id?: string | null;
+          name: string;
+          props?: Record<string, unknown>;
+          occurred_at?: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
     };
-    Views: Record<never, never>;
+    Views: {
+      analytics_leads: {
+        Relationships: [];
+        Row: {
+          id: string;
+          profile_id: string;
+          channel: Channel;
+          status: LeadStatus;
+          source: string;
+          assigned_to: string | null;
+          next_follow_up_at: string | null;
+          last_interaction_at: string | null;
+          first_interaction_at: string | null;
+          interaction_count: number;
+          created_at: string;
+        };
+      };
+      analytics_schools: {
+        Relationships: [];
+        Row: { id: string; city: string; created_at: string };
+      };
+      analytics_children: {
+        Relationships: [];
+        Row: {
+          id: string;
+          profile_id: string;
+          channel: Channel;
+          school_id: string | null;
+          age_months_at_signup: number;
+          gender: ChildGender;
+          city: string | null;
+          created_at: string;
+        };
+      };
+      analytics_assessments: {
+        Relationships: [];
+        Row: {
+          id: string;
+          child_id: string;
+          profile_id: string;
+          channel: Channel;
+          status: AssessmentStatus;
+          start_stage: string;
+          stages_by_domain: Record<string, string[]>;
+          bank_version: string;
+          created_at: string;
+          completed_at: string | null;
+          last_answered_at: string | null;
+          answered_count: number;
+        };
+      };
+      analytics_payments: {
+        Relationships: [];
+        Row: {
+          id: string;
+          profile_id: string;
+          child_id: string | null;
+          channel: Channel;
+          amount_paise: number;
+          status: PaymentStatus;
+          kind: PaymentKind;
+          method: string | null;
+          created_at: string;
+          paid_at: string | null;
+        };
+      };
+    };
     Functions: {
       is_admin: { Args: Record<never, never>; Returns: boolean };
       is_school: { Args: Record<never, never>; Returns: boolean };
       has_page_access: { Args: { page: string }; Returns: boolean };
+      can_read_analytics: { Args: Record<never, never>; Returns: boolean };
+      account_channel: { Args: { p_profile_id: string }; Returns: Channel };
     };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;

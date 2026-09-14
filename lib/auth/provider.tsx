@@ -36,7 +36,7 @@ export interface AccountProfile {
   email: string;
   createdAt: string;
   accountType: AccountType;
-  school: { name: string; contactName: string; contactPhone: string } | null;
+  school: { name: string; contactName: string; contactPhone: string; city: string } | null;
 }
 
 interface AuthState {
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (accountType === "school") {
       const { data: schoolRow } = await supabase
         .from("schools")
-        .select("school_name, contact_name, contact_phone")
+        .select("school_name, contact_name, contact_phone, city")
         .eq("id", id)
         .maybeSingle();
       if (schoolRow) {
@@ -101,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: schoolRow.school_name,
           contactName: schoolRow.contact_name,
           contactPhone: schoolRow.contact_phone,
+          city: schoolRow.city ?? "",
         };
       }
     }

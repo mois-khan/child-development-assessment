@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { listSchools, inviteSchool, resetSchoolPassword, type AdminSchool } from "@/lib/data/schools";
-import { Badge, Button, Card, IconClose, InlineBanner, useBanner } from "@/components/ui";
+import { getSchoolDetail, listSchools, inviteSchool, resetSchoolPassword, type AdminSchool } from "@/lib/data/schools";
+import { exportAllSchools, exportSchoolRoster } from "@/lib/export/schools-xlsx";
+import { Badge, Button, Card, IconClose, IconDownload, InlineBanner, useBanner } from "@/components/ui";
 
 /**
  * A password the admin can read aloud or paste into WhatsApp without
@@ -54,6 +55,8 @@ export default function SchoolsPage() {
     { email: string; password: string; phone: string; schoolName: string } | null
   >(null);
   const [resettingId, setResettingId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -92,6 +95,30 @@ export default function SchoolsPage() {
       banner.showError("Failed to create school account: " + err.message);
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleDownload = async (s: AdminSchool) => {
+    setDownloadingId(s.id);
+    try {
+      const detail = await getSchoolDetail(s.id);
+      if (!detail) throw new Error("School not found.");
+      await exportSchoolRoster(detail);
+    } catch (err: any) {
+      banner.showError("Failed to download roster: " + err.message);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    setDownloadingAll(true);
+    try {
+      await exportAllSchools(schools);
+    } catch (err: any) {
+      banner.showError("Failed to download rosters: " + err.message);
+    } finally {
+      setDownloadingAll(false);
     }
   };
 
@@ -149,9 +176,19 @@ export default function SchoolsPage() {
             the password yourself &mdash; they can change it later from their own page.
           </p>
         </div>
-        <Button onClick={() => setInviteDrawerOpen(true)} variant="primary">
-          + Add School
-        </Button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            variant="secondary"
+            onClick={handleDownloadAll}
+            disabled={downloadingAll || schools.length === 0}
+            iconLeft={<IconDownload size={16} />}
+          >
+            {downloadingAll ? "Preparing…" : "Download all schools"}
+          </Button>
+          <Button onClick={() => setInviteDrawerOpen(true)} variant="primary">
+            + Add School
+          </Button>
+        </div>
       </div>
 
       <div className="mt-8">
@@ -195,17 +232,32 @@ export default function SchoolsPage() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleResend(s);
-                          }}
-                          disabled={resettingId === s.id}
-                          className="rounded-md px-2.5 py-1.5 text-xs font-semibold text-ink-3 hover:bg-surface-2 hover:text-ink disabled:opacity-50"
-                        >
-                          {resettingId === s.id ? "Resetting…" : "Reset & resend"}
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            title="Download this school's roster"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(s);
+                            }}
+                            disabled={downloadingId === s.id}
+                            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-ink-3 hover:bg-surface-2 hover:text-ink disabled:opacity-50"
+                          >
+                            <IconDownload size={13} />
+                            {downloadingId === s.id ? "…" : "Download"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleResend(s);
+                            }}
+                            disabled={resettingId === s.id}
+                            className="rounded-md px-2.5 py-1.5 text-xs font-semibold text-ink-3 hover:bg-surface-2 hover:text-ink disabled:opacity-50"
+                          >
+                            {resettingId === s.id ? "Resetting…" : "Reset & resend"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -244,17 +296,31 @@ export default function SchoolsPage() {
                     </p>
                     <p className="break-all font-mono text-xs text-ink-3">{s.email}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleResend(s);
-                    }}
-                    disabled={resettingId === s.id}
-                    className="mt-3 rounded-md px-2.5 py-1.5 text-xs font-semibold text-ink-3 hover:bg-surface-2 hover:text-ink disabled:opacity-50"
-                  >
-                    {resettingId === s.id ? "Resetting…" : "Reset & resend"}
-                  </button>
+                  <div className="mt-3 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(s);
+                      }}
+                      disabled={downloadingId === s.id}
+                      className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-ink-3 hover:bg-surface-2 hover:text-ink disabled:opacity-50"
+                    >
+                      <IconDownload size={13} />
+                      {downloadingId === s.id ? "…" : "Download"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResend(s);
+                      }}
+                      disabled={resettingId === s.id}
+                      className="rounded-md px-2.5 py-1.5 text-xs font-semibold text-ink-3 hover:bg-surface-2 hover:text-ink disabled:opacity-50"
+                    >
+                      {resettingId === s.id ? "Resetting…" : "Reset & resend"}
+                    </button>
+                  </div>
                 </div>
               ))}
               {schools.length === 0 && (
