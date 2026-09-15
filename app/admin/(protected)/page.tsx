@@ -3,32 +3,50 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { adminDashboardCounts, type AdminDashboardCounts } from "@/lib/admin/data";
-import { adminAnalytics, type AdminAnalytics } from "@/lib/admin/analytics";
+import { adminAnalytics, AnalyticsAccessError, type AdminAnalytics } from "@/lib/admin/analytics";
 import {
   BRAND_GRADIENT,
   IconBolt,
   IconPhone,
   IconUsers,
   IconCheck,
-  IconSparkle,
-  IconTrophy,
+  IconSchool,
+  IconClock,
+  IconRupee,
+  IconClipboard,
+  IconChart,
 } from "@/components/ui";
 import type { ReactNode, CSSProperties } from "react";
+
+/** Funnel: the direct-lead pipeline. School: roster activation — same 78°
+ *  dark→bright→dark shape, a different hue so the two panels read as
+ *  distinct programmes at a glance. */
+const FUNNEL_GRADIENT = "linear-gradient(78deg, #04314d 0%, #3aa7ef 55%, #022c58 100%)";
+const SCHOOL_GRADIENT = "linear-gradient(78deg, #04331f 0%, #2fd480 55%, #022518 100%)";
 
 function formatRupees(paise: number): string {
   return "₹" + (paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
 
+function formatPct(ratio: number): string {
+  return Math.round(ratio * 100) + "%";
+}
+
 /**
- * The four moments that matter for the business, in the order a parent
- * actually moves through them.
+ * Every step a direct (self-signup) family passes through, in order.
+ *
+ * This has five steps where the old funnel had four — "Paid" didn't exist
+ * as a step at all, so the ₹99 gate, the single biggest drop-off in this
+ * business, was invisible. It's back because analytics.direct.accounts
+ * carries it now (lib/admin/analytics.ts).
  */
-function funnelSteps(data: AdminAnalytics) {
+function directFunnelSteps(d: AdminAnalytics["direct"]) {
   return [
-    { label: "Leads", value: data.leadsTotal, icon: <IconPhone size={18} />, color: "var(--accent)" },
-    { label: "Added a child", value: data.childrenTotal, icon: <IconUsers size={18} />, color: "var(--sec-auditory)" },
-    { label: "Started an assessment", value: data.assessmentsStarted, icon: <IconBolt size={18} />, color: "var(--sun-500)" },
-    { label: "Completed", value: data.assessmentsCompleted, icon: <IconCheck size={18} />, color: "var(--st-on-track)" },
+    { label: "Leads", value: d.accounts.leads, icon: <IconPhone size={18} />, color: "var(--accent)" },
+    { label: "Added a child", value: d.accounts.addedChild, icon: <IconUsers size={18} />, color: "var(--sec-auditory)" },
+    { label: "Paid", value: d.accounts.paid, icon: <IconRupee size={18} />, color: "var(--sun-500)" },
+    { label: "Started", value: d.accounts.started, icon: <IconBolt size={18} />, color: "var(--sec-visual)" },
+    { label: "Completed", value: d.accounts.completed, icon: <IconCheck size={18} />, color: "var(--st-on-track)" },
   ];
 }
 
@@ -36,6 +54,7 @@ export default function AdminDashboardPage() {
   const [counts, setCounts] = useState<AdminDashboardCounts | null>(null);
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
   useEffect(() => {
     adminDashboardCounts()
@@ -43,7 +62,14 @@ export default function AdminDashboardPage() {
       .catch((err) => setError(err.message ?? "Failed to load"));
     adminAnalytics()
       .then(setAnalytics)
-      .catch(() => {});
+      // Distinguish "you don't have the grant" from "something broke" —
+      // the old code swallowed both, so a missing page grant looked
+      // identical to the funnel just not rendering.
+      .catch((err) =>
+        setAnalyticsError(
+          err instanceof AnalyticsAccessError ? err.message : "Couldn't load analytics."
+        )
+      );
   }, []);
 
   const hour = new Date().getHours();
@@ -102,7 +128,7 @@ export default function AdminDashboardPage() {
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <PrimaryCard
-              value={analytics?.leadsTotal ?? "—"}
+              value={analytics?.direct.accounts.leads ?? "—"}
               label="Total Leads"
               icon={<IconPhone size={18} />}
               color="var(--accent)"
@@ -118,68 +144,137 @@ export default function AdminDashboardPage() {
             <PrimaryCard
               value={counts.totalAssessments}
               label="Total Assessments"
-              icon={<IconTrophy size={18} />}
+              icon={<IconClipboard size={18} />}
               color="var(--st-on-track)"
               href="/admin/assessments"
             />
             <PrimaryCard
               value={formatRupees(counts.totalRevenuePaise)}
               label="Total Revenue"
-              icon={<IconSparkle size={18} />}
+              icon={<IconRupee size={18} />}
               color="var(--sun-500)"
               href="/admin/purchases"
             />
           </div>
 
-          {/* ── the funnel ───────────────────────────────────────────────── */}
-          {analytics && analytics.leadsTotal > 0 && (
-            <>
-              <div
-                className="relative overflow-hidden rounded-[28px] p-6 sm:p-8"
-                style={{ background: BRAND_GRADIENT }}
-              >
-                <div
-                  aria-hidden="true"
-                  className="bloom"
-                  style={{ width: 220, height: 220, top: -100, right: "8%", "--bloom-color": "var(--sun-300)", opacity: 0.2 } as CSSProperties}
-                />
-                <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center">
-                  <div className="lg:w-52 lg:shrink-0">
-                    <p className="text-lg font-extrabold text-white" style={{ fontFamily: "var(--font-display)" }}>
-                      From lead to finished check
-                    </p>
-                    <p className="mt-2 text-sm leading-relaxed text-white/75">
-                      Where every parent stands in the journey, one stage at a time.
-                    </p>
-                  </div>
+          {analyticsError && (
+            <p className="rounded-xl bg-[var(--st-consult-soft)] px-4 py-3 text-sm font-semibold text-[var(--st-consult-ink)]">
+              {analyticsError}
+            </p>
+          )}
 
-                  <div className="grid flex-1 grid-cols-2 gap-3 md:grid-cols-4">
-                    {funnelSteps(analytics).map((step, i, all) => {
-                      const prev = i > 0 ? all[i - 1] : null;
-                      const pctOfPrev = prev ? Math.round((step.value / (prev.value || 1)) * 100) : null;
-                      return (
-                        <div
-                          key={step.label}
-                          className="rounded-2xl bg-[var(--surface)] p-4 text-center shadow-[var(--clay-sm)]"
+          {/* ── the direct funnel ────────────────────────────────────────── */}
+          {analytics && analytics.direct.accounts.leads > 0 && (
+            <div
+              className="relative overflow-hidden rounded-[28px] p-6 sm:p-8"
+              style={{ background: FUNNEL_GRADIENT }}
+            >
+              <div
+                aria-hidden="true"
+                className="bloom"
+                style={{ width: 220, height: 220, top: -100, right: "8%", "--bloom-color": "#ffffff", opacity: 0.15 } as CSSProperties}
+              />
+              <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center">
+                <div className="lg:w-52 lg:shrink-0">
+                  <p className="text-lg font-extrabold text-white" style={{ fontFamily: "var(--font-display)" }}>
+                    From lead to finished check
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-white/75">
+                    Every self-signed-up family's path from first contact to a finished check.
+                  </p>
+                  {analytics.direct.overdueFollowUps > 0 && (
+                    <Link
+                      href="/admin/leads"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/25"
+                    >
+                      <IconClock size={13} /> {analytics.direct.overdueFollowUps} follow-up{analytics.direct.overdueFollowUps === 1 ? "" : "s"} overdue
+                    </Link>
+                  )}
+                </div>
+
+                <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  {directFunnelSteps(analytics.direct).map((step, i, all) => {
+                    const prev = i > 0 ? all[i - 1] : null;
+                    const pctOfPrev = prev ? Math.round((step.value / (prev.value || 1)) * 100) : null;
+                    return (
+                      <div
+                        key={step.label}
+                        className="rounded-2xl bg-[var(--surface)] p-4 text-center shadow-[var(--clay-sm)]"
+                      >
+                        <span
+                          className="mx-auto grid size-10 place-items-center rounded-full text-white"
+                          style={{ background: step.color }}
                         >
-                          <span
-                            className="mx-auto grid size-10 place-items-center rounded-full text-white"
-                            style={{ background: step.color }}
-                          >
-                            {step.icon}
-                          </span>
-                          <p className="mt-3 text-sm font-extrabold leading-snug text-ink">{step.label}</p>
-                          <p className="text-xs font-semibold text-ink-3">
-                            {prev ? `${pctOfPrev}% of ${prev.label.toLowerCase()}` : "Top of funnel"}
-                          </p>
-                          <p className="tnum mt-2 text-2xl font-extrabold text-ink">{step.value}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
+                          {step.icon}
+                        </span>
+                        <p className="mt-3 text-sm font-extrabold leading-snug text-ink">{step.label}</p>
+                        <p className="text-xs font-semibold text-ink-3">
+                          {prev ? `${pctOfPrev}% of ${prev.label.toLowerCase()}` : "Top of funnel"}
+                        </p>
+                        <p className="tnum mt-2 text-2xl font-extrabold text-ink">{step.value}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </>
+            </div>
+          )}
+
+          {/* ── school activation ────────────────────────────────────────── */}
+          {analytics && analytics.school.schools > 0 && (
+            <div
+              className="relative overflow-hidden rounded-[28px] p-6 sm:p-8"
+              style={{ background: SCHOOL_GRADIENT }}
+            >
+              <div
+                aria-hidden="true"
+                className="bloom"
+                style={{ width: 220, height: 220, top: -100, right: "8%", "--bloom-color": "#ffffff", opacity: 0.15 } as CSSProperties}
+              />
+              <div className="relative flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-lg font-extrabold text-white" style={{ fontFamily: "var(--font-display)" }}>
+                    School activation
+                  </p>
+                  <p className="mt-1 text-sm text-white/75">
+                    How actively each school's roster is being screened.
+                  </p>
+                </div>
+                <Link
+                  href="/admin/schools"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-xs font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/25"
+                >
+                  <IconSchool size={14} /> {analytics.school.schools} school{analytics.school.schools === 1 ? "" : "s"}
+                </Link>
+              </div>
+
+              <div className="relative mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <SchoolTile
+                  value={analytics.school.students}
+                  label="Students on roster"
+                  icon={<IconUsers size={16} />}
+                  color="var(--sec-auditory)"
+                />
+                <SchoolTile
+                  value={analytics.school.studentsAssessed}
+                  label="Assessed"
+                  icon={<IconClipboard size={16} />}
+                  color="var(--sec-visual)"
+                />
+                <SchoolTile
+                  value={analytics.school.studentsCompleted}
+                  label="Completed"
+                  icon={<IconCheck size={16} />}
+                  color="var(--st-on-track)"
+                />
+                <SchoolTile
+                  value={formatPct(analytics.school.rosterUtilisation)}
+                  label="Roster utilisation"
+                  icon={<IconChart size={16} />}
+                  color="var(--accent)"
+                />
+              </div>
+            </div>
           )}
         </>
       )}
@@ -221,3 +316,27 @@ function PrimaryCard({
   );
 }
 
+function SchoolTile({
+  value,
+  label,
+  icon,
+  color,
+}: {
+  value: ReactNode;
+  label: string;
+  icon: ReactNode;
+  color: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-[var(--surface)] p-4 text-center shadow-[var(--clay-sm)]">
+      <span
+        className="mx-auto grid size-9 place-items-center rounded-full text-white"
+        style={{ background: color }}
+      >
+        {icon}
+      </span>
+      <p className="tnum mt-2.5 text-2xl font-extrabold text-ink">{value}</p>
+      <p className="mt-1 text-xs font-semibold text-ink-3">{label}</p>
+    </div>
+  );
+}

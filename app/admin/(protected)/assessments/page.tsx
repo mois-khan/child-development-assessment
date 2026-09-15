@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Avatar, Badge, Card } from "@/components/ui";
+import { Avatar, Badge, ButtonLink, Card } from "@/components/ui";
 
 type Filter = "all" | "completed" | "in_progress";
 
@@ -114,12 +113,9 @@ export default function AdminAssessmentsPage() {
                   {a.completed_at ? (
                     <>
                       <Badge tone="success">Completed</Badge>
-                      <Link
-                        href={`/admin/report/${a.id}`}
-                        className="text-sm font-semibold text-accent hover:underline"
-                      >
-                        View Report →
-                      </Link>
+                      <ButtonLink href={`/admin/report/${a.id}`} variant="secondary" size="sm">
+                        View Report
+                      </ButtonLink>
                     </>
                   ) : (
                     <Badge tone="warn">In Progress</Badge>

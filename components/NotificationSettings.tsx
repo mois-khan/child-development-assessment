@@ -68,14 +68,14 @@ export function NotificationSettings() {
   if (status === "unsupported") return null;
 
   return (
-    <Card variant="clay" className="mt-5 flex flex-wrap items-center justify-between gap-4 p-6 sm:p-7">
-      <div className="flex items-start gap-4">
+    <Card variant="clay" className="flex h-full flex-wrap items-center justify-between gap-4 !p-5">
+      <div className="flex items-start gap-3.5">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-accent">
           <IconBell size={20} />
         </span>
         <div>
-          <p className="text-base font-extrabold text-ink">Notifications on this device</p>
-          <p className="mt-1 max-w-[46ch] text-sm text-ink-3">
+          <p className="text-sm font-bold text-ink">Notifications on this device</p>
+          <p className="mt-1 max-w-[38ch] text-xs text-ink-3">
             {status === "denied"
               ? "Blocked in your browser settings; this app can't ask again until you allow it there."
               : status === "on"

@@ -400,3 +400,24 @@ export function IconEdit(p: IconProps) {
     </Svg>
   );
 }
+
+export function IconRupee(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M6.5 4h11" />
+      <path d="M6.5 8.2h11" />
+      <path d="M6.5 4c6.2 0 6.2 8.2 0 8.2h-1" />
+      <path d="M6.5 12.2 15 20" />
+    </Svg>
+  );
+}
+
+export function IconClipboard(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="5" y="4.5" width="14" height="16" rx="2.2" />
+      <rect x="9" y="3" width="6" height="3" rx="1.2" />
+      <path d="M8.5 12.5 10.8 14.8 16 10" />
+    </Svg>
+  );
+}

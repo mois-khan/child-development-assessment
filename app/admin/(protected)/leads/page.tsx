@@ -156,7 +156,7 @@ export default function AdminLeadsPage() {
           </p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((lead) => (
             <LeadRow
               key={lead.id}
@@ -218,7 +218,7 @@ function LeadRow({
     <>
       <Card
         variant="clay"
-        className="animate-rise flex flex-col gap-4 !p-4 transition-shadow hover:shadow-md sm:!p-5"
+        className="animate-rise flex h-full flex-col gap-4 !p-4 transition-shadow hover:shadow-md sm:!p-5"
       >
         {/* ── basic details first ── */}
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -267,7 +267,7 @@ function LeadRow({
 
         {/* ── two actions, so working a lead never has to start with a
             navigation just to log a two-second call ── */}
-        <div className="flex gap-2.5 border-t border-line-soft pt-3.5">
+        <div className="mt-auto flex gap-2.5 border-t border-line-soft pt-3.5">
           <ButtonLink href={`/admin/leads/${lead.id}`} variant="secondary" size="sm" block>
             Open profile
           </ButtonLink>

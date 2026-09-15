@@ -8,7 +8,7 @@ import { cx } from "./primitives";
 
 /* ══ brand ═════════════════════════════════════════════════════════════════ */
 
-export function Wordmark({ height = 34 }: { height?: number }) {
+export function Wordmark({ height = 34, className = "" }: { height?: number; className?: string }) {
   return (
     <span className="brand-plate">
       <Image
@@ -17,6 +17,7 @@ export function Wordmark({ height = 34 }: { height?: number }) {
         width={Math.round(height * 1.62)}
         height={height}
         priority
+        className={className}
         // Both axes declared so Next.js can keep the intrinsic aspect ratio.
         style={{ height, width: "auto", maxWidth: "none" }}
       />
@@ -148,22 +149,24 @@ export function TopBar({
 
 export function Footer() {
   return (
-    <footer className="no-print border-t border-line bg-[var(--surface)]">
+    <footer className="no-print bg-[var(--brand-900)]">
       <Shell width="wide">
         <div className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
-            <Wordmark height={38} />
-            <p className="mt-4 max-w-[42ch] text-sm leading-relaxed text-ink-2">
+            <span className="inline-flex rounded-lg bg-white px-2.5 py-1.5">
+              <Wordmark height={34} />
+            </span>
+            <p className="mt-4 max-w-[42ch] text-sm leading-relaxed text-white/65">
               A gentle revolution to make the world a better place, helping every child
               actualise the genius they were born with, in the first six golden years.
             </p>
           </div>
 
           <div>
-            <h3 className="text-base">Programme</h3>
-            <ul className="mt-3 list-none space-y-2 p-0 text-sm text-ink-2">
+            <h3 className="text-base text-white">Programme</h3>
+            <ul className="mt-3 list-none space-y-2 p-0 text-sm text-white/65">
               <li>
-                <Link href="/children" className="hover:text-accent">
+                <Link href="/children" className="hover:text-white">
                   Milestone check
                 </Link>
               </li>
@@ -172,7 +175,7 @@ export function Footer() {
                   href="https://www.kaushalyageniuskid.com"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-accent"
+                  className="hover:text-white"
                 >
                   KGKP method
                 </a>
@@ -182,7 +185,7 @@ export function Footer() {
                   href="https://www.kaushalyageniuskid.com"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-accent"
+                  className="hover:text-white"
                 >
                   Courses
                 </a>
@@ -191,24 +194,24 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-base">Support</h3>
-            <ul className="mt-3 list-none space-y-2 p-0 text-sm text-ink-2">
+            <h3 className="text-base text-white">Support</h3>
+            <ul className="mt-3 list-none space-y-2 p-0 text-sm text-white/65">
               <li>
-                <a href="mailto:support@kaushalyageniuskid.com" className="hover:text-accent">
+                <a href="mailto:support@kaushalyageniuskid.com" className="hover:text-white">
                   support@kaushalyageniuskid.com
                 </a>
               </li>
               <li>
-                <a href="tel:+919394360043" className="hover:text-accent">
+                <a href="tel:+919394360043" className="hover:text-white">
                   +91 93943 60043
                 </a>
               </li>
-              <li className="text-ink-3">Mon–Sat, 11am–5pm IST</li>
+              <li className="text-white/45">Mon–Sat, 11am–5pm IST</li>
             </ul>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-soft py-6 text-xs text-ink-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 py-6 text-xs text-white/45">
           <p>© {new Date().getFullYear()} Kaushalya Developmental Screening Platform. All rights reserved.</p>
           <p>A screening tool, not a medical diagnosis.</p>
         </div>

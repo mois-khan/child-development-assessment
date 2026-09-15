@@ -646,64 +646,66 @@ function ProfileInner() {
               )}
             </Card>
 
-            {/* ══ Change password ═══════════════════════════════════════════ */}
-            <Card variant="clay" className="mt-5 !p-5">
-              <button
-                type="button"
-                onClick={() => setPasswordFormOpen((v) => !v)}
-                className="flex w-full items-center justify-between gap-3"
-              >
-                <span className="flex items-center gap-2.5 text-sm font-bold text-ink">
-                  <IconLock size={17} className="text-ink-3" /> Change password
-                </span>
-                <span className="text-xs font-semibold text-accent">
-                  {passwordFormOpen ? "Cancel" : "Change"}
-                </span>
-              </button>
-
-              {passwordFormOpen && (
-                <form
-                  onSubmit={handleChangePassword}
-                  className="animate-rise mt-4 max-w-sm space-y-3 border-t border-line-soft pt-4"
+            {/* ══ Change password + notifications, side by side ══════════════ */}
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <Card variant="clay" className="h-full !p-5">
+                <button
+                  type="button"
+                  onClick={() => setPasswordFormOpen((v) => !v)}
+                  className="flex w-full items-center justify-between gap-3"
                 >
-                  <div>
-                    <label className="label" htmlFor="new-password">New password</label>
-                    <input
-                      id="new-password"
-                      type="password"
-                      className="field"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="At least 8 characters"
-                      disabled={changingPassword}
-                      autoComplete="new-password"
-                    />
-                  </div>
-                  <div>
-                    <label className="label" htmlFor="confirm-password">Confirm new password</label>
-                    <input
-                      id="confirm-password"
-                      type="password"
-                      className="field"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      disabled={changingPassword}
-                      autoComplete="new-password"
-                    />
-                  </div>
-                  {passwordMsg && (
-                    <p className={`text-sm font-semibold ${passwordMsg.ok ? "text-[var(--st-on-track)]" : "text-[var(--st-consult)]"}`}>
-                      {passwordMsg.text}
-                    </p>
-                  )}
-                  <Button type="submit" size="sm" disabled={changingPassword}>
-                    {changingPassword ? "Saving…" : "Save new password"}
-                  </Button>
-                </form>
-              )}
-            </Card>
+                  <span className="flex items-center gap-2.5 text-sm font-bold text-ink">
+                    <IconLock size={17} className="text-ink-3" /> Change password
+                  </span>
+                  <span className="text-xs font-semibold text-accent">
+                    {passwordFormOpen ? "Cancel" : "Change"}
+                  </span>
+                </button>
 
-            <NotificationSettings />
+                {passwordFormOpen && (
+                  <form
+                    onSubmit={handleChangePassword}
+                    className="animate-rise mt-4 space-y-3 border-t border-line-soft pt-4"
+                  >
+                    <div>
+                      <label className="label" htmlFor="new-password">New password</label>
+                      <input
+                        id="new-password"
+                        type="password"
+                        className="field"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="At least 8 characters"
+                        disabled={changingPassword}
+                        autoComplete="new-password"
+                      />
+                    </div>
+                    <div>
+                      <label className="label" htmlFor="confirm-password">Confirm new password</label>
+                      <input
+                        id="confirm-password"
+                        type="password"
+                        className="field"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={changingPassword}
+                        autoComplete="new-password"
+                      />
+                    </div>
+                    {passwordMsg && (
+                      <p className={`text-sm font-semibold ${passwordMsg.ok ? "text-[var(--st-on-track)]" : "text-[var(--st-consult)]"}`}>
+                        {passwordMsg.text}
+                      </p>
+                    )}
+                    <Button type="submit" size="sm" disabled={changingPassword}>
+                      {changingPassword ? "Saving…" : "Save new password"}
+                    </Button>
+                  </form>
+                )}
+              </Card>
+
+              <NotificationSettings />
+            </div>
           </Shell>
         </Section>
 

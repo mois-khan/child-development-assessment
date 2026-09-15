@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { completedMonths, formatAge } from "@/lib/age";
-import { Avatar, Badge, Card, IconSchool } from "@/components/ui";
+import { Avatar, Badge, ButtonLink, Card, IconSchool } from "@/components/ui";
 
 interface ChildRow {
   id: string;
@@ -239,17 +239,14 @@ export default function AdminChildrenPage() {
             </div>
 
             {lastAssessment && (
-              <p className="text-xs text-ink-3">
-                Last: {lastAssessment.assessed_on}
+              <div className="flex items-center justify-between gap-3 border-t border-line-soft pt-3.5">
+                <p className="text-xs text-ink-3">Last: {lastAssessment.assessed_on}</p>
                 {lastAssessment.completed_at && (
-                  <a
-                    href={`/admin/report/${lastAssessment.id}`}
-                    className="ml-2 font-semibold text-accent hover:underline"
-                  >
-                    View Report →
-                  </a>
+                  <ButtonLink href={`/admin/report/${lastAssessment.id}`} variant="secondary" size="sm">
+                    View Report
+                  </ButtonLink>
                 )}
-              </p>
+              </div>
             )}
           </Card>
         ))}

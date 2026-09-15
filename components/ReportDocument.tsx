@@ -38,6 +38,7 @@ import {
   IconSparkle,
   LoadError,
   Mascot,
+  Meter,
   Section,
   SectionIcon,
   SectionTile,
@@ -372,64 +373,33 @@ export function ReportDocument({
             <Card variant="clay" className="mt-8 p-6 sm:p-8">
               <p className="eyebrow mb-2">Progress, area by area</p>
               <p className="mb-6 text-sm font-medium text-ink-3">
-                These are screening terms, not a diagnosis; see the note at the end of this
-                report.
+                Each area&rsquo;s score against what the chart expects at {child.name}&rsquo;s age.
               </p>
-              <div className="progress-matrix-scroll">
-              <div className="progress-matrix">
-                <span aria-hidden="true" className="progress-matrix-corner" />
-                <div className="progress-matrix-headrow">
-                  {STAGES.map((s) => (
-                    <span key={s.label} className="progress-matrix-headcell">
-                      {s.label}
-                    </span>
-                  ))}
-                </div>
+              <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
                 {ordered.map((score) => {
                   const d = DOMAIN_BY_CODE[score.domain];
                   const value = score.dq === null ? score.percent * 100 : score.dq;
-                  /* Colour by RESULT, not by competence. A bar coloured by
-                     domain is decoration — every child gets the same six
-                     colours whatever their answers. Coloured by status, the
-                     bar and its length say the same thing, and a row of
-                     greens vs a row of reds reads before any label does. */
-                  const color = statusColor(score.status);
-                  const { index, frac } = stagePosition(value);
-                  const pct = ((index + frac) / STAGES.length) * 100;
                   return (
-                    <Fragment key={score.domain}>
-                      <div className="progress-matrix-row-label">
-                        <SectionTile code={score.domain} size={34} />
-                        <span className="truncate text-sm font-extrabold text-ink">
-                          {d.name}
-                        </span>
-                      </div>
-                      <div
-                        className="progress-matrix-row-track"
-                        role="img"
-                        aria-label={`${d.name}: ${STAGES[index].label}, score ${Math.round(value)}`}
-                      >
-                        <div className="progress-matrix-grid">
-                          {STAGES.map((s) => (
-                            <span key={s.label} className="progress-matrix-cell" />
-                          ))}
+                    <div key={score.domain} className="flex items-center gap-3.5">
+                      <SectionTile code={score.domain} size={40} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="truncate text-sm font-bold text-ink">{d.name}</span>
+                          <span className="tnum text-sm font-extrabold text-ink-3">
+                            {Math.round(value)}
+                          </span>
                         </div>
-                        <div
-                          className="progress-matrix-fill grow-in"
-                          style={{
-                            width: `${pct}%`,
-                            background: `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 78%, black))`,
-                          }}
-                        />
-                        <div
-                          className="progress-matrix-dot"
-                          style={{ left: `${pct}%`, ["--dot-color" as string]: color }}
+                        <Meter
+                          value={Math.min(100, value)}
+                          color={statusColor(score.status)}
+                          className="mt-1.5 !h-2.5"
+                          label={`${d.name}: ${Math.round(value)} out of an expected 100`}
+                          animate
                         />
                       </div>
-                    </Fragment>
+                    </div>
                   );
                 })}
-              </div>
               </div>
             </Card>
           </Section>
@@ -553,86 +523,81 @@ function ExecutiveSummaryCard({ result, child }: { result: AssessmentResult; chi
     STATUSES[result.overallStatus].label.toLowerCase(),
   ];
 
+  const color = statusColor(result.overallStatus);
+
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-[var(--brand-200)]/80 bg-gradient-to-br from-[var(--brand-50)]/50 via-[var(--surface)] to-[var(--surface)] p-6 sm:p-7 shadow-[0_4px_24px_-4px_rgba(77,20,53,0.08)]">
-      <div>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--brand-100)] pb-4">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-200)] bg-[var(--brand-50)] px-3 py-1 text-xs font-bold text-[var(--brand-600)] shadow-xs">
-              <IconCalendar size={13} className="text-[var(--brand-600)]" />
-              <span>{child.name} · {formatAge(result.assessedMonths)}</span>
-            </span>
-            <span className="rounded-full bg-[var(--brand-600)] px-2.5 py-0.5 text-[0.68rem] font-black uppercase tracking-wider text-white shadow-xs">
-              Overall Summary
-            </span>
-          </div>
-
-          <StatusChip status={result.overallStatus} label={STATUSES[result.overallStatus].label} solid size="sm" />
-        </div>
-
-        <div className="mt-5">
-          <div className="mb-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-            <h4 className="text-[1.02rem] font-extrabold tracking-tight text-[var(--ink)]">
-              Developmental Profile Verdict
-            </h4>
-            <span className="whitespace-nowrap text-[0.7rem] font-bold uppercase tracking-wider text-[var(--brand-600)]">
-              6 Areas Analyzed
-            </span>
-          </div>
-
-          <div
-            className="rounded-xl border border-[var(--brand-100)] bg-[var(--surface)]/90 p-4.5 sm:p-5 shadow-xs"
-            style={{ borderLeft: `4px solid ${statusColor(result.overallStatus)}` }}
-          >
-            <div className="space-y-3">
-              {verdict.map((p) => (
-                <p key={p.slice(0, 40)} className="text-[0.95rem] leading-[1.7] text-[var(--ink)] font-medium">
-                  <Highlight text={p} terms={terms} />
-                </p>
-              ))}
-            </div>
-
-            {(result.strengths.length > 0 || result.focusAreas.length > 0) && (
-              <div className="mt-4 flex flex-col gap-2.5 border-t border-[var(--line-soft)] pt-3.5">
-                {result.strengths.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[0.72rem] font-bold uppercase tracking-wider text-[var(--ink-3)]">
-                      Notable Strengths:
-                    </span>
-                    {result.strengths.map((code) => (
-                      <span
-                        key={code}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--st-on-track)]/25 bg-[var(--st-on-track-soft)] px-2.5 py-1 text-xs font-bold text-[var(--st-on-track-ink)]"
-                      >
-                        <SectionIcon code={code} size={13} />
-                        {DOMAIN_BY_CODE[code].name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {result.focusAreas.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[0.72rem] font-bold uppercase tracking-wider text-[var(--ink-3)]">
-                      Areas to Nurture:
-                    </span>
-                    {result.focusAreas.map((code) => (
-                      <span
-                        key={code}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--st-needs-focus)]/25 bg-[var(--st-needs-focus-soft)] px-2.5 py-1 text-xs font-bold text-[var(--st-needs-focus-ink)]"
-                      >
-                        <SectionIcon code={code} size={13} />
-                        {DOMAIN_BY_CODE[code].name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+    <div className="flex flex-col rounded-2xl border border-line bg-[var(--surface)] p-6 shadow-[0_4px_24px_-4px_rgba(77,20,53,0.08)] sm:p-7">
+      <div className="flex items-center gap-3.5">
+        <span
+          className="grid size-12 shrink-0 place-items-center rounded-2xl"
+          style={{
+            background: `color-mix(in srgb, ${color} 14%, var(--surface))`,
+            color,
+            border: `1.5px solid color-mix(in srgb, ${color} 30%, var(--line))`,
+          }}
+        >
+          <IconHeart size={22} />
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-[1.05rem] font-extrabold tracking-tight text-[var(--ink)]">
+            Overall summary
+          </h3>
+          <p className="mt-0.5 text-sm font-semibold text-ink-3">
+            {child.name} · {formatAge(result.assessedMonths)} · 6 areas analysed
+          </p>
         </div>
       </div>
 
+      <div
+        className="mt-5 rounded-xl p-4.5 sm:p-5"
+        style={{ background: `color-mix(in srgb, ${color} 6%, var(--surface))` }}
+      >
+        <div className="space-y-3">
+          {verdict.map((p) => (
+            <p key={p.slice(0, 40)} className="text-[0.95rem] leading-[1.7] text-[var(--ink)] font-medium">
+              <Highlight text={p} terms={terms} />
+            </p>
+          ))}
+        </div>
+
+        {(result.strengths.length > 0 || result.focusAreas.length > 0) && (
+          <div className="mt-4 flex flex-col gap-2.5 border-t border-[var(--line-soft)] pt-3.5">
+            {result.strengths.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[0.72rem] font-bold uppercase tracking-wider text-[var(--ink-3)]">
+                  Notable strengths:
+                </span>
+                {result.strengths.map((code) => (
+                  <span
+                    key={code}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--st-on-track)]/25 bg-[var(--st-on-track-soft)] px-2.5 py-1 text-xs font-bold text-[var(--st-on-track-ink)]"
+                  >
+                    <SectionIcon code={code} size={13} />
+                    {DOMAIN_BY_CODE[code].name}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {result.focusAreas.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[0.72rem] font-bold uppercase tracking-wider text-[var(--ink-3)]">
+                  Areas to nurture:
+                </span>
+                {result.focusAreas.map((code) => (
+                  <span
+                    key={code}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--st-needs-focus)]/25 bg-[var(--st-needs-focus-soft)] px-2.5 py-1 text-xs font-bold text-[var(--st-needs-focus-ink)]"
+                  >
+                    <SectionIcon code={code} size={13} />
+                    {DOMAIN_BY_CODE[code].name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -775,15 +740,12 @@ function DomainCard({
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2.5 sm:gap-3">
-              <StatusChip status={score.status} label={STATUSES[score.status].label} />
-              <span
-                aria-hidden="true"
-                className="no-print grid size-7 place-items-center rounded-full border border-line bg-[var(--surface-2)] text-[var(--ink-2)] transition-transform duration-200 group-open/domain:rotate-90 hover:bg-[var(--surface-3)] sm:size-8"
-              >
-                <IconChevronRight size={15} />
-              </span>
-            </div>
+            <span
+              aria-hidden="true"
+              className="no-print grid size-7 shrink-0 place-items-center rounded-full border border-line bg-[var(--surface-2)] text-[var(--ink-2)] transition-transform duration-200 group-open/domain:rotate-90 hover:bg-[var(--surface-3)] sm:size-8"
+            >
+              <IconChevronRight size={15} />
+            </span>
           </div>
 
           {/* Slim progress bar and score */}
@@ -945,43 +907,6 @@ function DefaultRecommendationCard({ stage, child }: { stage: BrainStage; child:
 }
 
 /* ══ helpers ═══════════════════════════════════════════════════════════════ */
-
-/**
- * The columns of the progress matrix — the chart's own TIME FRAME columns,
- * read as a quotient.
- *
- * These are not chosen thresholds. Every stage on the chart puts its slow
- * column at twice its average and its superior column at half, so reaching a
- * stage at the slow age is a quotient of 50, at the average age 100, and at
- * the superior age 200. The boundaries below are those three numbers, and the
- * labels are the chart's four verdicts.
- *
- * Deliberately NOT the old five-way "developmental delay" scale. This is a
- * screening result a parent reads alone, at home, about their own child, and
- * naming a delay is a clinician's job — see the wording rules at the top of
- * lib/narrative.ts.
- */
-const STAGES = [
-  { label: "Significant developmental delay", max: 50 },
-  { label: "Developmental delay", max: 70 },
-  { label: "Mild developmental gaps", max: 85 },
-  { label: "Typically developing", max: 115 },
-  { label: "Advanced development", max: Infinity },
-] as const;
-
-function stagePosition(value: number): { index: number; frac: number } {
-  let lo = 0;
-  for (let i = 0; i < STAGES.length; i++) {
-    const hi = STAGES[i].max;
-    if (value < hi || i === STAGES.length - 1) {
-      const span = i === STAGES.length - 1 ? 25 : hi - lo;
-      const frac = Math.min(1, Math.max(0, (value - lo) / span));
-      return { index: i, frac };
-    }
-    lo = hi;
-  }
-  return { index: 0, frac: 0 };
-}
 
 function formatDate(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", {

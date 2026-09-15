@@ -172,8 +172,29 @@ interface PaymentRow {
  *                       if the parent opened it and answered nothing
  *   - `answered_count`  how many questions are in so far
  */
+const HOUR_MS = 3_600_000;
+
 function classifyProgress(a: AssessmentRow, now: Date): "live" | "abandoned" {
-  // TODO(human)
+  const startedMs = Date.parse(a.created_at);
+
+  // Grace period: anything opened in the last hour is still being worked on
+  // regardless of how far it's gotten — a parent mid-sitting isn't a
+  // drop-off just because they haven't answered anything yet.
+  if (now.getTime() - startedMs < HOUR_MS) return "live";
+
+  if (a.last_answered_at === null) {
+    // Opened it and answered nothing at all. That is weaker engagement than
+    // someone mid-assessment, so it gets a much shorter clock — six hours,
+    // not the multi-day allowance below.
+    return now.getTime() - startedMs > 6 * HOUR_MS ? "abandoned" : "live";
+  }
+
+  // Six sections realistically span more than one sitting — a parent doing
+  // this over breakfast and again after work is normal, so the bar has to
+  // survive an overnight gap without forgiving someone who quietly quit
+  // weeks ago. Three days of silence is the line.
+  const hoursSinceLastAnswer = (now.getTime() - Date.parse(a.last_answered_at)) / HOUR_MS;
+  return hoursSinceLastAnswer > 72 ? "abandoned" : "live";
 }
 
 /* ── small helpers ───────────────────────────────────────────────────────── */

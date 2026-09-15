@@ -384,24 +384,32 @@ export default function DashboardPage() {
             <p className="eyebrow eyebrow-accent">What every check covers</p>
             <h2 className="mt-1.5">Six areas of brain development</h2>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {DOMAINS.map((d) => {
                 const best = bestFor(summaries, d.code);
+                const color = domainColor(d.code);
                 return (
-                  <div
+                  <Card
                     key={d.code}
-                    className="flex items-center gap-4 rounded-[var(--radius-xl)] border border-line bg-[var(--surface)] p-4"
-                    style={{ borderLeft: `5px solid ${domainColor(d.code)}` }}
+                    variant="tint"
+                    tint={color}
+                    className="lift relative overflow-hidden !p-5"
                   >
-                    <SectionTile code={d.code} size={46} />
-                    <div className="min-w-0 flex-1">
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute -right-6 -top-6 size-24 rounded-full opacity-[0.15]"
+                      style={{ background: color }}
+                    />
+                    <div className="relative flex items-center gap-3.5">
+                      <SectionTile code={d.code} size={46} />
                       <p className="truncate text-sm font-extrabold text-ink">{d.short}</p>
+                    </div>
+                    <div className="relative mt-4">
                       {best ? (
                         <>
                           <Meter
                             value={Math.min(100, best.value)}
-                            color={domainColor(d.code)}
-                            className="mt-2"
+                            color={color}
                             label={`${d.short}: ${Math.round(best.value)}`}
                           />
                           <p className="mt-1.5 text-xs font-semibold text-ink-3">
@@ -409,12 +417,12 @@ export default function DashboardPage() {
                           </p>
                         </>
                       ) : (
-                        <p className="mt-1 text-xs font-medium leading-relaxed text-ink-3">
+                        <p className="text-xs font-medium leading-relaxed text-ink-3">
                           {d.blurb}
                         </p>
                       )}
                     </div>
-                  </div>
+                  </Card>
                 );
               })}
             </div>
