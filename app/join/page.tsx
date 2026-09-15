@@ -34,7 +34,7 @@ export default function JoinPage() {
 function JoinInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const { user, loading, signUp, signIn, resetPassword } = useAuth();
+  const { user, loading, signUp, signIn, signInWithGoogle, resetPassword } = useAuth();
 
   const rawNext = params.get("next");
   // No `next` means they came here on their own rather than being bounced off
@@ -52,9 +52,23 @@ function JoinInner() {
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [error, setError] = useState<string | null>(
+    params.get("error") === "oauth" ? "Something went wrong signing in with Google. Please try again." : null,
+  );
+
+  async function continueWithGoogle() {
+    setError(null);
+    setGoogleBusy(true);
+    const result = await signInWithGoogle(next);
+    if (result.error) {
+      setError(result.error);
+      setGoogleBusy(false);
+    }
+    // On success the browser is already navigating to Google — nothing left to do here.
+  }
 
   // Already signed in? Don't make them look at a login form.
   useEffect(() => {
@@ -198,6 +212,27 @@ function JoinInner() {
             </div>
 
             <Card variant="clay" className="mt-9 p-6 sm:p-8">
+              {mode !== "forgot" && (
+                <>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="lg"
+                    block
+                    disabled={googleBusy}
+                    iconLeft={<GoogleGlyph size={18} />}
+                    onClick={continueWithGoogle}
+                  >
+                    {googleBusy ? "Redirecting…" : "Continue with Google"}
+                  </Button>
+                  <div className="my-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-ink-2">
+                    <span className="h-px flex-1 bg-line" />
+                    or
+                    <span className="h-px flex-1 bg-line" />
+                  </div>
+                </>
+              )}
+
               <form onSubmit={submit} noValidate className="space-y-5">
                 {mode === "signup" && (
                   <>
@@ -352,6 +387,31 @@ function JoinInner() {
 
       <Footer />
     </>
+  );
+}
+
+/** Google's "G" mark. Brand guidelines require its four colours as-is, so
+ *  unlike the rest of this app's icons it doesn't take currentColor. */
+function GoogleGlyph({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        fill="#4285F4"
+        d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.11A11.998 11.998 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28V6.61H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.39l4-3.11Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.77c1.76 0 3.34.61 4.58 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.27 6.61l4 3.11C6.22 6.87 8.87 4.77 12 4.77Z"
+      />
+    </svg>
   );
 }
 

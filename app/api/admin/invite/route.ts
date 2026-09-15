@@ -49,7 +49,12 @@ export async function POST(request: Request) {
     // which has no reason to know about this app's admin section at all.
     const redirectTo = `${new URL(request.url).origin}/admin/accept-invite`;
 
-    // Call Supabase Admin API to invite user
+    // Call Supabase Admin API to invite user. `data` here becomes
+    // raw_user_meta_data, which handle_new_user() (0017_close_signup_...)
+    // deliberately no longer trusts for anything privileged — it's exactly
+    // what a public signUp() call can also set. The admin_users row below is
+    // this route's own, server-authorized insert, not something read back
+    // out of metadata.
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/invite?redirect_to=${encodeURIComponent(redirectTo)}`,
       {
@@ -59,13 +64,7 @@ export async function POST(request: Request) {
           "apikey": process.env.SUPABASE_SERVICE_ROLE_KEY!,
           "Authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
         },
-        body: JSON.stringify({
-          email,
-          data: {
-            is_admin: "true", // metadata flag that triggers route them to admin_users
-            role,
-          },
-        }),
+        body: JSON.stringify({ email }),
       },
     );
 
@@ -74,16 +73,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: err.msg || "Failed to invite user" }, { status: response.status });
     }
 
-    // The invite call inserts the auth.users row synchronously, and a
-    // trigger (0001_core.sql) creates the matching admin_users row in the
-    // same transaction — so the invited user's admin_users row already
-    // exists by the time this response comes back, and page grants chosen
-    // at invite time can be written immediately instead of waiting for a
-    // second "edit" step after the fact.
     const invited = await response.json();
     const newUserId: string | undefined = invited?.id;
-    if (newUserId && role !== "super_admin" && pageIds.length > 0) {
-      const admin = getSupabaseServiceRoleClient();
+    if (!newUserId) {
+      return NextResponse.json({ error: "Invite succeeded but returned no user id" }, { status: 500 });
+    }
+
+    const admin = getSupabaseServiceRoleClient();
+
+    // The trigger still fires on this insert and gives every new auth.users
+    // row a parent profile + lead by default — wrong for staff. Replace that
+    // with the real admin_users row, and drop the parent profile/lead this
+    // account should never have had (leads cascades off profiles).
+    const { error: adminInsertError } = await admin
+      .from("admin_users")
+      .upsert({ id: newUserId, email, role }, { onConflict: "id" });
+    if (adminInsertError) {
+      return NextResponse.json(
+        { error: `Invite sent, but granting admin access failed: ${adminInsertError.message}` },
+        { status: 500 },
+      );
+    }
+    await admin.from("profiles").delete().eq("id", newUserId);
+
+    if (role !== "super_admin" && pageIds.length > 0) {
       const { error: grantError } = await admin
         .from("admin_page_access")
         .insert(pageIds.map((pageId) => ({ admin_user_id: newUserId, page_id: pageId })));

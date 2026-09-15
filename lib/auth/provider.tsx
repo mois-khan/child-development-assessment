@@ -46,6 +46,9 @@ interface AuthState {
   loading: boolean;
   signUp: (input: SignUpInput) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  /** Redirects to Google, then back to /auth/callback, which lands the
+   *  browser on `next` (default /dashboard) once the session is set. */
+  signInWithGoogle: (next?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   /** Sends a reset link to `email`. Always resolves without error, even for
@@ -168,6 +171,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? friendlyAuthError(error.message) : null };
   }, []);
 
+  const signInWithGoogle = useCallback(async (next?: string) => {
+    const supabase = getSupabaseBrowserClient();
+    const redirectTo = new URL("/auth/callback", window.location.origin);
+    if (next) redirectTo.searchParams.set("next", next);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: redirectTo.toString() },
+    });
+    return { error: error ? friendlyAuthError(error.message) : null };
+  }, []);
+
   const signOut = useCallback(async () => {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
@@ -200,12 +214,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signUp,
       signIn,
+      signInWithGoogle,
       signOut,
       refreshProfile,
       resetPassword,
       updatePassword,
     }),
-    [user, profile, loading, signUp, signIn, signOut, refreshProfile, resetPassword, updatePassword],
+    [
+      user,
+      profile,
+      loading,
+      signUp,
+      signIn,
+      signInWithGoogle,
+      signOut,
+      refreshProfile,
+      resetPassword,
+      updatePassword,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

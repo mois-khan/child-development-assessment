@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getSupabaseServiceRoleClient } from "@/lib/supabase/server";
 
 /**
  * Creates a school account with a password the admin sets, using Supabase's
@@ -8,9 +9,14 @@ import { cookies } from "next/headers";
  * flow — that depends on the invite email actually arriving, which has been
  * unreliable). The account is created with email_confirm: true and the
  * given password already set, so the school can sign in at /join
- * immediately; no email has to be delivered for that to work. The same
- * metadata shape as before is passed through so handle_new_user()
- * (0007_schools.sql) still creates the right profiles/schools rows.
+ * immediately; no email has to be delivered for that to work.
+ *
+ * handle_new_user() (0017_close_signup_privilege_escalation.sql) no longer
+ * reads account_type/school fields from user_metadata — that field is
+ * exactly what a public signUp() call could also set, which used to let
+ * anyone self-register as a school. This route now creates the
+ * profiles(account_type='school') + schools rows itself, after deleting the
+ * parent profile/lead the trigger creates by default for every new user.
  *
  * Schools are never self-serve (see the migration's header note) — only an
  * admin with the "schools" page grant can call this. The UI already hides
@@ -62,12 +68,6 @@ export async function POST(request: Request) {
           email,
           password,
           email_confirm: true,
-          user_metadata: {
-            account_type: "school",
-            school_name: schoolName,
-            contact_name: contactName ?? "",
-            contact_phone: contactPhone ?? "",
-          },
         }),
       },
     );
@@ -75,6 +75,53 @@ export async function POST(request: Request) {
     if (!response.ok) {
       const err = await response.json();
       return NextResponse.json({ error: err.msg || "Failed to create school account" }, { status: response.status });
+    }
+
+    const created = await response.json();
+    const newUserId: string | undefined = created?.id;
+    if (!newUserId) {
+      return NextResponse.json({ error: "Account created but returned no user id" }, { status: 500 });
+    }
+
+    const admin = getSupabaseServiceRoleClient();
+
+    // Overwrite the trigger's default parent profile with a school one, and
+    // add the schools row — the two things user_metadata used to do.
+    const { error: profileError } = await admin
+      .from("profiles")
+      .upsert(
+        {
+          id: newUserId,
+          full_name: contactName ?? "",
+          phone: contactPhone ?? "",
+          email,
+          account_type: "school",
+        },
+        { onConflict: "id" },
+      );
+    if (profileError) {
+      return NextResponse.json(
+        { error: `Account created, but setting up the school profile failed: ${profileError.message}` },
+        { status: 500 },
+      );
+    }
+    // Undoes handle_new_user()'s default lead row — a school is never a lead.
+    await admin.from("leads").delete().eq("profile_id", newUserId);
+
+    const { error: schoolError } = await admin.from("schools").upsert(
+      {
+        id: newUserId,
+        school_name: schoolName,
+        contact_name: contactName ?? "",
+        contact_phone: contactPhone ?? "",
+      },
+      { onConflict: "id" },
+    );
+    if (schoolError) {
+      return NextResponse.json(
+        { error: `Account created, but the schools record failed: ${schoolError.message}` },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ success: true });
