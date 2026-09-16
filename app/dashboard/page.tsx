@@ -22,7 +22,6 @@ import {
   IconCheck,
   IconChevronRight,
   IconClock,
-  IconDownload,
   IconPlus,
   IconSparkle,
   IconStarFilled,
@@ -277,7 +276,7 @@ export default function DashboardPage() {
                   label={totals.done === 1 ? "Check done" : "Checks done"}
                   icon={<IconCheck size={19} />}
                   gradient="linear-gradient(135deg, var(--st-on-track), var(--sec-language))"
-                  href="/profile"
+                  href="/children"
                 />
                 <StatTile
                   value={totals.open}
@@ -428,60 +427,6 @@ export default function DashboardPage() {
             </div>
           </Shell>
         </Section>
-
-        {/* ══ reports ══════════════════════════════════════════════════════ */}
-        {!loading && summaries.some((s) => s.completed.length > 0) && (
-          <Section size="sm">
-            <Shell width="wide">
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="eyebrow eyebrow-accent">Keepsakes</p>
-                  <h2 className="mt-1.5">Recent reports</h2>
-                </div>
-                <ButtonLink
-                  href="/profile"
-                  variant="ghost"
-                  size="sm"
-                  iconRight={<IconChevronRight size={16} />}
-                >
-                  See all
-                </ButtonLink>
-              </div>
-
-              <div className="mt-5 grid gap-3">
-                {recentReports(summaries).map(({ child, assessment }) => (
-                  <div
-                    key={assessment.id}
-                    className="flex flex-col gap-4 rounded-[var(--radius-xl)] border border-line bg-[var(--surface)] px-5 py-4 sm:flex-row sm:items-center"
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-4">
-                      <Avatar name={child.name} photoUrl={child.photoUrl} size={42} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-extrabold text-ink">{child.name}</p>
-                        <p className="text-sm font-semibold text-ink-3">
-                          {formatDateTime(assessment.completedAt)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2.5 pl-[58px] sm:pl-0">
-                      <ButtonLink href={`/report/${assessment.id}`} variant="secondary" size="sm" className="flex-1 sm:flex-initial">
-                        View
-                      </ButtonLink>
-                      <ButtonLink
-                        href={`/report/${assessment.id}?download=1`}
-                        size="sm"
-                        iconLeft={<IconDownload size={15} />}
-                        className="flex-1 sm:flex-initial"
-                      >
-                        Download
-                      </ButtonLink>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Shell>
-          </Section>
-        )}
 
         {/* ══ programme ════════════════════════════════════════════════════ */}
         <Section size="sm">
@@ -721,24 +666,4 @@ function bestFor(
     }
   }
   return best;
-}
-
-function recentReports(summaries: ChildSummary[]) {
-  return summaries
-    .flatMap((s) => s.completed.map((assessment) => ({ child: s.child, assessment })))
-    .sort((a, b) => (b.assessment.completedAt ?? "").localeCompare(a.assessment.completedAt ?? ""))
-    .slice(0, 4);
-}
-
-function formatDateTime(iso?: string): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }

@@ -27,16 +27,16 @@ const SIGNED_OUT: [string, string][] = [
 const SIGNED_IN: [string, string][] = [
   ["/dashboard", "Dashboard"],
   ["/children", "My children"],
-  ["/profile", "Parent profile"],
+  ["/settings", "Account"],
 ];
 
 /** A school account owns children the same way a parent does (see
- *  0007_schools.sql), but "My children" and "Parent profile" describe a
- *  family, not a roster — same destinations, words a school recognises. */
+ *  0007_schools.sql), but "My children" describes a family, not a roster —
+ *  same destination, words a school recognises. */
 const SIGNED_IN_SCHOOL: [string, string][] = [
   ["/school", "Dashboard"],
   ["/children", "Students"],
-  ["/profile", "School account"],
+  ["/settings", "Account"],
 ];
 
 export function MainNav() {

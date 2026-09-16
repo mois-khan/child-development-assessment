@@ -22,7 +22,7 @@ export function AuthNav() {
     return (
       <div className="flex items-center gap-2.5">
         <Link
-          href="/profile"
+          href="/settings/account"
           className="group hidden items-center gap-2.5 rounded-full py-1 pl-1 pr-3.5 transition-colors md:inline-flex"
           style={{ background: "var(--surface-2)" }}
         >
