@@ -334,6 +334,15 @@ body {
   overflow-x: hidden;
 }
 
+/* A <main> immediately followed by the site <footer> always fills at least
+   one viewport height, so the footer never sits a few hundred pixels below
+   the header on a short page — it always takes a scroll to reach. Scoped to
+   that adjacency (not every <main>) so admin layouts, which have no footer,
+   are unaffected. */
+main:has(+ footer) {
+  min-height: 100dvh;
+}
+
 h1,
 h2,
 h3 {

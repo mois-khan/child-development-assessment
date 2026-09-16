@@ -367,23 +367,13 @@ export default function ChildProfilePage({
         {latest && result && (
           <Section size="sm">
             <Shell width="wide">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="eyebrow eyebrow-accent">Latest evaluation</p>
-                  <h2 className="mt-1">Recent check breakdown</h2>
-                </div>
-                <div className="flex flex-wrap gap-2.5">
-                  <ButtonLink href={`/report/${latest.id}`} variant="secondary" size="sm">
-                    Open full report
-                  </ButtonLink>
-                  <ButtonLink
-                    href={`/report/${latest.id}?download=1`}
-                    size="sm"
-                    iconLeft={<IconDownload size={16} />}
-                  >
-                    Download Report
-                  </ButtonLink>
-                </div>
+              {/* No View/Download buttons here — the "Completed" row for this
+                  same check in the table above already has them. This card's
+                  job is the domain-by-domain numbers, not a second set of
+                  the same two links. */}
+              <div>
+                <p className="eyebrow eyebrow-accent">Latest evaluation</p>
+                <h2 className="mt-1">Recent check breakdown</h2>
               </div>
 
               <Card variant="clay" className="mt-5 overflow-hidden">
