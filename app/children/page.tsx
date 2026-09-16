@@ -111,11 +111,11 @@ function ChildrenPageInner() {
                         ? "Your child"
                         : "Your children"}
                 </h1>
-                <p className="lede mt-3 max-w-[48ch]">
-                  {empty
-                    ? "Three quick things and we'll find exactly which of the seven phases they're on."
-                    : "Each child keeps their own phase, their own checks and their own reports."}
-                </p>
+                {empty && (
+                  <p className="lede mt-3 max-w-[48ch]">
+                    Three quick things and we&rsquo;ll find exactly which of the seven phases they&rsquo;re on.
+                  </p>
+                )}
               </div>
 
               {list !== null && list.length > 0 && (
