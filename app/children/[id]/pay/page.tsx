@@ -3,7 +3,7 @@
 import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DOMAINS } from "@/content/domains";
-import { scoredItemsFor } from "@/content/items";
+import { itemBankReady, liveScoredItemsFor, primeItemBank } from "@/lib/item-bank";
 import { stageForAge } from "@/lib/stage";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { createAssessment, getChild, type SavedChild } from "@/lib/store";
@@ -57,6 +57,8 @@ export default function PayPage({
   const [starting, setStarting] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [celebrating, setCelebrating] = useState(false);
+  const [bankReady, setBankReady] = useState(itemBankReady());
+  const [bankFailed, setBankFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -71,6 +73,19 @@ export default function PayPage({
     return () => { active = false; };
   }, [id, loadAttempt]);
 
+  useEffect(() => {
+    let active = true;
+    setBankFailed(false);
+    primeItemBank()
+      .then(() => {
+        if (active) setBankReady(true);
+      })
+      .catch(() => {
+        if (active) setBankFailed(true);
+      });
+    return () => { active = false; };
+  }, [loadAttempt]);
+
   const today = todayISO();
   const age = useMemo(
     () => (child && child !== "error" ? summariseAge(child.dob, today, child.gestationalWeeks) : null),
@@ -84,12 +99,13 @@ export default function PayPage({
      within a stage or two of that. */
   const perSection = useMemo(() => {
     if (!startStage || !age) return [];
+    if (!bankReady) return [];
     return DOMAINS.map((d) => ({
       code: d.code,
       name: d.name,
-      count: scoredItemsFor(startStage.id, d.code, age.assessedMonths).length,
+      count: liveScoredItemsFor(startStage.id, d.code, age.assessedMonths).length,
     }));
-  }, [startStage, age]);
+  }, [startStage, age, bankReady]);
   const questionCount = perSection.reduce((n, s) => n + s.count, 0);
 
   async function applyCoupon(e: React.FormEvent) {
@@ -233,7 +249,7 @@ export default function PayPage({
     }
   }
 
-  if (child === undefined) {
+  if (child === undefined || !bankReady) {
     return (
       <>
         <TopBar />
@@ -243,7 +259,7 @@ export default function PayPage({
       </>
     );
   }
-  if (child === "error") {
+  if (child === "error" || bankFailed) {
     return (
       <>
         <TopBar />

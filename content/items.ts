@@ -4,9 +4,18 @@ import { BRAIN_STAGES } from "./stages";
 export const BANK_VERSION = "2026.09.04-ace";
 
 /**
- * The assessment item bank.
+ * The original transcription of the assessment booklet — NOT the live
+ * question bank any more.
  *
- * SOURCE — this matters, please read before adding content.
+ * The assessment, the scoring engine and the admin item-bank page all read
+ * from `public.item_overrides` via lib/item-bank.ts, which is the sole
+ * source of what a parent is asked. This file seeded that table once
+ * (supabase/migrations/0018_item_bank_is_sole_source.sql) and now exists
+ * only as the historical record of where those questions came from, and as
+ * fixture data for tests/scoring.test.ts and scripts/seed-demo.ts. Editing a
+ * question here changes neither.
+ *
+ * SOURCE — this matters, please read before touching this file.
  *
  * Every question here is transcribed from the programme's own printed
  * assessment booklet (Ru Education Pvt Ltd), which families already fill in by

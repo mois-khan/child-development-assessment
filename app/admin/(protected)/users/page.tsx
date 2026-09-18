@@ -13,6 +13,56 @@ import {
 } from "@/lib/data/rbac";
 import { Card, Button, Badge, ConfirmDeleteButton, IconClose, InlineBanner, useBanner } from "@/components/ui";
 
+/** The per-page access switches, identical in the Edit and Invite drawers —
+ *  one definition instead of two copies drifting apart as pages get added. */
+function PageAccessToggles({
+  pages,
+  role,
+  access,
+  onToggle,
+  disabled,
+}: {
+  pages: AdminPage[];
+  role: AdminRole;
+  access: Set<string>;
+  onToggle: (pageId: string) => void;
+  disabled: boolean;
+}) {
+  if (role === "super_admin") {
+    return (
+      <div className="rounded-md bg-surface-2 p-4 text-sm text-ink-2 text-center border border-line-soft">
+        Super admins always have access to all pages.
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      {pages.map((page) => {
+        const checked = access.has(page.id);
+        return (
+          <div key={page.id} className="flex items-center justify-between">
+            <div>
+              <div className="font-semibold text-ink">{page.label}</div>
+              <div className="text-xs text-ink-3">{page.description}</div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={checked}
+              onClick={() => onToggle(page.id)}
+              disabled={disabled}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${checked ? "bg-[var(--accent)]" : "bg-[var(--surface-3)]"} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+        );
+      })}
+      {pages.length === 0 && <p className="text-sm text-ink-3">No pages registered yet.</p>}
+    </div>
+  );
+}
+
 export default function UserManagementPage() {
   const { session } = useAdminSession();
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -280,36 +330,13 @@ export default function UserManagementPage() {
 
               <div className="pt-2">
                 <h3 className="text-sm font-extrabold tracking-widest uppercase text-ink-3 mb-4">Page Access</h3>
-                
-                {editRole === "super_admin" ? (
-                  <div className="rounded-md bg-surface-2 p-4 text-sm text-ink-2 text-center border border-line-soft">
-                    Super admins always have access to all pages.
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {pages.map(page => {
-                      const checked = userPageAccess.has(page.id);
-                      return (
-                        <div key={page.id} className="flex items-center justify-between">
-                          <div>
-                            <div className="font-semibold text-ink">{page.label}</div>
-                            <div className="text-xs text-ink-3">{page.description}</div>
-                          </div>
-                          <button 
-                            type="button"
-                            role="switch" 
-                            aria-checked={checked}
-                            onClick={() => togglePageAccess(page.id)}
-                            disabled={savingEdit}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${checked ? 'bg-[var(--accent)]' : 'bg-[var(--surface-3)]'} ${savingEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <PageAccessToggles
+                  pages={pages}
+                  role={editRole}
+                  access={userPageAccess}
+                  onToggle={togglePageAccess}
+                  disabled={savingEdit}
+                />
               </div>
             </div>
 
@@ -374,39 +401,13 @@ export default function UserManagementPage() {
 
               <div className="pt-2">
                 <h3 className="text-sm font-extrabold tracking-widest uppercase text-ink-3 mb-4">Page Access</h3>
-
-                {inviteRole === "super_admin" ? (
-                  <div className="rounded-md bg-surface-2 p-4 text-sm text-ink-2 text-center border border-line-soft">
-                    Super admins always have access to all pages.
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {pages.map(page => {
-                      const checked = invitePageAccess.has(page.id);
-                      return (
-                        <div key={page.id} className="flex items-center justify-between">
-                          <div>
-                            <div className="font-semibold text-ink">{page.label}</div>
-                            <div className="text-xs text-ink-3">{page.description}</div>
-                          </div>
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={checked}
-                            onClick={() => toggleInvitePageAccess(page.id)}
-                            disabled={inviting}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${checked ? 'bg-[var(--accent)]' : 'bg-[var(--surface-3)]'} ${inviting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
-                          </button>
-                        </div>
-                      );
-                    })}
-                    {pages.length === 0 && (
-                      <p className="text-sm text-ink-3">No pages registered yet.</p>
-                    )}
-                  </div>
-                )}
+                <PageAccessToggles
+                  pages={pages}
+                  role={inviteRole}
+                  access={invitePageAccess}
+                  onToggle={toggleInvitePageAccess}
+                  disabled={inviting}
+                />
               </div>
 
               <div className="pt-6 mt-auto border-t border-line flex gap-3 justify-end">

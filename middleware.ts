@@ -114,7 +114,7 @@ export async function middleware(request: NextRequest) {
   // this list gates by "signed in" rather than by account type. /dashboard
   // is the one exception, handled separately below: it's a parent's home,
   // and a school has its own at /school.
-  const PARENT_ONLY = ["/dashboard", "/children", "/assessment", "/report", "/profile"];
+  const PARENT_ONLY = ["/dashboard", "/children", "/assessment", "/report", "/profile", "/settings"];
   const SCHOOL_ONLY = ["/school"];
 
   // ── Routes that only make sense signed OUT ─────────────────────────────────

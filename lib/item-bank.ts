@@ -1,5 +1,10 @@
 /**
- * The live item bank: content/items.ts with admin edits layered on top.
+ * The item bank: every question a parent can be asked, read straight from
+ * storage. There is no code-level base bank any more — `public.item_overrides`
+ * (0006_item_bank.sql, promoted to sole source by 0018_item_bank_is_sole_source.sql)
+ * is not a diff on top of anything, it is the entire question set. Editing a
+ * question here is editing what the next parent is asked; there is no
+ * "shipped wording" left to fall back to or revert to.
  *
  * WHY THIS IS SYNCHRONOUS, AND WHAT THAT COSTS
  *
@@ -10,28 +15,30 @@
  * become async, and the walk's "answer → decide next stage → append" step
  * would stop being a pure function of stored state.
  *
- * So reads stay synchronous and the overlay lives in a module-level cache.
+ * So reads stay synchronous and the bank lives in a module-level cache.
  * Exactly one async step exists: `primeItemBank()`, which every page that
  * shows or scores questions awaits once before rendering them. Until it has
- * resolved, `itemBankReady()` is false and callers show a loading state
- * rather than the un-overlaid bank — showing base questions for a moment and
- * then swapping them mid-assessment would be worse than a spinner.
+ * resolved, `itemBankReady()` is false and callers show a loading state.
+ * If it rejects, `itemBankLoadFailed()` is true and callers must show a
+ * blocking error rather than proceed with — or silently render — no
+ * questions at all; there is nothing to fall back to any more.
  *
- * WHERE THE OVERLAY LIVES
+ * WHERE THE BANK LIVES
  *
- *   Supabase configured → public.item_overrides (0006_item_bank.sql).
- *                         Shared across devices, admin-writable, readable by
- *                         everyone because parents are asked these questions.
- *   Not configured      → localStorage, exactly as before, so a fresh clone
- *                         with no credentials still runs end to end.
+ *   Supabase configured → public.item_overrides. Shared across devices,
+ *                         admin-writable, readable by everyone because
+ *                         parents are asked these questions.
+ *   Not configured      → localStorage, so a fresh clone with no credentials
+ *                         still has somewhere to save admin-authored
+ *                         questions locally. It starts empty; there is no
+ *                         shipped content to seed it with.
  */
-import { ITEMS, itemsFor as baseItemsFor } from "@/content/items";
 import type { DomainCode, Item, ItemKind, ItemSource } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
-const OVERLAY_KEY = "kaushalya.admin.item-drafts.v1";
+const BANK_KEY = "kaushalya.admin.item-drafts.v1";
 
-export type ItemStatus = "base" | "edited" | "new" | "deleted";
+export type ItemStatus = "active" | "deleted";
 
 export interface AdminItem extends Item {
   status: ItemStatus;
@@ -54,26 +61,34 @@ export interface ItemInput {
   unit?: string;
 }
 
-export interface OverlayEntry extends Item {
+export interface BankEntry extends Item {
   deleted?: boolean;
 }
 
-type Overlay = Record<string, OverlayEntry>;
+type Bank = Record<string, BankEntry>;
 
 /* ══ the cache ═════════════════════════════════════════════════════════════ */
 
-let cache: Overlay | null = null;
-let inflight: Promise<Overlay> | null = null;
+let cache: Bank | null = null;
+let loadFailed = false;
+let inflight: Promise<Bank> | null = null;
 
-/** True once the overlay has been fetched at least once this page load. */
+/** True once the bank has been fetched at least once this page load. */
 export function itemBankReady(): boolean {
   return cache !== null;
 }
 
+/** True if the last `primeItemBank()` failed to load a configured bank. */
+export function itemBankLoadFailed(): boolean {
+  return loadFailed;
+}
+
 /**
- * Fetch the overlay into the cache. Safe to call from many components at
- * once — concurrent calls share the one request. Pass `force` after an admin
- * write to pick the change up.
+ * Fetch the bank into the cache. Safe to call from many components at once —
+ * concurrent calls share the one request. Pass `force` after an admin write
+ * to pick the change up. Rejects (and leaves `itemBankReady()` false) if
+ * Supabase is configured but the fetch fails — there is no shipped bank left
+ * to fall back to, so callers must show a blocking error rather than guess.
  */
 export async function primeItemBank(opts?: { force?: boolean }): Promise<void> {
   if (cache !== null && !opts?.force) return;
@@ -81,16 +96,20 @@ export async function primeItemBank(opts?: { force?: boolean }): Promise<void> {
     await inflight;
     return;
   }
-  inflight = fetchOverlay();
+  inflight = fetchBank();
   try {
     cache = await inflight;
+    loadFailed = false;
+  } catch (e) {
+    loadFailed = true;
+    throw e;
   } finally {
     inflight = null;
   }
 }
 
-async function fetchOverlay(): Promise<Overlay> {
-  if (!isSupabaseConfigured()) return readLocalOverlay();
+async function fetchBank(): Promise<Bank> {
+  if (!isSupabaseConfigured()) return readLocalBank();
 
   // Imported lazily so this module stays importable from server code that
   // will never touch the browser client.
@@ -99,17 +118,13 @@ async function fetchOverlay(): Promise<Overlay> {
     .from("item_overrides")
     .select("*");
 
-  // A failed fetch must not take the assessment down with it. The shipped
-  // bank is a complete, valid instrument on its own — falling back to it
-  // costs the admin's recent edits, not the parent's session.
   if (error || !data) {
-    console.error("Item bank overlay failed to load; using the shipped bank.", error);
-    return {};
+    throw new Error(error?.message ?? "Couldn't load the question bank.");
   }
 
-  const overlay: Overlay = {};
-  for (const row of data) overlay[row.id] = rowToEntry(row);
-  return overlay;
+  const bank: Bank = {};
+  for (const row of data) bank[row.id] = rowToEntry(row);
+  return bank;
 }
 
 /* ══ row ⇄ item ════════════════════════════════════════════════════════════ */
@@ -129,7 +144,7 @@ interface Row {
   deleted: boolean;
 }
 
-function rowToEntry(row: Row): OverlayEntry {
+function rowToEntry(row: Row): BankEntry {
   return {
     id: row.id,
     domain: row.domain as DomainCode,
@@ -150,67 +165,56 @@ function rowToEntry(row: Row): OverlayEntry {
 
 /* ══ localStorage fallback ═════════════════════════════════════════════════ */
 
-function readLocalOverlay(): Overlay {
+function readLocalBank(): Bank {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(window.localStorage.getItem(OVERLAY_KEY) ?? "{}") as Overlay;
+    return JSON.parse(window.localStorage.getItem(BANK_KEY) ?? "{}") as Bank;
   } catch {
     return {};
   }
 }
 
-function writeLocalOverlay(table: Overlay): void {
-  window.localStorage.setItem(OVERLAY_KEY, JSON.stringify(table));
+function writeLocalBank(table: Bank): void {
+  window.localStorage.setItem(BANK_KEY, JSON.stringify(table));
   cache = table;
 }
 
-/* ══ the merge ═════════════════════════════════════════════════════════════ */
+/* ══ reads ═════════════════════════════════════════════════════════════════ */
 
-/**
- * The shipped bank with the overlay applied: edits replace, retirements drop,
- * additions append.
- */
-function mergedItems(filter?: { domain?: DomainCode; stage?: string }): AdminItem[] {
-  const overlay = cache ?? {};
-  const baseIds = new Set(ITEMS.map((i) => i.id));
-
-  const merged: AdminItem[] = [];
-  for (const base of ITEMS) {
-    const override = overlay[base.id];
-    if (override?.deleted) continue;
-    merged.push(override ? { ...override, status: "edited" } : { ...base, status: "base" });
+function allItems(filter?: { domain?: DomainCode; stage?: string }): AdminItem[] {
+  const bank = cache ?? {};
+  const items: AdminItem[] = [];
+  for (const entry of Object.values(bank)) {
+    if (entry.deleted) continue;
+    items.push({ ...entry, status: "active" });
   }
-  for (const [id, entry] of Object.entries(overlay)) {
-    if (baseIds.has(id) || entry.deleted) continue;
-    merged.push({ ...entry, status: "new" });
-  }
-
-  return merged
+  return items
     .filter((i) => (filter?.domain ? i.domain === filter.domain : true))
     .filter((i) => (filter?.stage ? i.stage === filter.stage : true))
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
 export function adminListItems(filter?: { domain?: DomainCode; stage?: string }): AdminItem[] {
-  return mergedItems(filter);
+  return allItems(filter);
 }
 
 /**
  * What a parent is actually asked for one cell of the chart.
  *
  * `assessedMonths` drops the booklet's "if over six…" questions for a younger
- * child, exactly as content/items.ts does.
+ * child. Before the bank has been primed there is nothing to answer from —
+ * callers gate on `itemBankReady()` and show a loading (or, on failure, a
+ * blocking error) state rather than rendering an empty cell as if it were
+ * complete.
  */
 export function liveItemsFor(
   stage: string,
   domain: DomainCode,
   assessedMonths?: number,
 ): Item[] {
-  // Before priming, and on a server render, there is no overlay to apply —
-  // answer from the shipped bank rather than inventing a half-merged one.
-  if (cache === null) return baseItemsFor(stage, domain, assessedMonths);
+  if (cache === null) return [];
 
-  return mergedItems({ domain, stage }).filter(
+  return allItems({ domain, stage }).filter(
     (i) =>
       assessedMonths === undefined ||
       i.minAgeMonths === undefined ||
@@ -229,14 +233,14 @@ export function liveScoredItemsFor(
 
 /* ══ writes ════════════════════════════════════════════════════════════════ */
 
-function newDraftId(domain: DomainCode, stage: string): string {
-  return `${stage}-${domain}-draft-${Date.now().toString(36)}`;
+function newItemId(domain: DomainCode, stage: string): string {
+  return `${stage}-${domain}-${Date.now().toString(36)}`;
 }
 
 /** Create or update an item. Resolves once the change is readable again. */
 export async function adminSaveItem(input: ItemInput): Promise<void> {
-  const id = input.id ?? newDraftId(input.domain, input.stage);
-  const entry: OverlayEntry = {
+  const id = input.id ?? newItemId(input.domain, input.stage);
+  const entry: BankEntry = {
     id,
     domain: input.domain,
     stage: input.stage,
@@ -251,7 +255,7 @@ export async function adminSaveItem(input: ItemInput): Promise<void> {
   };
 
   if (!isSupabaseConfigured()) {
-    writeLocalOverlay({ ...readLocalOverlay(), [id]: entry });
+    writeLocalBank({ ...readLocalBank(), [id]: entry });
     return;
   }
 
@@ -276,58 +280,13 @@ export async function adminSaveItem(input: ItemInput): Promise<void> {
   await primeItemBank({ force: true });
 }
 
-/**
- * Retire an item.
- *
- * A base item gets a `deleted` row — the shipped question still exists in
- * content/items.ts, and without a row saying otherwise it would come straight
- * back. An admin-authored addition has no base to fall back to, so its row is
- * removed outright.
- */
+/** Remove a question from the bank for good — there is no shipped fallback
+ *  for it to reappear from, so this is a hard delete, not a soft retirement. */
 export async function adminDeleteItem(id: string): Promise<void> {
-  const base = ITEMS.find((i) => i.id === id);
-
   if (!isSupabaseConfigured()) {
-    const overlay = readLocalOverlay();
-    if (base) overlay[id] = { ...(overlay[id] ?? base), deleted: true };
-    else delete overlay[id];
-    writeLocalOverlay(overlay);
-    return;
-  }
-
-  const { getSupabaseBrowserClient } = await import("@/lib/supabase/client");
-  const supabase = getSupabaseBrowserClient();
-
-  if (base) {
-    const current = (cache ?? {})[id] ?? base;
-    const { error } = await supabase.from("item_overrides").upsert({
-      id,
-      domain: current.domain,
-      stage_id: current.stage,
-      text: current.text,
-      how: current.how,
-      kind: current.kind,
-      source: current.source,
-      invert: current.invert ?? false,
-      min_age_months: current.minAgeMonths ?? null,
-      choices: current.choices ?? null,
-      unit: current.unit ?? null,
-      deleted: true,
-    });
-    if (error) throw new Error(`Couldn't retire that question: ${error.message}`);
-  } else {
-    const { error } = await supabase.from("item_overrides").delete().eq("id", id);
-    if (error) throw new Error(`Couldn't remove that question: ${error.message}`);
-  }
-  await primeItemBank({ force: true });
-}
-
-/** Undo an edit or a retirement, restoring the shipped wording. */
-export async function adminRevertItem(id: string): Promise<void> {
-  if (!isSupabaseConfigured()) {
-    const overlay = readLocalOverlay();
-    delete overlay[id];
-    writeLocalOverlay(overlay);
+    const bank = readLocalBank();
+    delete bank[id];
+    writeLocalBank(bank);
     return;
   }
 
@@ -336,11 +295,24 @@ export async function adminRevertItem(id: string): Promise<void> {
     .from("item_overrides")
     .delete()
     .eq("id", id);
-  if (error) throw new Error(`Couldn't restore that question: ${error.message}`);
+  if (error) throw new Error(`Couldn't remove that question: ${error.message}`);
   await primeItemBank({ force: true });
 }
 
-/** How many items currently differ from the shipped bank. */
-export function overlayCount(): number {
-  return Object.keys(cache ?? {}).length;
+/** How many questions are currently in the bank. */
+export function itemBankSize(): number {
+  return allItems().length;
+}
+
+/**
+ * Test-only seam: load the cache directly from a fixture, bypassing Supabase
+ * and localStorage entirely. Scoring tests need a real, primed bank — there
+ * is no shipped fallback for `liveItemsFor` to return when nothing has been
+ * fetched — so they call this with a known set of items instead of hitting
+ * the network.
+ */
+export function __setItemBankForTests(items: Item[]): void {
+  cache = {};
+  for (const item of items) cache[item.id] = item;
+  loadFailed = false;
 }

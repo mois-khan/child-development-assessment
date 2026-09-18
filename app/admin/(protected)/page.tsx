@@ -105,9 +105,6 @@ export default function AdminDashboardPage() {
           <h1 className="mt-1 !text-2xl font-extrabold text-white sm:!text-3xl">
             {greeting}
           </h1>
-          <p className="mt-1 text-sm text-white/65">
-            Here's what's happening across the programme.
-          </p>
         </div>
       </div>
 
@@ -179,9 +176,6 @@ export default function AdminDashboardPage() {
                   <p className="text-lg font-extrabold text-white" style={{ fontFamily: "var(--font-display)" }}>
                     From lead to finished check
                   </p>
-                  <p className="mt-2 text-sm leading-relaxed text-white/75">
-                    Every self-signed-up family's path from first contact to a finished check.
-                  </p>
                   {analytics.direct.overdueFollowUps > 0 && (
                     <Link
                       href="/admin/leads"
@@ -235,9 +229,6 @@ export default function AdminDashboardPage() {
                 <div>
                   <p className="text-lg font-extrabold text-white" style={{ fontFamily: "var(--font-display)" }}>
                     School activation
-                  </p>
-                  <p className="mt-1 text-sm text-white/75">
-                    How actively each school's roster is being screened.
                   </p>
                 </div>
                 <Link

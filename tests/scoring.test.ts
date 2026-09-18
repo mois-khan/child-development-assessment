@@ -6,6 +6,7 @@ import { BRAIN_STAGES, STAGE_CELLS, cellFor } from "@/content/stages";
 import { ITEMS, itemsFor, scoredItemsFor } from "@/content/items";
 import { completedMonths, correctionMonths, summariseAge } from "@/lib/age";
 import { STAGE_BOUNDARIES, classifyAgainstStage, stageForAge } from "@/lib/stage";
+import { __setItemBankForTests } from "@/lib/item-bank";
 import {
   MIN_AGE_FOR_DQ,
   PASS_THRESHOLD,
@@ -17,6 +18,11 @@ import {
   startStageFor,
 } from "@/lib/scoring";
 import type { Child, DomainCode, ResponseValue } from "@/lib/types";
+
+// lib/scoring.ts reads through the live item bank (lib/item-bank.ts), which
+// has no shipped fallback any more — prime it once from the same fixture
+// content/items.ts still provides, so these tests exercise real questions.
+__setItemBankForTests(ITEMS);
 
 const ON = "2026-09-01";
 

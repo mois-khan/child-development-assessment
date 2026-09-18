@@ -9,8 +9,8 @@ import { Button, Card, Footer, Mascot, Section, Shell, TopBar } from "@/componen
  * Where a Supabase password-reset email actually lands (see the
  * `redirectTo` on resetPassword() in lib/auth/provider.tsx). Mirrors
  * app/admin/accept-invite/page.tsx — same exchange-code-for-session dance,
- * just for a parent instead of an admin, and landing on /profile instead
- * of /admin.
+ * just for a parent instead of an admin, and landing on /settings/account
+ * instead of /admin.
  */
 export default function ResetPasswordPage() {
   return (
@@ -137,7 +137,7 @@ function ResetPasswordInner() {
         setError(result.error);
         return;
       }
-      router.replace("/profile");
+      router.replace("/settings/account");
     } finally {
       setSubmitting(false);
     }
