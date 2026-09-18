@@ -6,13 +6,11 @@ import {
   ADMIN_DOMAINS,
   adminDeleteItem,
   adminListItems,
-  adminRevertItem,
   adminSaveItem,
   itemBankReady,
-  overlayCount,
+  itemBankSize,
   primeItemBank,
   type AdminItem,
-  type ItemStatus,
 } from "@/lib/admin/content";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { DomainCode, ItemKind, ItemSource } from "@/lib/types";
@@ -22,7 +20,6 @@ import {
   Card,
   ConfirmDeleteButton,
   IconPlus,
-  IconRefresh,
   InlineBanner,
   domainColor,
   domainName,
@@ -30,13 +27,6 @@ import {
 
 const SOURCES: ItemSource[] = ["ACE", "AUTHORED"];
 const KINDS: ItemKind[] = ["yesno", "choice", "count", "percent", "text"];
-
-const STATUS_BADGE: Record<ItemStatus, { label: string; tone: "neutral" | "accent" | "warn" | "success" } | null> = {
-  base: null,
-  edited: { label: "Edited", tone: "warn" },
-  new: { label: "New", tone: "accent" },
-  deleted: null,
-};
 
 export default function AdminQuestionBankPage() {
   const shared = isSupabaseConfigured();
@@ -115,7 +105,7 @@ export default function AdminQuestionBankPage() {
     [refresh],
   );
 
-  const changed = ready ? overlayCount() : 0;
+  const total = ready ? itemBankSize() : 0;
 
   return (
     <div className="space-y-6">
@@ -125,9 +115,7 @@ export default function AdminQuestionBankPage() {
           {ready && (
             <Badge tone={shared ? "success" : "warn"}>
               {shared
-                ? changed === 0
-                  ? "Live · no changes yet"
-                  : `Live · ${changed} question${changed === 1 ? "" : "s"} changed`
+                ? `Live · ${total} question${total === 1 ? "" : "s"}`
                 : "Dev mode: edits save to this browser only"}
             </Badge>
           )}
@@ -217,7 +205,6 @@ export default function AdminQuestionBankPage() {
                 onCancelEdit={() => setEditingId(null)}
                 onSave={(input) => run(() => adminSaveItem(input))}
                 onDelete={(id) => void run(() => adminDeleteItem(id)).catch(() => {})}
-                onRevert={(id) => void run(() => adminRevertItem(id)).catch(() => {})}
               />
             </Card>
           ) : (
@@ -246,7 +233,6 @@ export default function AdminQuestionBankPage() {
                         onCancelEdit={() => setEditingId(null)}
                         onSave={(input) => run(() => adminSaveItem(input))}
                         onDelete={(id) => void run(() => adminDeleteItem(id)).catch(() => {})}
-                        onRevert={(id) => void run(() => adminRevertItem(id)).catch(() => {})}
                       />
                     </div>
                   </details>
@@ -268,7 +254,6 @@ function ItemList({
   onCancelEdit,
   onSave,
   onDelete,
-  onRevert,
 }: {
   items: AdminItem[];
   editingId: string | "new" | null;
@@ -276,7 +261,6 @@ function ItemList({
   onCancelEdit: () => void;
   onSave: SaveHandler;
   onDelete: (id: string) => void;
-  onRevert: (id: string) => void;
 }) {
   return (
     <div className="divide-y divide-line">
@@ -297,7 +281,6 @@ function ItemList({
             item={item}
             onEdit={() => onEdit(item.id)}
             onDelete={() => onDelete(item.id)}
-            onRevert={item.status === "edited" ? () => onRevert(item.id) : undefined}
           />
         ),
       )}
@@ -309,20 +292,16 @@ function ItemRow({
   item,
   onEdit,
   onDelete,
-  onRevert,
 }: {
   item: AdminItem;
   onEdit: () => void;
   onDelete: () => void;
-  onRevert?: () => void;
 }) {
-  const badge = STATUS_BADGE[item.status];
   return (
     <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold text-ink">{item.text}</p>
-          {badge && <Badge tone={badge.tone} size="sm">{badge.label}</Badge>}
           <Badge size="sm">{item.source}</Badge>
         </div>
         <p className="mt-1 text-sm text-ink-3">{item.how}</p>
@@ -332,11 +311,6 @@ function ItemRow({
         <Button size="sm" variant="ghost" onClick={onEdit}>
           Edit
         </Button>
-        {onRevert && (
-          <Button size="sm" variant="ghost" iconLeft={<IconRefresh size={14} />} onClick={onRevert}>
-            Revert
-          </Button>
-        )}
         <ConfirmDeleteButton onConfirm={onDelete} />
       </div>
     </div>

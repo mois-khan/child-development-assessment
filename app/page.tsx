@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { DOMAINS, STAGE_JOURNEY } from "@/content/domains";
 import { BRAIN_STAGES } from "@/content/stages";
-import { ITEMS } from "@/content/items";
 import { DISCLAIMER } from "@/lib/narrative";
 import {
   Badge,
@@ -398,7 +397,7 @@ export default function Home() {
             <div className="mt-10">
               <Disclaimer text={DISCLAIMER} />
               <p className="mt-4 text-center text-xs leading-relaxed text-ink-3">
-                Built on a bank of {ITEMS.length} milestones drawn from the CDC&rsquo;s{" "}
+                Built on a bank of 100+ milestones drawn from the CDC&rsquo;s{" "}
                 <em>Learn the Signs. Act Early.</em> checklists, the NIDCD hearing and
                 communication checklist, and WHO motor milestone data.
               </p>
