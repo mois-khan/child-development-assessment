@@ -70,7 +70,7 @@ function SettingsShell({ children }: { children: ReactNode }) {
       <TopBar />
 
       <main className="pb-16">
-        <Shell width="narrow">
+        <Shell width="reading">
           <div className="mt-7 flex items-center gap-4">
             <Avatar name={name} size={56} ring />
             <div className="min-w-0">
