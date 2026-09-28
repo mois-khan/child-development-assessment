@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { CourseRecommendation } from "@/lib/types/recommendations";
 import { getCourseRecommendations } from "@/lib/data/course-recommendations";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { STAGE_BY_ID } from "@/content/stages";
 
 interface CourseRowProps {
   stageId: string;    // the child's overall achieved stage id
@@ -43,28 +44,19 @@ export function CourseRow({ stageId, childName }: CourseRowProps) {
   return (
     <div className="mt-8 border-t border-line-soft pt-6 no-print">
       <p className="eyebrow mb-1">📚 Recommended Courses</p>
-      <h3 className="text-lg font-bold text-ink">
-        Courses matched to {childName}&apos;s development
-      </h3>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {courses.map(course => <CourseCard key={course.id} course={course} />)}
       </div>
-      <a
-        href="https://www.kaushalyageniuskid.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--accent)] hover:underline"
-      >
-        View all courses at KaushalyaGeniusKids.com →
-      </a>
+      
     </div>
   );
 }
 
 function CourseCard({ course }: { course: CourseRecommendation }) {
+  const stage = STAGE_BY_ID[course.stage_id];
   return (
-    <div className="rounded-[var(--radius-sm)] bg-[var(--surface-2)] overflow-hidden flex h-full">
-      <div className="w-24 shrink-0 h-full min-h-[96px] bg-[var(--surface-3)]">
+    <div className="rounded-[0.5rem] bg-[white] overflow-hidden flex h-full border border-line-soft shadow-sm hover:shadow transition-shadow">
+      <div className="w-1/3 min-w-[120px] max-w-[160px] shrink-0 h-full min-h-[120px] bg-[#F3F4F6]">
         {course.thumbnail_url ? (
           <img 
             src={course.thumbnail_url} 
@@ -72,14 +64,17 @@ function CourseCard({ course }: { course: CourseRecommendation }) {
             className="w-full h-full object-cover" 
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-2xl">
-            🎓
+          <div className="flex h-full w-full flex-col items-center justify-center bg-[#4D1435]/10 p-2 text-center shadow-inner text-[#4D1435]">
+            <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">Phase {stage?.roman}</span>
+            <span className="mt-0.5 text-xs font-extrabold leading-tight">
+              {course.age_label || `${stage?.averageMonths} mo`}
+            </span>
           </div>
         )}
       </div>
       <div className="p-4 flex flex-col gap-1 flex-1">
         {course.age_label && (
-          <span className="self-start text-2xs font-bold px-2 py-0.5 rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+          <span className="self-start text-2xs font-bold px-2 py-0.5 rounded-full bg-[#FDF2F8] text-[#4D1435] mb-1">
             {course.age_label}
           </span>
         )}
@@ -87,14 +82,22 @@ function CourseCard({ course }: { course: CourseRecommendation }) {
         {course.subtitle && (
           <p className="text-xs text-ink-2 line-clamp-2">{course.subtitle}</p>
         )}
-        <div className="mt-auto pt-2">
+        <div className="mt-auto pt-3 flex items-center gap-2">
+          <a
+            href={course.redirect_url || "https://www.kaushalyageniuskid.com/demo"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex flex-1 items-center justify-center rounded-md bg-[#4D1435] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#4D1435]/90 text-center"
+          >
+            Explore Course
+          </a>
           <a
             href={course.redirect_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-bold text-[var(--accent)] hover:underline"
+            className="inline-flex flex-1 items-center justify-center rounded-md border border-[#4D1435] bg-transparent px-3 py-1.5 text-xs font-bold text-[#4D1435] transition-colors hover:bg-[#4D1435]/5 text-center"
           >
-            Explore →
+            Explore
           </a>
         </div>
       </div>

@@ -2,36 +2,20 @@ import { DOMAIN_BY_CODE } from "@/content/domains";
 import { STAGE_BY_ID } from "@/content/stages";
 import type { AssessmentResult, Child, DomainScore } from "./types";
 import { formatAge } from "./age";
-
-/**
- * Report wording.
- *
- * Deliberately template-driven rather than generated at request time. The
- * report tells some parents something frightening about their child, and every
- * sentence a family can receive should be reviewable in advance by Kaushalya's
- * team. Nothing here is written by a model at runtime.
- *
- * Rules this file follows:
- *   - never "delay", "fail", "deficit", "abnormal", "behind" as a verdict
- *   - always name a genuine strength before naming a concern
- *   - always end with something concrete the parent can do
- *   - the child's name, and "they", rather than clinical third person
- *   - the chart's own language — stages, and the age each one is reached
- */
+import { getCmsText } from "./cms";
 
 export function headline(result: AssessmentResult, child: Child): string {
   const name = child.name;
   switch (result.overallStatus) {
-    case "advanced":
+    case "A++":
+    case "A+":
       return `${name} is ahead of the chart across the board.`;
-    case "typical":
+    case "A":
       return `${name} is developing well across all six areas.`;
-    case "mild":
+    case "A-":
       return `${name} is growing steadily, and some areas would benefit from focused support.`;
-    case "delay":
-      return `${name} would benefit from targeted practice in some areas.`;
-    case "significant":
-      return `${name} would benefit from a closer look by a specialist.`;
+    case "A--":
+      return `${name} requires immediate and intensive support.`;
   }
 }
 
@@ -61,7 +45,8 @@ export function summary(result: AssessmentResult, child: Child): string[] {
     .join(" and ");
 
   switch (result.overallStatus) {
-    case "advanced":
+    case "A++":
+    case "A+":
       paras.push(
         strong
           ? `${name} has reached every stage we looked at earlier than the chart expects, and is furthest ahead in ${strong}.`
@@ -72,7 +57,7 @@ export function summary(result: AssessmentResult, child: Child): string[] {
       );
       break;
 
-    case "typical":
+    case "A":
       paras.push(
         strong
           ? `Across the six areas, ${name} is reaching each stage at or before the age the chart expects, and is particularly strong in ${strong}.`
@@ -83,7 +68,7 @@ export function summary(result: AssessmentResult, child: Child): string[] {
       );
       break;
 
-    case "mild":
+    case "A-":
       paras.push(
         strong
           ? `It is worth saying first that ${name} is doing genuinely well in ${strong}.`
@@ -94,18 +79,7 @@ export function summary(result: AssessmentResult, child: Child): string[] {
       );
       break;
 
-    case "delay":
-      paras.push(
-        strong
-          ? `It is worth saying first that ${name} is doing genuinely well in ${strong}.`
-          : `${name} has real strengths to build on, and this report is a starting point rather than a verdict.`,
-      );
-      paras.push(
-        `${capitalise(focus)} ${result.focusAreas.length > 1 ? "are" : "is"} noticeably behind the age the chart expects. That is worth working on rather than waiting on. We would suggest the activities below every day, and mentioning this report at your next visit to your doctor.`,
-      );
-      break;
-
-    case "significant":
+    case "A--":
       paras.push(
         strong
           ? `${name} is doing well in ${strong}, and that is a genuine strength to build on.`
@@ -125,28 +99,24 @@ export function summary(result: AssessmentResult, child: Child): string[] {
 
 export function domainNote(score: DomainScore, child: Child): string {
   const name = child.name;
-  const domain = DOMAIN_BY_CODE[score.domain].name.toLowerCase();
-  const stage = STAGE_BY_ID[score.achievedStage];
+  const domainCode = score.domain; // e.g. "vision", "auditory"
+  const domainName = DOMAIN_BY_CODE[score.domain].name.toLowerCase();
 
-  if (!stage) {
-    return `${name} has not yet reached the first stage of the chart in ${domain}. This is the area we would most want a professional to look at properly.`;
-  }
-
-  const reached = `${name} has reached stage ${stage.roman}, ${stage.name}, in ${domain}: “${score.cell.description.toLowerCase()}”`;
-  const expected = `The chart expects this stage at about ${months(stage.averageMonths)}`;
+  const vars = { name, domain: domainName };
 
   switch (score.status) {
-    case "advanced":
-      return `${reached}. ${expected}, and ${name} is there well ahead of that. ${score.notYet.length > 0 ? "The things listed as not yet are from the stage above, and are the natural next steps." : "This is a real strength."}`;
-    case "typical":
-      return `${reached}. ${expected}, which is where ${name} is. ${score.notYet.length > 0 ? "The things listed as not yet are the natural next steps." : "Everything we looked for is in place."}`;
-    case "mild":
-      return `${reached}. ${expected}, so this is an area to focus on. The things listed as not yet are exactly what to practise.`;
-    case "delay":
-      return `${reached}. ${expected}, and ${name} has taken longer to reach it. This is an area to concentrate on. The things listed as not yet are exactly what to practise.`;
-    case "significant":
-      return `${reached}. ${expected}, and ${name} has taken longer than the chart's range allows. This is the area we would most want a professional to look at properly.`;
+    case "A++":
+      return getCmsText(`domain_note_${domainCode}_a_plus_plus`, `${name} demonstrates a much-beyond-age progress in the ${domainName} competence.`, vars);
+    case "A+":
+      return getCmsText(`domain_note_${domainCode}_a_plus`, `${name} demonstrates beyond-age progress in the ${domainName} competence.`, vars);
+    case "A":
+      return getCmsText(`domain_note_${domainCode}_a`, `${name} demonstrates age appropriate progress in the ${domainName} competence.`, vars);
+    case "A-":
+      return getCmsText(`domain_note_${domainCode}_a_minus`, `${name} falls under a mild developmental gap category in the ${domainName} competence.`, vars);
+    case "A--":
+      return getCmsText(`domain_note_${domainCode}_a_minus_minus`, `${name} requires immediate and intensive support in ${domainName} competence.`, vars);
   }
+  return "";
 }
 
 export function nextSteps(result: AssessmentResult, child: Child): string[] {
@@ -162,13 +132,13 @@ export function nextSteps(result: AssessmentResult, child: Child): string[] {
     );
   }
 
-  if (result.overallStatus === "delay") {
+  if (result.overallStatus === "A-") {
     steps.push(
       `Take this report to your next appointment with your doctor and ask about a developmental screening.`,
     );
   }
 
-  if (result.overallStatus === "significant") {
+  if (result.overallStatus === "A--") {
     steps.push(
       `Ask your doctor to refer you to a developmental paediatrician, or contact a child development centre directly. You do not need to wait for a referral to ask.`,
     );
@@ -184,11 +154,14 @@ export function nextSteps(result: AssessmentResult, child: Child): string[] {
 export const DISCLAIMER =
   "This is a developmental screening tool, not a diagnosis. It is based on parent report and is designed to show where a child may benefit from extra support or a closer look by a professional. It cannot diagnose any condition. If you have concerns about your child's development, speak to your doctor, whatever this report says.";
 
+export function getDisclaimer(): string {
+  return getCmsText("report_disclaimer", DISCLAIMER);
+}
+
 function capitalise(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** "2.5 months" / "3 years" — the chart's time frames read out loud. */
 function months(n: number): string {
   if (n >= 24 && Number.isInteger(n / 12)) {
     const y = n / 12;

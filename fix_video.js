@@ -1,4 +1,6 @@
-"use client";
+const fs = require('fs');
+
+const src = \"use client";
 
 import { useEffect, useState } from "react";
 import type { DomainCode } from "@/lib/types";
@@ -50,7 +52,7 @@ export function MilestoneVideoRow({ stageId, domain, domainName }: MilestoneVide
             {/* QR Code for print and scan */}
             <div className="shrink-0">
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(video.redirect_url)}`} 
+                src={\\\https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=\\\\} 
                 alt="QR Code" 
                 className="w-24 h-24 rounded-lg bg-white p-1 border border-gray-200 shadow-sm"
                 crossOrigin="anonymous"
@@ -78,3 +80,6 @@ export function MilestoneVideoRow({ stageId, domain, domainName }: MilestoneVide
     </div>
   );
 }
+\;
+
+fs.writeFileSync('components/report/MilestoneVideoRow.tsx', src);

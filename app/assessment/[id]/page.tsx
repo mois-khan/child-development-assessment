@@ -164,6 +164,12 @@ export default function AssessmentPage({
     getAssessment(id)
       .then(found => {
         if (!active) return;
+        
+        if (found?.completedAt) {
+          router.replace(`/report/${id}`);
+          return;
+        }
+
         setRecord(found);
         if (found) {
           setResponses(found.responses);
@@ -175,7 +181,7 @@ export default function AssessmentPage({
         if (active) setLoadError(true);
       });
     return () => { active = false; };
-  }, [id, loadAttempt]);
+  }, [id, loadAttempt, router]);
 
   const months = record ? monthsFor(record) : 0;
 
@@ -194,7 +200,7 @@ export default function AssessmentPage({
      one short; replaying nextStageFor here brings it back to what it would
      have been, so a reload can never change the path the assessment took. */
   useEffect(() => {
-    if (resumed || !record || Object.keys(stages).length === 0) return;
+    if (resumed || !record || Object.keys(stages).length === 0 || !bankReady) return;
 
     const repaired: Record<DomainCode, string[]> = { ...stages };
     for (const domain of DOMAIN_ORDER) {
@@ -212,6 +218,7 @@ export default function AssessmentPage({
     setStages(repaired);
 
     if (Object.keys(record.responses).length > 0) {
+      let foundUndone = false;
       outer: for (let s = 0; s < DOMAIN_ORDER.length; s++) {
         const domain = DOMAIN_ORDER[s];
         const list = repaired[domain] ?? [];
@@ -219,23 +226,29 @@ export default function AssessmentPage({
           const items = itemsAt(domain, list[st]);
           for (let q = 0; q < items.length; q++) {
             const item = items[q];
-            const done =
-              item.kind === "yesno"
-                ? record.responses[item.id] !== undefined
-                : (record.details ?? {})[item.id] !== undefined;
+            // Observation questions (not yesno) are strictly optional and can be skipped.
+            // We should not force the user back to them on Resume if they already skipped them.
+            if (item.kind !== "yesno") continue;
+
+            const done = record.responses[item.id] !== undefined;
+            
             if (!done) {
               setSectionIndex(s);
               setStageOrdinal(st);
               setQuestionIndex(q);
               setPhase("question");
+              foundUndone = true;
               break outer;
             }
           }
         }
       }
+      if (!foundUndone) {
+        setPhase("finish");
+      }
     }
     setResumed(true);
-  }, [record, stages, resumed, id, months, itemsAt]);
+  }, [record, stages, resumed, id, months, itemsAt, bankReady]);
 
   const domainCode = DOMAIN_ORDER[sectionIndex];
   const stageIds = useMemo(() => stages[domainCode] ?? [], [stages, domainCode]);
@@ -384,10 +397,17 @@ export default function AssessmentPage({
     }
   }
 
-  function finish() {
-    completeAssessment(id);
-    setPhase("celebrating");
-    window.setTimeout(() => router.push(`/report/${id}`), 1900);
+  async function finish() {
+    setPending(true);
+    try {
+      await completeAssessment(id);
+      setPhase("celebrating");
+      window.setTimeout(() => router.push(`/report/${id}`), 1900);
+    } catch (e) {
+      console.error(e);
+      setPending(false);
+      alert("Failed to submit assessment. Please check your connection and try again.");
+    }
   }
 
   if (phase === "celebrating") {

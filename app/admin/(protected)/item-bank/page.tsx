@@ -20,6 +20,7 @@ import {
   Card,
   ConfirmDeleteButton,
   IconPlus,
+  IconChevronRight,
   InlineBanner,
   domainColor,
   domainName,
@@ -108,24 +109,37 @@ export default function AdminQuestionBankPage() {
   const total = ready ? itemBankSize() : 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="!text-2xl">Question bank</h1>
-          {ready && (
-            <Badge tone={shared ? "success" : "warn"}>
-              {shared
-                ? `Live · ${total} question${total === 1 ? "" : "s"}`
-                : "Dev mode: edits save to this browser only"}
-            </Badge>
-          )}
-        </div>
-      </div>
-
+    <div className="space-y-6 pb-10">
       <InlineBanner
         message={error ? { tone: "error", text: error } : null}
         onDismiss={() => setError(null)}
       />
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-ink tracking-tight">Question Bank</h1>
+          <p className="mt-1 text-sm text-ink-3">
+            Manage assessment items across all domains and phases.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {ready && (
+            <Badge tone={shared ? "success" : "warn"}>
+              {shared
+                ? `Live · ${total} question${total === 1 ? "" : "s"}`
+                : "Dev mode"}
+            </Badge>
+          )}
+          <Button
+            variant="primary"
+            iconLeft={<IconPlus size={16} />}
+            onClick={() => setEditingId("new")}
+            disabled={!band}
+            title={!band ? "Pick a phase first to add a question" : undefined}
+          >
+            Add Question
+          </Button>
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {ADMIN_DOMAINS.map((d) => (
@@ -164,15 +178,6 @@ export default function AdminQuestionBankPage() {
             </option>
           ))}
         </select>
-        <Button
-          size="sm"
-          variant="secondary"
-          iconLeft={<IconPlus size={16} />}
-          onClick={() => setEditingId("new")}
-          disabled={!band}
-        >
-          Add question{!band ? " (pick a phase first)" : ""}
-        </Button>
       </div>
 
       {!ready ? (
@@ -215,17 +220,20 @@ export default function AdminQuestionBankPage() {
               {stagesWithCounts
                 .filter(({ count }) => count > 0)
                 .map(({ band: b, count }) => (
-                  <details key={b.id} className="group card !p-0 overflow-hidden">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 select-none">
-                      <span className="text-sm font-bold text-ink">
-                        {b.roman} · {b.name}
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <Badge size="sm">{count}</Badge>
-                        <span className="text-ink-3 transition-transform group-open:rotate-90">›</span>
-                      </span>
-                    </summary>
-                    <div className="border-t border-line">
+                  <Card key={b.id} className="overflow-hidden !p-0">
+                    <details className="group">
+                      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-4 transition-colors hover:bg-surface-2">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <IconChevronRight size={16} className="shrink-0 text-ink-3 transition-transform group-open:rotate-90" />
+                          <span className="text-base font-extrabold text-ink">
+                            Phase {b.roman} · {b.name}
+                          </span>
+                        </span>
+                        <Badge size="sm" tone={count > 0 ? "accent" : "neutral"}>
+                          {count} question{count === 1 ? "" : "s"}
+                        </Badge>
+                      </summary>
+                      <div className="border-t border-line">
                       <ItemList
                         items={items.filter((i) => i.stage === b.id)}
                         editingId={editingId}
@@ -236,6 +244,7 @@ export default function AdminQuestionBankPage() {
                       />
                     </div>
                   </details>
+                  </Card>
                 ))}
             </div>
           )}

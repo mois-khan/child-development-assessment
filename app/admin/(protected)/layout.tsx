@@ -46,6 +46,7 @@ const NAV: NavEntry[] = [
   { href: "/admin/purchases",    label: "Purchases",      icon: <IconBolt size={18} /> },
   { divider: true,               label: "CMS" },
   { href: "/admin/item-bank",        label: "Question Bank",         icon: <IconBolt size={18} /> },
+  { href: "/admin/content",          label: "Report Narratives",     icon: <IconSparkle size={18} /> },
   { href: "/admin/milestone-videos", label: "Milestone Videos",      icon: <IconTrophy size={18} /> },
   { href: "/admin/courses",          label: "Course Recommendations", icon: <IconSparkle size={18} /> },
   { divider: true,               label: "Settings" },

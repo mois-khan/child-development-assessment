@@ -207,11 +207,11 @@ export function Badge({
 }
 
 const STATUS_TONE: Record<StatusCode, BadgeTone> = {
-  advanced: "success",
-  typical: "success",
-  mild: "warn",
-  delay: "danger",
-  significant: "danger",
+  "A++": "success",
+  "A+": "success",
+  "A": "success",
+  "A-": "warn",
+  "A--": "danger",
 };
 
 /* The five-step developmental scale — see app/globals.css. One colour per
@@ -219,11 +219,11 @@ const STATUS_TONE: Record<StatusCode, BadgeTone> = {
    red, which meant the two outcomes that matter most were the two a parent
    could not tell apart. */
 const STATUS_VAR: Record<StatusCode, string> = {
-  advanced: "--st-advanced",
-  typical: "--st-typical",
-  mild: "--st-mild",
-  delay: "--st-delay",
-  significant: "--st-significant",
+  "A++": "var(--st-on-track)",
+  "A+": "var(--st-on-track)",
+  "A": "var(--st-on-track)",
+  "A-": "var(--st-emerging)",
+  "A--": "var(--st-consult)",
 };
 
 export function statusColor(status: StatusCode): string {

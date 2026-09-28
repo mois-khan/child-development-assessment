@@ -89,44 +89,42 @@ export const PASS_THRESHOLD = 1;
 export const MIN_AGE_FOR_DQ = 1;
 
 export const STATUSES: Record<StatusCode, Status> = {
-  advanced: {
-    code: "advanced",
-    label: "Advanced development",
-    meaning: "Ahead of the chart's average for this age; this is a real strength.",
+  "A++": {
+    code: "A++",
+    label: "Highly Advanced",
+    meaning: "Mastered current phase and multiple advanced milestones.",
   },
-  typical: {
-    code: "typical",
-    label: "Typically developing",
-    meaning: "Reached this stage at the age the chart expects, or earlier. Nothing to act on.",
+  "A+": {
+    code: "A+",
+    label: "Advanced",
+    meaning: "Mastered current phase and showing advanced skills.",
   },
-  mild: {
-    code: "mild",
-    label: "Mild developmental gaps",
-    meaning: "Slightly behind the age the chart expects. Worth daily focused activity.",
+  "A": {
+    code: "A",
+    label: "Average",
+    meaning: "Development is on proper phase according to their age.",
   },
-  delay: {
-    code: "delay",
-    label: "Developmental delay",
-    meaning: "Noticeably behind the expected stage. We recommend targeted practice.",
+  "A-": {
+    code: "A-",
+    label: "Slightly Below Average",
+    meaning: "Missed some expected milestones. Monitor closely.",
   },
-  significant: {
-    code: "significant",
-    label: "Significant developmental delay",
-    meaning: "We suggest an assessment by a developmental paediatrician or therapist. This is a screening result, not a diagnosis.",
+  "A--": {
+    code: "A--",
+    label: "Needs Focus",
+    meaning: "Missing foundational milestones. We recommend targeted practice.",
   },
 };
 
-/** Status codes as an ordered scale, so callers can ask "is this one worse
- *  than that one" without hard-coding the order of the five. */
 export const STATUS_SEVERITY: Record<StatusCode, number> = {
-  advanced: 0,
-  typical: 1,
-  mild: 2,
-  delay: 3,
-  significant: 4,
+  "A++": 0,
+  "A+": 1,
+  "A": 2,
+  "A-": 3,
+  "A--": 4,
 };
 
-const SEVERITY_STATUS: StatusCode[] = ["advanced", "typical", "mild", "delay", "significant"];
+const SEVERITY_STATUS: StatusCode[] = ["A++", "A+", "A", "A-", "A--"];
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Reading one cell of the chart
@@ -321,65 +319,89 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
   const details = input.details ?? {};
   const age = summariseAge(child.dob, assessedOn, child.gestationalWeeks);
   const months = age.assessedMonths;
-  const suppressDq = age.assessedExact < MIN_AGE_FOR_DQ;
+  const suppressDq = false; // We use percentage now, no need to suppress
 
   const domainScores: DomainScore[] = DOMAINS.map((domain) => {
     const stageIds = stagesByDomain[domain.code] ?? [];
     const asked = sortStages(stageIds);
-    const items = asked.flatMap((s) => itemsFor(s.id, domain.code, months));
+    const start = startStageFor(months);
+    const startItems = itemsFor(start.id, domain.code, months).filter(i => i.kind === "yesno");
+    const numBaseItems = startItems.length > 0 ? startItems.length : 1;
+    const baseValuePerYes = 100 / numBaseItems;
 
+    let baseScore = 0;
+    let upBonus = 0;
+    let downPenalty = 0;
+
+    let raw = 0;
+    let answered = 0;
     const achieved: Item[] = [];
     const notYet: Item[] = [];
     const observed: Record<string, string> = {};
-    let raw = 0;
-    let answered = 0;
 
-    for (const item of items) {
-      if (item.kind !== "yesno") {
-        const note = details[item.id];
-        if (note !== undefined && note !== "") observed[item.id] = note;
-        continue;
+    for (const stage of asked) {
+      const items = itemsFor(stage.id, domain.code, months);
+      for (const item of items) {
+        if (item.kind !== "yesno") {
+          const note = details[item.id];
+          if (note !== undefined && note !== "") observed[item.id] = note;
+          continue;
+        }
+        const v = responses[item.id];
+        if (v === undefined) continue;
+        
+        const asExpected = item.invert ? 1 - v : v;
+        raw += asExpected;
+        answered += 1;
+        
+        if (asExpected === 1) achieved.push(item);
+        else notYet.push(item);
+
+        if (stage.id === start.id) {
+            if (asExpected === 1) {
+                baseScore += baseValuePerYes;
+            }
+        } else if (stage.order > start.order) {
+            if (asExpected === 1) {
+                upBonus += 10;
+            }
+        } else if (stage.order < start.order) {
+            if (asExpected === 0) {
+                downPenalty += 10;
+            }
+        }
       }
-      const v = responses[item.id];
-      if (v === undefined) continue;
-      const asExpected = item.invert ? 1 - v : v;
-      raw += asExpected;
-      answered += 1;
-      if (asExpected === 1) achieved.push(item);
-      else notYet.push(item);
     }
 
-    const { stage } = achievedStageFor(domain.code, stageIds, responses, months);
-    const neurologicalMonths = neurologicalAge(
-      domain.code,
-      stageIds,
-      responses,
-      months,
-    );
+    let finalPercent = baseScore + upBonus - downPenalty;
+    if (finalPercent < 0) finalPercent = 0;
+    finalPercent = Math.round(finalPercent);
 
-    const dq = suppressDq
-      ? null
-      : Math.round((neurologicalMonths / Math.max(age.assessedExact, 0.5)) * 100);
-
-    const valueForStatus = dq === null ? (answered === 0 ? 0 : raw / answered) * 100 : dq;
-    
     let status: StatusCode;
-    if (valueForStatus <= 50) status = "significant";
-    else if (valueForStatus <= 70) status = "delay";
-    else if (valueForStatus <= 85) status = "mild";
-    else if (valueForStatus <= 115) status = "typical";
-    else status = "advanced";
+    if (finalPercent > 120) status = "A++";
+    else if (finalPercent > 100) status = "A+";
+    else if (finalPercent >= 80) status = "A";
+    else if (finalPercent >= 50) status = "A-";
+    else status = "A--";
+
+    let highestPassedStage = null;
+    for (const stage of asked) {
+        const cell = readCell(stage.id, domain.code, responses, months);
+        if (cell.answered > 0 && cell.passed) {
+            highestPassedStage = stage;
+        }
+    }
 
     return {
       domain: domain.code,
-      achievedStage: stage?.id ?? "",
-      cell: cellFor(stage?.id ?? BRAIN_STAGES[0].id, domain.code),
+      achievedStage: highestPassedStage?.id ?? start.id,
+      cell: cellFor(highestPassedStage?.id ?? start.id, domain.code),
       stagesAsked: asked.map((s) => s.id),
       raw,
       max: answered,
-      percent: answered === 0 ? 0 : raw / answered,
-      neurologicalMonths: Math.round(neurologicalMonths * 10) / 10,
-      dq,
+      percent: finalPercent / 100,
+      neurologicalMonths: finalPercent,
+      dq: finalPercent,
       status,
       achieved,
       notYet,
@@ -388,38 +410,27 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
   });
 
   const dqs = domainScores.map((d) => d.dq).filter((d): d is number => d !== null);
-  const overallDq =
-    dqs.length === 0
-      ? null
-      : Math.round(dqs.reduce((a, b) => a + b, 0) / dqs.length);
+  const overallDq = dqs.length === 0 ? null : Math.round(dqs.reduce((a, b) => a + b, 0) / dqs.length);
 
-  /* The overall verdict is the median of the six, not their mean. Averaging a
-     quotient across competences lets one very high number cancel one very low
-     one, which is the opposite of what a screener should do. The median says
-     what this child is mostly like, and the rule below then refuses to let a
-     single struggling competence disappear behind it. */
   const severities = domainScores.map((d) => STATUS_SEVERITY[d.status]).sort((a, b) => a - b);
   const median = Math.ceil(
     (severities[Math.floor((severities.length - 1) / 2)] +
       severities[Math.ceil((severities.length - 1) / 2)]) /
       2,
   );
-  let overallStatus: StatusCode = SEVERITY_STATUS[median];
+  let overallStatus: StatusCode = SEVERITY_STATUS[median] || "A";
 
   const statusFromMedian = overallStatus;
   const worstDomain = worstOf(domainScores.map((d) => d.status));
   
-  if (worstDomain === "significant" && STATUS_SEVERITY[overallStatus] < 3) {
-    overallStatus = "delay";
-  } else if (worstDomain === "delay" && STATUS_SEVERITY[overallStatus] < 2) {
-    overallStatus = "mild";
-  } else if (worstDomain === "mild" && STATUS_SEVERITY[overallStatus] < 1) {
-    overallStatus = "typical";
+  if (worstDomain === "A--" && STATUS_SEVERITY[overallStatus] < 3) {
+    overallStatus = "A-";
+  } else if (worstDomain === "A-" && STATUS_SEVERITY[overallStatus] < 2) {
+    overallStatus = "A";
+  } else if (worstDomain === "A" && STATUS_SEVERITY[overallStatus] < 1) {
+    overallStatus = "A+";
   }
 
-  // If the median alone would have read better, name the competence
-  // responsible so the report can explain itself rather than looking
-  // self-contradictory.
   const overallRaisedBy =
     STATUS_SEVERITY[overallStatus] > STATUS_SEVERITY[statusFromMedian]
       ? ([...domainScores].sort(
@@ -428,7 +439,6 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
       : null;
 
   const { strengths, focusAreas } = pickHighlights(domainScores);
-
   const allStages = new Set(Object.values(stagesByDomain).flat());
 
   return {
@@ -451,7 +461,7 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
 function worstOf(codes: StatusCode[]): StatusCode {
   return codes.reduce(
     (worst, c) => (STATUS_SEVERITY[c] > STATUS_SEVERITY[worst] ? c : worst),
-    "advanced" as StatusCode,
+    "A++" as StatusCode,
   );
 }
 
@@ -482,7 +492,7 @@ function pickHighlights(scores: DomainScore[]): {
     .reverse()
     .filter(
       (d) =>
-        STATUS_SEVERITY[d.status] >= STATUS_SEVERITY.mild || metric(d) <= mean - SPREAD,
+        STATUS_SEVERITY[d.status] >= STATUS_SEVERITY["A-"] || metric(d) <= mean - SPREAD,
     )
     .slice(0, 2)
     .map((d) => d.domain);

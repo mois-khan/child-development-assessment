@@ -1,40 +1,9 @@
-import type { BrainStage, CompetenceCode, StageCell } from "@/lib/types";
+import re
 
-/**
- * The Developmental Profile — seven stages of brain development, six
- * competences, forty-two cells.
- *
- * This is a direct transcription of the programme's own wall chart (Ru
- * Education Pvt Ltd), which is also the front page of the paper assessment
- * booklet families already fill in by hand. It is the north star for the whole
- * engine: the chart decides which questions are asked, what a child's result
- * means, and what the report looks like.
- *
- * Nothing in this file is invented. If a number or a phrase here disagrees with
- * the printed chart, the printed chart is right and this file is a bug.
- */
+with open('content/stages.ts', 'r', encoding='utf-8') as f:
+    content = f.read()
 
-/* ────────────────────────────────────────────────────────────────────────────
- * The seven stages, and their time frames
- *
- * Each stage carries three ages from the chart's TIME FRAME column: the age a
- * SUPERIOR child reaches this stage, the age an AVERAGE child reaches it, and
- * the age a SLOW child reaches it. These three numbers do all the work:
- *
- *   - `averageMonths` picks which stage a child starts the assessment at
- *     (nearest average wins — see lib/stage.ts)
- *   - `averageMonths` of the stage a child actually reaches is their
- *     neurological age, which is what the developmental quotient divides
- *   - all three together classify the result, with no invented thresholds:
- *     reach stage IV at 6 months and you are superior, at 12 average, at 24
- *     slow, and past 24 it is worth a closer look
- *
- * Stage I's superior/average/slow are printed on the chart as ranges from
- * birth (birth–0.5, birth–1.0, birth–2.0); the upper bound is what matters and
- * is what is recorded here.
- * ──────────────────────────────────────────────────────────────────────────*/
-
-export const BRAIN_STAGES: BrainStage[] = [
+new_brain_stages = '''export const BRAIN_STAGES: BrainStage[] = [
   { id: "s1", order: 1, roman: "I", name: "Phase 1", superiorMonths: 0.5, averageMonths: 1, slowMonths: 2.5, hue: 0 },
   { id: "s2", order: 2, roman: "II", name: "Phase 2", superiorMonths: 1, averageMonths: 2.5, slowMonths: 7, hue: 24 },
   { id: "s3", order: 3, roman: "III", name: "Phase 3", superiorMonths: 2.5, averageMonths: 7, slowMonths: 12, hue: 50 },
@@ -44,36 +13,13 @@ export const BRAIN_STAGES: BrainStage[] = [
   { id: "s6b", order: 7, roman: "VIB", name: "Phase 6b", superiorMonths: 27, averageMonths: 36, slowMonths: 54, hue: 245 },
   { id: "s7a", order: 8, roman: "VIIA", name: "Phase 7a", superiorMonths: 36, averageMonths: 54, slowMonths: 72, hue: 275 },
   { id: "s7b", order: 9, roman: "VIIB", name: "Phase 7b", superiorMonths: 54, averageMonths: 72, slowMonths: 144, hue: 292 }
-];
+];'''
 
-export const STAGE_BY_ID = Object.fromEntries(
-  BRAIN_STAGES.map((s) => [s.id, s]),
-) as Record<string, BrainStage>;
+content = re.sub(r'export const BRAIN_STAGES: BrainStage\[\] = \[.*?\];', new_brain_stages, content, flags=re.DOTALL)
 
-export const FIRST_STAGE = BRAIN_STAGES[0];
-export const LAST_STAGE = BRAIN_STAGES[BRAIN_STAGES.length - 1];
+old_cells_match = re.search(r'const CELL_ROWS:.*?\[(.*?)\n\];', content, flags=re.DOTALL)
 
-/** The stage one step up, or null at the top of the chart. */
-export function stageAbove(stage: BrainStage): BrainStage | null {
-  return BRAIN_STAGES[stage.order] ?? null; // order is 1-based, so [order] is the next one
-}
-
-/** The stage one step down, or null at the bottom of the chart. */
-export function stageBelow(stage: BrainStage): BrainStage | null {
-  return BRAIN_STAGES[stage.order - 2] ?? null;
-}
-
-/* ────────────────────────────────────────────────────────────────────────────
- * The forty-two cells
- *
- * Every cell on the chart carries a number (1–42, counting up the rows), the
- * competence it describes, and the italic line beneath it naming the kind of
- * function that stage represents. Both are printed on the physical chart, so a
- * parent holding the paper version can find the exact box the report is
- * talking about.
- * ──────────────────────────────────────────────────────────────────────────*/
-
-const CELL_ROWS: {
+new_cell_rows = '''const CELL_ROWS: {
   stage: string;
   cells: Record<CompetenceCode, [number: number, competence: string, kind: string]>;
 }[] = [
@@ -176,35 +122,11 @@ const CELL_ROWS: {
       hand: [54, "Using a hand to write (VIIB)", "Sophisticated human expression"],
     },
   }
-];
+];'''
 
-export const STAGE_CELLS: StageCell[] = CELL_ROWS.flatMap((row) =>
-  (Object.entries(row.cells) as [CompetenceCode, [number, string, string]][]).map(
-    ([competence, [number, description, kind]]) => ({
-      number,
-      stage: row.stage,
-      competence,
-      description,
-      kind,
-    }),
-  ),
-);
+content = re.sub(r'const CELL_ROWS:.*?\[.*?\];', new_cell_rows, content, flags=re.DOTALL)
 
-const CELL_LOOKUP = new Map(
-  STAGE_CELLS.map((c) => [`${c.stage}:${c.competence}`, c]),
-);
+with open('content/stages.ts', 'w', encoding='utf-8') as f:
+    f.write(content)
 
-/** The chart cell for one stage and one competence. Always defined — all 42 exist. */
-export function cellFor(stage: string, competence: CompetenceCode): StageCell {
-  return CELL_LOOKUP.get(`${stage}:${competence}`)!;
-}
-
-/** "1 month" / "2.5 months" / "6 years" — for the time-frame column on reports. */
-export function formatStageMonths(months: number): string {
-  if (months >= 24 && Number.isInteger(months / 12)) {
-    const y = months / 12;
-    return `${y} year${y === 1 ? "" : "s"}`;
-  }
-  const n = Number.isInteger(months) ? `${months}` : `${months}`;
-  return `${n} month${months === 1 ? "" : "s"}`;
-}
+print("Updated content/stages.ts")
