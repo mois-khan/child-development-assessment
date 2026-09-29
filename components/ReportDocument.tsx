@@ -8,6 +8,7 @@ import { PLATFORM_NAME, PLATFORM_SHORT, phaseLabel, reportName } from "@/lib/nam
 import { DISCLAIMER, domainNote, headline, nextSteps, summary } from "@/lib/narrative";
 import { STATUS_SEVERITY, STATUSES, scoreAssessment } from "@/lib/scoring";
 import { itemBankReady, primeItemBank } from "@/lib/item-bank";
+import { primeCmsBank, cmsReady } from "@/lib/cms";
 import { stageForAge } from "@/lib/stage";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
 import type {
@@ -18,7 +19,7 @@ import type {
   DomainScore,
   StatusCode,
 } from "@/lib/types";
-import { BRAIN_STAGES, STAGE_BY_ID, stageAbove } from "@/content/stages";
+import { BRAIN_STAGES, STAGE_BY_ID, stageAbove, cellFor } from "@/content/stages";
 import { MilestoneVideoRow } from "@/components/report/MilestoneVideoRow";
 import { CourseRow } from "@/components/report/CourseRow";
 import { Avatar, LoadError, TopBar, Wordmark, Button } from "@/components/ui";
@@ -56,6 +57,7 @@ export function ReportDocument({
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [bankReady, setBankReady] = useState(itemBankReady());
+  const [cmsLoaded, setCmsLoaded] = useState(cmsReady());
 
   useEffect(() => {
     let active = true;
@@ -65,6 +67,14 @@ export function ReportDocument({
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    primeCmsBank().finally(() => {
+      if (active) setCmsLoaded(true);
+    });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -112,7 +122,7 @@ export function ReportDocument({
   }, [result, searchParams]);
 
   if (loadError) return <div className="p-8 text-red-500">Failed to load report.</div>;
-  if (record === undefined || !bankReady) return <div className="p-8 text-gray-500">Loading...</div>;
+  if (record === undefined || !bankReady || !cmsLoaded) return <div className="p-8 text-gray-500">Loading...</div>;
   if (record === null || result === null) return <div className="p-8 text-gray-500">Report not found.</div>;
 
   const child = record.child;
@@ -129,9 +139,10 @@ export function ReportDocument({
   const outputDomainCodes = OUTPUT_DOMAINS;
   
   const getAgeTopPercent = (months: number) => {
-    const stage = BRAIN_STAGES.find(s => months <= s.averageMonths) || BRAIN_STAGES[8];
-    const topPercent = ((9 - stage.order) * (100 / 9)) + (100 / 18);
-    return topPercent;
+    const stage = stageForAge(months);
+    // reversedStages has Phase VII-B (order=9) at top (0%) and Phase I (order=1) at bottom
+    // The top of the child's phase row = (9 - stage.order) / 9 * 100
+    return ((9 - stage.order) / 9) * 100;
   };
 
   const getFillHeight = (stage: BrainStage, score: DomainScore) => {
@@ -141,7 +152,7 @@ export function ReportDocument({
       // Proportional shading based on partial completion can go here, using 50% for now.
       // Alternatively, we map the exact raw vs max.
       if (score.percent === 1) return 100;
-      return 50; 
+      return Math.max(0, Math.min(99, Math.round(score.percent * 100)));
     }
     return 0;
   };
@@ -150,14 +161,25 @@ export function ReportDocument({
     const fillHeight = getFillHeight(stage, score);
     if (fillHeight === 0) return null;
     const color = STAGE_COLORS[stage.id];
+    const cell = cellFor(stage.id, score.domain as any);
     return (
-      <div 
-        className="absolute bottom-0 left-0 w-full" 
-        style={{ 
-          height: `${fillHeight}%`,
-          background: `repeating-linear-gradient(45deg, ${color}40, ${color}40 4px, ${color}80 4px, ${color}80 8px)`
-        }} 
-      />
+      <>
+        <div 
+          className="absolute bottom-0 left-0 w-full" 
+          style={{ 
+            height: `${fillHeight}%`,
+            background: `repeating-linear-gradient(45deg, ${color}40, ${color}40 4px, ${color}80 4px, ${color}80 8px)`
+          }} 
+        />
+        <div className="absolute inset-0 p-[2px] flex flex-col justify-center items-center text-center z-10 overflow-hidden">
+          <p 
+            className="text-[6px] sm:text-[7px] leading-[1.1] font-bold text-gray-900 drop-shadow-md"
+            style={{ textShadow: "0 0 2px white, 0 0 3px white, 0 0 4px white" }}
+          >
+            {cell?.description}
+          </p>
+        </div>
+      </>
     );
   };
 
@@ -378,19 +400,20 @@ export function ReportDocument({
 
                            {/* Narrative */}
                            <div className="flex-1 flex flex-col">
-                              <div className="mb-6">
+                              <div className="mb-4">
                                 <h3 className="text-[1.1rem] font-bold text-[#4D1435] mb-2 uppercase tracking-wide">Summary:</h3>
-                                <div className="text-[1rem] leading-relaxed text-gray-800 border-b border-gray-300 pb-1">
+                                <div className="text-[1rem] leading-relaxed text-gray-800 border-b border-gray-300 pb-3">
                                   {domainNote(score, child)}
                                 </div>
                               </div>
-
-                              <div className="mt-auto">
-                                <h3 className="text-[1.1rem] font-bold text-[#4D1435] mb-2 uppercase tracking-wide">Recommendation:</h3>
-                                <p className="text-[1rem] leading-relaxed text-gray-800 mb-4 border-b border-gray-300 pb-4">
-                                  You may join the Phase {nextStageId} Course of the KGKP for further enhancement of the milestones in {domain.name} &amp; other Competencies. Please use the link given at the end of the report.
-                                </p>
-                              </div>
+                              {/* Milestone QR video card — replaces hardcoded Recommendation text */}
+                              {!isAdmin && (
+                                <MilestoneVideoRow
+                                  stageId={score.achievedStage}
+                                  domain={score.domain}
+                                  domainName={domain.name}
+                                />
+                              )}
                            </div>
                         </div>
                      </div>

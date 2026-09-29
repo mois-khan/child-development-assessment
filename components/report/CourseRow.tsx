@@ -7,9 +7,11 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { STAGE_BY_ID } from "@/content/stages";
 
 interface CourseRowProps {
-  stageId: string;    // the child's overall achieved stage id
-  childName: string;  // for personalizing the heading
+  stageId: string;    // the child's overall start stage id
+  childName: string;  // for personalizing the CTA
 }
+
+const DEMO_URL = "https://www.kaushalyageniuskid.com/demo";
 
 export function CourseRow({ stageId, childName }: CourseRowProps) {
   const [courses, setCourses] = useState<CourseRecommendation[]>([]);
@@ -38,68 +40,125 @@ export function CourseRow({ stageId, childName }: CourseRowProps) {
   }, [stageId]);
 
   if (loading || courses.length === 0) {
-    return null;
+    // Still show the demo CTA even if no courses found in DB
+    return <FallbackCta stageId={stageId} childName={childName} />;
   }
 
   return (
-    <div className="mt-8 border-t border-line-soft pt-6 no-print">
-      <p className="eyebrow mb-1">📚 Recommended Courses</p>
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {courses.map(course => <CourseCard key={course.id} course={course} />)}
-      </div>
-      
+    <div className="mt-6 flex flex-col gap-4">
+      {courses.map(course => (
+        <CourseCard key={course.id} course={course} childName={childName} />
+      ))}
     </div>
   );
 }
 
-function CourseCard({ course }: { course: CourseRecommendation }) {
+function CourseCard({ course, childName }: { course: CourseRecommendation; childName: string }) {
   const stage = STAGE_BY_ID[course.stage_id];
+  const courseUrl = course.redirect_url || "https://www.kaushalyageniuskid.com";
+  const demoUrl = `${DEMO_URL}?phase=${stage?.roman ?? ""}`;
+
   return (
-    <div className="rounded-[0.5rem] bg-[white] overflow-hidden flex h-full border border-line-soft shadow-sm hover:shadow transition-shadow">
-      <div className="w-1/3 min-w-[120px] max-w-[160px] shrink-0 h-full min-h-[120px] bg-[#F3F4F6]">
-        {course.thumbnail_url ? (
-          <img 
-            src={course.thumbnail_url} 
-            alt={course.title} 
-            className="w-full h-full object-cover" 
-          />
-        ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-[#4D1435]/10 p-2 text-center shadow-inner text-[#4D1435]">
-            <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">Phase {stage?.roman}</span>
-            <span className="mt-0.5 text-xs font-extrabold leading-tight">
-              {course.age_label || `${stage?.averageMonths} mo`}
-            </span>
+    <div className="rounded-2xl border-2 border-[#4D1435]/20 overflow-hidden bg-white shadow-sm">
+      <div className="flex">
+        {/* Thumbnail */}
+        <div className="w-[140px] shrink-0 min-h-[130px] bg-[#4D1435]/10 relative overflow-hidden">
+          {course.thumbnail_url ? (
+            <img
+              src={course.thumbnail_url}
+              alt={course.title}
+              className="w-full h-full object-cover absolute inset-0"
+            />
+          ) : (
+            <div className="flex h-full w-full flex-col items-center justify-center p-3 text-center text-[#4D1435]">
+              <span className="text-4xl mb-1">📚</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">Phase {stage?.roman}</span>
+              <span className="mt-0.5 text-xs font-extrabold leading-tight">
+                {course.age_label || `${stage?.averageMonths} mo`}
+              </span>
+            </div>
+          )}
+          {/* Phase badge overlay */}
+          <div className="absolute top-2 left-2 bg-[#4D1435] text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+            Phase {stage?.roman}
           </div>
-        )}
-      </div>
-      <div className="p-4 flex flex-col gap-1 flex-1">
-        {course.age_label && (
-          <span className="self-start text-2xs font-bold px-2 py-0.5 rounded-full bg-[#FDF2F8] text-[#4D1435] mb-1">
-            {course.age_label}
-          </span>
-        )}
-        <h4 className="text-base font-extrabold text-ink leading-snug">{course.title}</h4>
-        {course.subtitle && (
-          <p className="text-xs text-ink-2 line-clamp-2">{course.subtitle}</p>
-        )}
-        <div className="mt-auto pt-3 flex items-center gap-2">
-          <a
-            href={course.redirect_url || "https://www.kaushalyageniuskid.com/demo"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex flex-1 items-center justify-center rounded-md bg-[#4D1435] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#4D1435]/90 text-center"
-          >
-            Explore Course
-          </a>
-          <a
-            href={course.redirect_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex flex-1 items-center justify-center rounded-md border border-[#4D1435] bg-transparent px-3 py-1.5 text-xs font-bold text-[#4D1435] transition-colors hover:bg-[#4D1435]/5 text-center"
-          >
-            Explore
-          </a>
         </div>
+
+        {/* Course details */}
+        <div className="flex-1 p-4 flex flex-col gap-2">
+          <div>
+            {course.age_label && (
+              <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDF2F8] text-[#4D1435] mb-1.5">
+                {course.age_label}
+              </span>
+            )}
+            <h4 className="text-base font-extrabold text-[#4D1435] leading-snug">{course.title}</h4>
+            {course.subtitle && (
+              <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">{course.subtitle}</p>
+            )}
+          </div>
+
+          {/* CTAs */}
+          <div className="mt-auto pt-3 flex items-center gap-2 flex-wrap">
+            {/* Primary: Demo — highlighted in gold/sun colour */}
+            <a
+              href={demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#F4A93B] px-4 py-2 text-xs font-extrabold text-[#4D1435] border-2 border-[#E8971F] hover:bg-[#E8971F] transition-colors text-center shadow-sm"
+            >
+              <span>🎁</span>
+              7-Day Free Demo
+            </a>
+            {/* Secondary: Explore */}
+            <a
+              href={courseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex flex-1 items-center justify-center rounded-lg border-2 border-[#4D1435] px-4 py-2 text-xs font-bold text-[#4D1435] hover:bg-[#4D1435] hover:text-white transition-colors text-center"
+            >
+              Explore Course
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Shown when no courses exist in DB — ensures the CTA never disappears */
+function FallbackCta({ stageId, childName }: { stageId: string; childName: string }) {
+  const stage = STAGE_BY_ID[stageId];
+  const demoUrl = `${DEMO_URL}?phase=${stage?.roman ?? ""}`;
+  return (
+    <div className="mt-4 rounded-2xl border-2 border-[#4D1435]/20 p-6 bg-gradient-to-br from-[#4D1435]/5 to-transparent flex flex-col gap-3">
+      <div>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#4D1435]/60">Recommended</span>
+        <h4 className="text-base font-extrabold text-[#4D1435] mt-0.5">
+          Phase {stage?.roman} — KGKP Course
+        </h4>
+        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+          Designed for children at {childName}'s stage. Structured activities to accelerate development across all 6 competencies.
+        </p>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        <a
+          href={demoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#F4A93B] px-4 py-2 text-xs font-extrabold text-[#4D1435] border-2 border-[#E8971F] hover:bg-[#E8971F] transition-colors text-center shadow-sm"
+        >
+          <span>🎁</span>
+          7-Day Free Demo
+        </a>
+        <a
+          href="https://www.kaushalyageniuskid.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex flex-1 items-center justify-center rounded-lg border-2 border-[#4D1435] px-4 py-2 text-xs font-bold text-[#4D1435] hover:bg-[#4D1435] hover:text-white transition-colors text-center"
+        >
+          Explore Course
+        </a>
       </div>
     </div>
   );

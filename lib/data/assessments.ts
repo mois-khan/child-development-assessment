@@ -76,6 +76,9 @@ export async function getAssessment(id: string): Promise<StoredAssessment | null
       gender: child.gender as any,
       gestationalWeeks: child.gestational_weeks ?? undefined,
       city: child.city ?? undefined,
+      parentName: child.parent_name ?? undefined,
+      parentPhone: child.parent_phone ?? undefined,
+      parentEmail: child.parent_email ?? undefined,
       photoUrl: child.photo_url ?? undefined
     },
     assessedOn: a.assessed_on,
@@ -215,6 +218,9 @@ export async function assessmentsForChild(childId: string): Promise<StoredAssess
         gender: child.gender as any,
         gestationalWeeks: child.gestational_weeks ?? undefined,
         city: child.city ?? undefined,
+        parentName: child.parent_name ?? undefined,
+        parentPhone: child.parent_phone ?? undefined,
+        parentEmail: child.parent_email ?? undefined,
         photoUrl: child.photo_url ?? undefined
       },
       assessedOn: a.assessed_on,
@@ -268,6 +274,9 @@ export async function listAssessments(): Promise<StoredAssessment[]> {
         gender: child.gender as any,
         gestationalWeeks: child.gestational_weeks ?? undefined,
         city: child.city ?? undefined,
+        parentName: child.parent_name ?? undefined,
+        parentPhone: child.parent_phone ?? undefined,
+        parentEmail: child.parent_email ?? undefined,
         photoUrl: child.photo_url ?? undefined
       },
       assessedOn: a.assessed_on,
