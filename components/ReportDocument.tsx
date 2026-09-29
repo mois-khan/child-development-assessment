@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE, INPUT_DOMAINS, OUTPUT_DOMAINS } from "@/content/domains";
 import { formatAge, summariseAge } from "@/lib/age";
 import { PLATFORM_NAME, PLATFORM_SHORT, phaseLabel, reportName } from "@/lib/naming";
-import { DISCLAIMER, domainNote, headline, nextSteps, summary } from "@/lib/narrative";
+import { DISCLAIMER, domainNote, headline, nextSteps, summary, overallSummary } from "@/lib/narrative";
 import { STATUS_SEVERITY, STATUSES, scoreAssessment } from "@/lib/scoring";
 import { itemBankReady, primeItemBank } from "@/lib/item-bank";
 import { primeCmsBank, cmsReady } from "@/lib/cms";
@@ -431,11 +431,7 @@ export function ReportDocument({
 
            <div className="space-y-12">
              <div>
-               <p className="text-xl leading-[2] text-gray-800 font-medium">
-                  The KECCTRA report indicates that <span className="font-bold underline px-1">{child.name}</span> is developing <span className="font-bold underline px-1 text-[#4D1435]">
-                    {result.overallStatus === "A++" || result.overallStatus === "A+" ? "beyond expectation" : result.overallStatus === "A" ? "as expected" : "below expectation"}
-                  </span> for his/her age.
-               </p>
+               <p className="text-xl leading-[2] text-gray-800 font-medium">{overallSummary(result, child)}</p>
              </div>
 
              <div>
