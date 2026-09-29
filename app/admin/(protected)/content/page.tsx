@@ -79,6 +79,7 @@ export default function CmsContentPage() {
     if (id.endsWith("_a_minus")) return "Grade: A-";
     if (id.endsWith("_a")) return "Grade: A";
     if (id === "report_disclaimer") return "Report Disclaimer";
+    if (id === "report_overall_summary") return "Overall Summary";
     return id;
   }
 
@@ -89,7 +90,7 @@ export default function CmsContentPage() {
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">Report Narratives</h1>
           <p className="mt-1 text-sm text-ink-3">
-            Edit the text shown in the printed reports. You can use <code>{'{name}'}</code> and <code>{'{domain}'}</code> as placeholders.
+            Edit the text shown in the printed reports. You can use <code>{'{name}'}</code>, <code>{'{domain}'}</code>, <code>{'{grade}'}</code>, and <code>{'{age}'}</code> as placeholders.
           </p>
         </div>
       </div>

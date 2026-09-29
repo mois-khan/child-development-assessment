@@ -169,3 +169,19 @@ function months(n: number): string {
   }
   return `${n} month${n === 1 ? "" : "s"}`;
 }
+
+export function overallSummary(result: AssessmentResult, child: Child): string {
+  const gradeText = result.overallStatus === "A++" || result.overallStatus === "A+" 
+    ? "beyond expectation" 
+    : result.overallStatus === "A" 
+      ? "as expected" 
+      : "below expectation";
+
+  const defaultText = "The KECCTRA report indicates that {name} is developing {grade} for his/her age.";
+  
+  return getCmsText("report_overall_summary", defaultText, {
+    name: child.name,
+    grade: gradeText,
+    age: result.assessedMonths.toString()
+  });
+}
