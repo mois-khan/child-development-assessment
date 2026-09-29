@@ -161,6 +161,8 @@ milestone_videos (id, stage_id, domain, title, description, redirect_url, thumbn
 - **ALWAYS** use `summariseAge()` from `lib/age.ts` for age calculations — never compute months inline.
 - Domain codes (`vision`, `auditory`, `tactile`, `mobility`, `language`, `hand`) are the canonical keys everywhere — in DB, in CMS block IDs, in scoring, in the report. Never introduce aliases.
 
+- **NEVER** use images or raster graphics for UI components (like thumbnails or icons). **ALWAYS** use inline SVG icons to ensure crisp printing, scalability, and professional design.
+
 ### 5.3 Report Rules
 - The report is **5 pages** of A4 (210mm × 297mm, `height: 297mm`). Never collapse to fewer pages without design approval.
 - Page 1: Cover + Profile · Page 2: Spectrum Chart · Pages 3-4: Per-Competence (2 per page) · Page 5: Conclusion

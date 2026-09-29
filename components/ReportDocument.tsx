@@ -407,13 +407,11 @@ export function ReportDocument({
                                 </div>
                               </div>
                               {/* Milestone QR video card — replaces hardcoded Recommendation text */}
-                              {!isAdmin && (
-                                <MilestoneVideoRow
+                              <MilestoneVideoRow
                                   stageId={score.achievedStage}
                                   domain={score.domain}
                                   domainName={domain.name}
                                 />
-                              )}
                            </div>
                         </div>
                      </div>
@@ -446,11 +444,9 @@ export function ReportDocument({
                   <span className="font-bold underline px-1">{child.name}</span> needs to join <span className="font-bold">Phase {startStage.roman} Course</span> of the KGKP for further enhancement of his/her Competencies to raise the DQ. Please use the link below to explore the Course to help you make a decision to continue further.
                </p>
                
-               {!isAdmin && (
-                  <div className="mt-8">
+               <div className="mt-8">
                     <CourseRow stageId={startStage.id} childName={child.name} />
                   </div>
-               )}
              </div>
            </div>
 
