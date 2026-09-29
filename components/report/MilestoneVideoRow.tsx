@@ -7,9 +7,17 @@ import { getMilestoneVideos } from "@/lib/data/milestone-videos";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 interface MilestoneVideoRowProps {
-  stageId: string;     // e.g. "s3"
-  domain: DomainCode;  // e.g. "vision"
-  domainName: string;  // e.g. "Visual Competence" for the heading
+  stageId: string;
+  domain: DomainCode;
+  domainName: string;
+}
+
+function PlayIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M6 4l15 8-15 8z" />
+    </svg>
+  );
 }
 
 export function MilestoneVideoRow({ stageId, domain, domainName }: MilestoneVideoRowProps) {
@@ -42,45 +50,58 @@ export function MilestoneVideoRow({ stageId, domain, domainName }: MilestoneVide
     return null;
   }
 
-  return (
-    <div className="mt-6 border-t border-line-soft pt-5">
-      <p className="eyebrow mb-3">🎬 Milestone Videos &middot; {domainName}</p>
-      <div className="flex gap-3 overflow-x-auto pb-2 no-print">
-        {videos.map(video => <VideoCard key={video.id} video={video} />)}
-      </div>
-    </div>
-  );
-}
+  const video = videos[0];
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(video.redirect_url)}&color=000000&bgcolor=FFFFFF&margin=0`;
 
-function VideoCard({ video }: { video: MilestoneVideo }) {
   return (
-    <div className="w-48 shrink-0 rounded-[var(--radius-sm)] bg-[var(--surface-2)] overflow-hidden flex flex-col">
-      {video.thumbnail_url ? (
-        <img 
-          src={video.thumbnail_url} 
-          alt={video.title} 
-          className="h-28 w-full object-cover" 
-        />
-      ) : (
-        <div className="h-28 w-full bg-[var(--surface-3)] flex items-center justify-center text-2xl">
-          ▶️
+    <div className="mt-6 pt-5 border-t border-gray-200 w-full flex flex-col">
+      <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-3">
+        Milestone Activity Video
+      </span>
+      
+      <div className="w-full flex bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm group hover:shadow-md transition-shadow relative">
+        <div className="absolute left-0 top-0 w-1 h-full bg-[#4D1435]" />
+        
+        {/* Left: Sharp QR Code */}
+        <div className="w-32 shrink-0 bg-gray-50 flex flex-col items-center justify-center p-4 border-r border-gray-200">
+          <img
+            src={qrUrl}
+            alt="Scan to watch"
+            className="w-[72px] h-[72px] object-contain rounded-none border border-gray-200 p-1 bg-white mb-2 shadow-sm"
+            crossOrigin="anonymous"
+          />
+          <span className="text-[9px] font-bold text-gray-700 text-center uppercase tracking-widest leading-snug">
+            Scan To<br/>Watch
+          </span>
         </div>
-      )}
-      <div className="p-3 flex flex-col flex-1">
-        <h4 className="text-sm font-extrabold text-ink line-clamp-2">{video.title}</h4>
-        {video.description && (
-          <p className="text-xs text-ink-3 mt-1 line-clamp-2">{video.description}</p>
-        )}
-        <div className="mt-auto pt-2.5">
-          <a 
-            href={video.redirect_url} 
-            target="_blank" 
+
+        {/* Right: Content & Action */}
+        <div className="flex-1 p-5 flex flex-col justify-center">
+          <h4 className="text-[15px] font-bold text-gray-900 leading-snug mb-1.5 line-clamp-1">
+            {video.title}
+          </h4>
+          
+          {video.description && (
+            <p className="text-[12.5px] text-gray-600 font-medium leading-relaxed line-clamp-2 max-w-lg mb-4 pr-4">
+              {video.description}
+            </p>
+          )}
+          
+          <a
+            href={video.redirect_url}
+            target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-bold text-[var(--accent)] hover:underline"
+            className="no-print self-start inline-flex items-center gap-2 rounded-lg bg-[#4D1435] px-5 py-2.5 text-[12px] font-medium text-white hover:bg-[#3d102a] transition-colors shadow-sm"
           >
-            Watch →
+            <PlayIcon />
+            Watch Activity Video
           </a>
+          
+          <span className="hidden print:block text-[9px] text-gray-400 break-all leading-tight mt-1.5 font-medium">
+            Link: {video.redirect_url}
+          </span>
         </div>
+
       </div>
     </div>
   );

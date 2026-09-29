@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BRAIN_STAGES } from "@/content/stages";
+import { BRAIN_STAGES, formatStageMonths } from "@/content/stages";
 import { CourseRecommendation, CourseRecommendationInput } from "@/lib/types/recommendations";
 import { 
   listAllCourseRecommendations, 
@@ -11,6 +11,7 @@ import {
   toggleCourseRecommendationActive
 } from "@/lib/data/course-recommendations";
 import { Card, Button, Badge, ConfirmDeleteButton, IconChevronRight, IconClose, IconPlus, InlineBanner, useBanner } from "@/components/ui";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function CourseRecommendationsPage() {
   const [courses, setCourses] = useState<CourseRecommendation[]>([]);
@@ -26,9 +27,12 @@ export default function CourseRecommendationsPage() {
   const [ageLabel, setAgeLabel] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
+  const [demoUrl, setDemoUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const banner = useBanner();
+  const supabase = getSupabaseBrowserClient();
 
   const fetchCourses = () => {
     setLoading(true);
@@ -51,6 +55,7 @@ export default function CourseRecommendationsPage() {
     setAgeLabel("");
     setThumbnailUrl("");
     setRedirectUrl("");
+    setDemoUrl("");
     setIsActive(true);
     setDrawerOpen(true);
   };
@@ -64,9 +69,11 @@ export default function CourseRecommendationsPage() {
     setAgeLabel(course.age_label);
     setThumbnailUrl(course.thumbnail_url);
     setRedirectUrl(course.redirect_url);
+    setDemoUrl(course.redirect_url || "");
     setIsActive(course.is_active);
     setDrawerOpen(true);
   };
+
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +114,32 @@ export default function CourseRecommendationsPage() {
       banner.showError("Failed to save: " + err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${ext}`;
+      const { data, error } = await supabase.storage
+        .from("thumbnails")
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("thumbnails")
+        .getPublicUrl(fileName);
+
+      setThumbnailUrl(publicUrl);
+    } catch (err: any) {
+      banner.showError("Upload failed: " + err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -194,11 +227,16 @@ export default function CourseRecommendationsPage() {
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                           {stageCourses.map(course => (
                             <Card key={course.id} variant="clay" className="flex h-32 overflow-hidden">
-                              <div className="w-32 shrink-0 bg-surface-3">
+                              <div className="w-40 shrink-0 bg-surface-3">
                                 {course.thumbnail_url ? (
                                   <img src={course.thumbnail_url} alt="" className="h-full w-full object-cover" />
                                 ) : (
-                                  <div className="flex h-full w-full items-center justify-center text-3xl">🎓</div>
+                                  <div className="flex h-full w-full flex-col items-center justify-center bg-surface-2 p-2 text-center shadow-inner">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-ink-3">Phase {stage.roman}</span>
+                                    <span className="mt-0.5 text-sm font-extrabold text-ink leading-tight">
+                                      {course.age_label || formatStageMonths(stage.averageMonths)}
+                                    </span>
+                                  </div>
                                 )}
                               </div>
                               <div className="flex min-w-0 flex-1 flex-col p-4">
@@ -324,15 +362,24 @@ export default function CourseRecommendationsPage() {
               </div>
 
               <div>
-                <label className="label">Thumbnail URL</label>
-                <input
-                  type="url"
-                  placeholder="https://..."
-                  className="field"
-                  value={thumbnailUrl}
-                  onChange={e => setThumbnailUrl(e.target.value)}
-                  disabled={saving}
-                />
+                <label className="label">Thumbnail Photo {uploading && <span className="text-accent text-xs ml-2 animate-pulse">Uploading...</span>}</label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={saving || uploading}
+                    className="field py-1.5 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-surface-2 file:text-ink hover:file:bg-surface-3"
+                  />
+                  <input
+                    type="url"
+                    placeholder="Or enter image URL https://..."
+                    className="field"
+                    value={thumbnailUrl}
+                    onChange={e => setThumbnailUrl(e.target.value)}
+                    disabled={saving || uploading}
+                  />
+                </div>
                 {thumbnailUrl && (
                   <div className="mt-2 h-20 w-32 overflow-hidden rounded-lg border border-line-soft bg-surface-2">
                     <img src={thumbnailUrl} alt="Preview" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
@@ -341,7 +388,7 @@ export default function CourseRecommendationsPage() {
               </div>
 
               <div>
-                <label className="label">Redirect URL *</label>
+                <label className="label">Explore URL (Redirect) *</label>
                 <input
                   type="url"
                   required
@@ -351,7 +398,20 @@ export default function CourseRecommendationsPage() {
                   onChange={e => setRedirectUrl(e.target.value)}
                   disabled={saving}
                 />
-                <p className="hint">Where tapping the course card takes a parent.</p>
+                <p className="hint">Where the "Explore" button takes a parent.</p>
+              </div>
+
+              <div>
+                <label className="label">Free Demo URL</label>
+                <input
+                  type="url"
+                  placeholder="https://www.kaushalyageniuskid.com/demo"
+                  className="field"
+                  value={demoUrl}
+                  onChange={e => setDemoUrl(e.target.value)}
+                  disabled={saving}
+                />
+                <p className="hint">Overrides the default demo button link if provided.</p>
               </div>
 
               <label className="flex cursor-pointer items-center gap-2.5 pt-1">

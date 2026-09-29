@@ -12,6 +12,7 @@ import {
   toggleMilestoneVideoActive
 } from "@/lib/data/milestone-videos";
 import { Card, Button, Badge, ConfirmDeleteButton, IconChevronRight, IconClose, IconPlus, InlineBanner, useBanner } from "@/components/ui";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function MilestoneVideosPage() {
   const [videos, setVideos] = useState<MilestoneVideo[]>([]);
@@ -30,7 +31,9 @@ export default function MilestoneVideosPage() {
   const [redirectUrl, setRedirectUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const banner = useBanner();
+  const supabase = getSupabaseBrowserClient();
 
   const fetchVideos = () => {
     setLoading(true);
@@ -106,6 +109,32 @@ export default function MilestoneVideosPage() {
       banner.showError("Failed to save: " + err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${ext}`;
+      const { data, error } = await supabase.storage
+        .from("thumbnails")
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("thumbnails")
+        .getPublicUrl(fileName);
+
+      setThumbnailUrl(publicUrl);
+    } catch (err: any) {
+      banner.showError("Upload failed: " + err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -326,15 +355,24 @@ export default function MilestoneVideosPage() {
               </div>
 
               <div>
-                <label className="label">Thumbnail URL</label>
-                <input
-                  type="url"
-                  placeholder="https://..."
-                  className="field"
-                  value={thumbnailUrl}
-                  onChange={e => setThumbnailUrl(e.target.value)}
-                  disabled={saving}
-                />
+                <label className="label">Thumbnail Photo {uploading && <span className="text-accent text-xs ml-2 animate-pulse">Uploading...</span>}</label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={saving || uploading}
+                    className="field py-1.5 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-surface-2 file:text-ink hover:file:bg-surface-3"
+                  />
+                  <input
+                    type="url"
+                    placeholder="Or enter image URL https://..."
+                    className="field"
+                    value={thumbnailUrl}
+                    onChange={e => setThumbnailUrl(e.target.value)}
+                    disabled={saving || uploading}
+                  />
+                </div>
                 {thumbnailUrl && (
                   <div className="mt-2 h-20 w-32 overflow-hidden rounded-lg border border-line-soft bg-surface-2">
                     <img src={thumbnailUrl} alt="Preview" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />

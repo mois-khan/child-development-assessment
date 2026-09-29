@@ -36,6 +36,8 @@ export interface CourseRecommendation {
   thumbnail_url: string;
   /** Where clicking the card takes the parent (opens in new tab). */
   redirect_url: string;
+  /** Optional separate URL for the 7-day free demo. Falls back to DEMO_URL constant. */
+  demo_url?: string | null;
   /** Human-readable age range shown on the card, e.g. "0–3 months". */
   age_label: string;
   sort_order: number;

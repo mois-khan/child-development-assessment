@@ -87,7 +87,7 @@ export async function adminDashboardCounts(): Promise<AdminDashboardCounts> {
       totalRevenuePaise: (paidPayments ?? []).reduce((sum, p) => sum + p.amount_paise, 0),
       needsFollowUp: submissions.filter((s) => {
         const st = s.result?.overallStatus;
-        return st === "significant" || st === "delay";
+        return st === "A--" || st === "A-";
       }).length,
     };
   } catch (err: any) {

@@ -62,7 +62,7 @@ export async function createCourseRecommendation(
 
   const { data, error } = await supabase
     .from("course_recommendations")
-    .insert(input)
+    .insert(input as any)
     .select()
     .single();
 
@@ -83,7 +83,7 @@ export async function updateCourseRecommendation(
 
   const { data, error } = await supabase
     .from("course_recommendations")
-    .update(input)
+    .update(input as any)
     .eq("id", id)
     .select()
     .single();

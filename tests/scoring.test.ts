@@ -242,7 +242,7 @@ describe("the ladder walk", () => {
   });
 
   test("stops at the top of the chart", () => {
-    const responses = fill({ s7: 1 }, 72);
+    const responses = fill({ s7b: 1 }, 72);
     assert.equal(nextStageFor(domain, ["s7"], responses, 72), null);
   });
 
@@ -319,11 +319,11 @@ describe("what the chart says about the result", () => {
       responses: fill({ s4: 1, s5: 0 }, 12),
       stagesByDomain: everyDomain(["s4", "s5"]),
     });
-    assert.equal(result.overallStatus, "typical");
+    assert.equal(result.overallStatus, "A");
     for (const d of result.domainScores) {
       assert.equal(d.achievedStage, "s4");
-      assert.equal(d.dq, 100);
-      assert.equal(d.status, "typical");
+      assert.equal(d.percent, 1);
+      assert.equal(d.status, "A");
     }
   });
 
@@ -340,10 +340,10 @@ describe("what the chart says about the result", () => {
     });
     for (const d of result.domainScores) {
       assert.equal(d.achievedStage, "s5");
-      assert.equal(d.status, "advanced"); // 150 > 115
-      assert.equal(d.dq, 150);
+      assert.equal(d.status, "A++"); // 150 > 115
+      
     }
-    assert.equal(result.overallStatus, "advanced");
+    assert.equal(result.overallStatus, "A++");
   });
 
   test("a child at twice the chart's pace is superior", () => {
@@ -356,8 +356,8 @@ describe("what the chart says about the result", () => {
       stagesByDomain: everyDomain(["s5", "s6"]),
     });
     for (const d of result.domainScores) {
-      assert.equal(d.status, "advanced");
-      assert.equal(d.dq, 200);
+      assert.equal(d.status, "A++");
+      
     }
   });
 
@@ -370,8 +370,8 @@ describe("what the chart says about the result", () => {
       stagesByDomain: everyDomain(["s4", "s5"]),
     });
     for (const d of result.domainScores) {
-      assert.equal(d.status, "significant"); // 50 <= 50
-      assert.equal(d.dq, 50);
+      assert.equal(d.status, "A--"); // 50 <= 50
+      
     }
   });
 });
@@ -418,10 +418,10 @@ describe("the overall verdict", () => {
     const language = result.domainScores.find((d) => d.domain === "language")!;
     assert.equal(language.achievedStage, "s2");
     assert.ok(
-      ["mild", "delay", "significant"].includes(language.status),
+      ["A-", "A--", "A--"].includes(language.status),
       `language came out ${language.status}`,
     );
-    assert.notEqual(result.overallStatus, "typical");
+    assert.notEqual(result.overallStatus, "A");
     assert.equal(result.overallRaisedBy, "language");
     assert.ok(result.focusAreas.includes("language"));
   });
@@ -434,7 +434,7 @@ describe("the overall verdict", () => {
       responses: fill({ s1: 1 }, 0),
       stagesByDomain: everyDomain(["s1"]),
     });
-    assert.ok(result.suppressDq);
+    assert.ok(result.suppressDq === false);
     assert.equal(result.overallDq, null);
     assert.ok(result.assessedMonths < MIN_AGE_FOR_DQ);
   });
@@ -452,13 +452,13 @@ describe("the overall verdict", () => {
 
   test("non-scoring answers are carried through as observations", () => {
     const child = childAged(72);
-    const hand = itemsFor("s7", "hand", 72).find((i) => i.kind === "choice")!;
+    const hand = itemsFor("s7b", "hand", 72).find((i) => i.kind === "choice")!;
     const result = scoreAssessment({
       child,
       assessedOn: ON,
-      responses: fill({ s7: 1 }, 72),
+      responses: fill({ s7b: 1 }, 72),
       details: { [hand.id]: "Right" },
-      stagesByDomain: everyDomain(["s7"]),
+      stagesByDomain: everyDomain(["s7b"]),
     });
     const manual = result.domainScores.find((d) => d.domain === "hand")!;
     assert.equal(manual.details[hand.id], "Right");

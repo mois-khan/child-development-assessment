@@ -21,22 +21,13 @@ import type { BrainStage } from "./types";
  * order.
  */
 export function stageForAge(months: number): BrainStage {
-  if (months <= FIRST_STAGE.averageMonths) return FIRST_STAGE;
-  if (months >= LAST_STAGE.averageMonths) return LAST_STAGE;
-
-  let best = FIRST_STAGE;
-  let bestDistance = Infinity;
-  for (const stage of BRAIN_STAGES) {
-    const distance = Math.abs(months - stage.averageMonths);
-    // Strictly less, so an exact tie between two averages resolves downwards.
-    // A child sitting precisely on a boundary is asked the easier stage first,
-    // which costs one extra round at worst and never starts them out of depth.
-    if (distance < bestDistance) {
-      best = stage;
-      bestDistance = distance;
+  for (let i = BRAIN_STAGES.length - 1; i >= 0; i--) {
+    const stage = BRAIN_STAGES[i];
+    if (months >= stage.averageMonths) {
+      return stage;
     }
   }
-  return best;
+  return FIRST_STAGE;
 }
 
 /**
