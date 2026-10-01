@@ -207,16 +207,20 @@ export function ReportDocument({
           <div className="text-center mt-4 mb-4 flex justify-center">
              <Wordmark height={140} className="h-[50px] sm:h-[120px] print:h-[120px] w-auto" />
           </div>
-          <div className="w-full mt-4 mb-10 flex justify-center">
-            <div className="flex flex-col items-start">
-              <div className="flex items-baseline gap-2 sm:gap-4 flex-nowrap">
-                <h1 className="font-black uppercase tracking-tight leading-none text-[#4D1435] text-[2rem] sm:text-[5.5rem] print:text-[5.5rem]">
-                  <span style={{ WebkitTextStroke: '3px #4D1435', color: 'white', marginRight: '2px' }}>ECCTR</span>ACTION
+          <div className="w-full mt-4 mb-10 flex justify-center px-4 sm:px-0">
+            <div className="flex flex-col items-stretch max-w-full">
+              <div className="flex items-baseline gap-2 sm:gap-4 flex-nowrap justify-center">
+                <h1 className="font-black uppercase tracking-tight leading-none text-[#4D1435] text-[1.7rem] sm:text-[5.5rem] print:text-[5.5rem]">
+                  <span className="text-white mr-[2px] [-webkit-text-stroke:1.5px_#4D1435] sm:[-webkit-text-stroke:3px_#4D1435] print:[-webkit-text-stroke:3px_#4D1435]">ECCTR</span>ACTION
                 </h1>
-                <h2 className="font-bold uppercase text-[#4D1435] tracking-widest text-[1.2rem] sm:text-[2.5rem] print:text-[2.5rem]">Plan</h2>
+                <h2 className="font-bold uppercase text-[#4D1435] tracking-widest text-[1.1rem] sm:text-[2.5rem] print:text-[2.5rem]">Plan</h2>
               </div>
-              <div className="bg-[#FFE600] text-[#4D1435] tracking-[0.2em] font-bold px-3 py-[2px] mt-1 text-[0.6rem] sm:text-[0.7rem] print:text-[0.7rem] whitespace-normal sm:whitespace-nowrap print:whitespace-nowrap">
-                EARLY&nbsp;&nbsp;CHILDHOOD&nbsp;&nbsp;COMPETENCE&nbsp;&nbsp;TRACKING&nbsp;&nbsp;REPORT
+              <div className="bg-[#FFE600] text-[#4D1435] font-bold px-3 sm:px-4 py-[3px] sm:py-[4px] mt-1 sm:mt-2 text-[0.45rem] sm:text-[0.7rem] print:text-[0.7rem] w-full flex justify-between items-center tracking-[0.05em] sm:tracking-widest print:tracking-widest">
+                <span>EARLY</span>
+                <span>CHILDHOOD</span>
+                <span>COMPETENCE</span>
+                <span>TRACKING</span>
+                <span>REPORT</span>
               </div>
             </div>
           </div>
