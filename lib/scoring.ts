@@ -367,7 +367,8 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
             }
         } else if (stage.order < start.order) {
             if (asExpected === 0) {
-                downPenalty += 10;
+                const penaltyPerNo = 50 / Math.max(1, items.length);
+                downPenalty += penaltyPerNo;
             }
         }
       }
@@ -392,6 +393,13 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
         }
     }
 
+    const nMonths = neurologicalAge(
+      domain.code,
+      asked.map((s) => s.id),
+      responses,
+      months
+    );
+
     return {
       domain: domain.code,
       achievedStage: highestPassedStage?.id ?? start.id,
@@ -400,7 +408,7 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
       raw,
       max: answered,
       percent: finalPercent / 100,
-      neurologicalMonths: finalPercent,
+      neurologicalMonths: nMonths,
       dq: finalPercent,
       status,
       achieved,
