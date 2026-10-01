@@ -240,17 +240,17 @@ export function ReportDocument({
 
         {/* Page 2: Progress & Spectrum */}
         <A4Page>
-          <div className="border-b-[3px] border-[#4D1435] pb-3 mb-8">
-             <h2 className="text-[0.9rem] sm:text-[1.1rem] print:text-[1.1rem] font-extrabold uppercase text-[#4D1435] tracking-wide">
-               {child.name}'S KAUSHALYA ECCTRACTION PLAN (PHASE {startStage.roman})
-             </h2>
-          </div>
-          <div className="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4 sm:gap-0">
-             <div className="w-full sm:flex-1 sm:pr-8">
-                <h3 className="text-[0.85rem] sm:text-lg print:text-lg font-bold uppercase mb-3 text-[#4D1435] tracking-wide truncate">CHILD'S OVERALL DEVELOPMENT ({child.name})</h3>
-                <p className="text-[#1D1D1B] font-medium leading-relaxed w-full">{headline(result, child)}</p>
-             </div>
-             <div className="flex-shrink-0 self-start sm:self-auto">
+          <div className="border-b-[2px] border-[#4D1435] pb-2 mb-6">
+               <h2 className="text-[0.75rem] sm:text-[1.1rem] print:text-[1.1rem] font-extrabold uppercase text-[#4D1435] tracking-normal sm:tracking-wide">
+                 {child.name}'S KAUSHALYA ECCTRACTION PLAN (PHASE {startStage.roman})
+               </h2>
+            </div>
+            <div className="flex flex-row justify-between items-center mb-6 gap-3 sm:gap-6">
+               <div className="flex-1">
+                  <h3 className="text-[0.75rem] sm:text-lg print:text-lg font-bold uppercase mb-1.5 sm:mb-3 text-[#4D1435] tracking-wide">CHILD'S OVERALL DEVELOPMENT ({child.name})</h3>
+                  <p className="text-[0.8rem] sm:text-base print:text-base text-[#1D1D1B] font-medium leading-relaxed">{headline(result, child)}</p>
+               </div>
+               <div className="flex-shrink-0">
                 <div className="flex flex-col items-center justify-center min-w-[90px] sm:min-w-[110px] px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl border-[3px] sm:border-[4px] border-[#4D1435] bg-[#4D1435] text-white shadow-lg">
                   <span className="text-2xl sm:text-3xl font-black tracking-tight leading-none">{result.overallStatus.replace(/-/g, '\u2212')}</span>
                   <span className="text-xs sm:text-sm font-bold mt-1 opacity-80">{Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1) * 100)}%</span>
@@ -360,11 +360,11 @@ export function ReportDocument({
                    return (
                      <div key={score.domain} className="flex-1 flex flex-col border-b-2 border-gray-100 pb-8 last:border-0 last:pb-0">
                         <div className="flex flex-row justify-between items-center mb-4 sm:mb-6 border-b border-[#4D1435] pb-2 gap-2 sm:gap-0">
-                           <h2 className="text-[0.9rem] sm:text-lg font-bold uppercase text-[#4D1435] tracking-wide flex items-center max-w-[75%]">
-                             <span className="mr-2 sm:mr-3 border-2 border-[#4D1435] rounded-full w-7 h-7 sm:w-8 sm:h-8 inline-flex items-center justify-center text-[0.8rem] sm:text-sm shrink-0">{romanDomain}</span>
-                             <span className="truncate">{domain.name}</span>
-                           </h2>
-                            <div className="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[90px] px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0">
+                             <h2 className="text-[0.75rem] sm:text-lg font-bold uppercase text-[#4D1435] tracking-wide flex items-center">
+                               <span className="mr-1.5 sm:mr-3 border-2 border-[#4D1435] rounded-full w-6 h-6 sm:w-8 sm:h-8 inline-flex items-center justify-center text-[0.65rem] sm:text-sm shrink-0">{romanDomain}</span>
+                               <span className="whitespace-normal leading-tight">{domain.name}</span>
+                             </h2>
+                              <div className="flex flex-col items-center justify-center min-w-[65px] sm:min-w-[90px] px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0">
                             <span className="text-lg sm:text-xl font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
                             <span className="text-[10px] sm:text-xs font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
                           </div>
