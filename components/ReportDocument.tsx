@@ -23,6 +23,8 @@ import { BRAIN_STAGES, STAGE_BY_ID, stageAbove, cellFor } from "@/content/stages
 import { MilestoneVideoRow } from "@/components/report/MilestoneVideoRow";
 import { CourseRow } from "@/components/report/CourseRow";
 import { Avatar, LoadError, TopBar, Wordmark, Button } from "@/components/ui";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { ZoomIn, ZoomOut, Maximize } from "lucide-react";
 
 const STAGE_COLORS: Record<string, string> = {
   s1: "#EF4444",
@@ -38,7 +40,7 @@ const STAGE_COLORS: Record<string, string> = {
 
 const A4Page = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div
-    className={`w-full max-w-[210mm] mx-auto bg-white sm:my-8 sm:shadow-lg print:m-0 print:shadow-none relative overflow-hidden break-after-page print:last:break-after-auto text-black flex flex-col p-4 sm:p-[12mm] md:p-[15mm] border border-gray-200 print:border-none print:h-[297mm] print:max-h-[297mm] min-h-screen sm:min-h-[297mm] h-auto ${className}`}
+    className={`w-[210mm] mx-auto bg-white my-8 shadow-lg print:my-0 print:shadow-none relative overflow-hidden break-after-page print:last:break-after-auto text-black flex flex-col p-[15mm] border border-gray-200 print:border-none print:h-[297mm] print:max-h-[297mm] min-h-[297mm] ${className}`}
     style={{ pageBreakInside: "avoid", breakInside: "avoid" }}
   >
     {children}
@@ -196,6 +198,21 @@ export function ReportDocument({
       `}} />
       {!isAdmin && <TopBar />}
       <main className="bg-gray-100 min-h-screen py-8 print:py-0 print:bg-white flex flex-col items-center print:block print:min-h-0">
+      <TransformWrapper
+        initialScale={1}
+        minScale={0.2}
+        maxScale={4}
+        centerOnInit={true}
+        wheel={{ step: 0.1, activationKeys: ["Control", "Meta", "Alt", "Shift"] }}
+      >
+        {({ zoomIn, zoomOut, resetTransform }) => (
+          <div className="w-full flex flex-col relative print:!block">
+            <div className="no-print fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200">
+              <button onClick={() => zoomOut()} className="p-2 hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><ZoomOut size={20} /></button>
+              <button onClick={() => resetTransform()} className="p-2 hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><Maximize size={18} /></button>
+              <button onClick={() => zoomIn()} className="p-2 hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><ZoomIn size={20} /></button>
+            </div>
+            <TransformComponent wrapperClass="!w-full print:!transform-none print:!w-auto" contentClass="w-full flex flex-col items-center print:!transform-none">
         <div className="no-print fixed bottom-8 right-8 z-50">
           <Button variant="sun" className="shadow-2xl rounded-full px-8 py-6 text-lg font-bold flex items-center gap-2 border-[3px] border-[#4D1435]" onClick={() => window.print()}>
              Download PDF
@@ -205,23 +222,23 @@ export function ReportDocument({
         {/* Page 1: Cover */}
         <A4Page>
           <div className="text-center mt-4 mb-4 flex justify-center">
-             <Wordmark height={140} className="h-[70px] sm:h-[140px] print:h-[140px] w-auto" />
+             <Wordmark height={140} className="h-[50px] sm:h-[120px] print:h-[120px] w-auto" />
           </div>
           <div className="w-full mt-4 mb-10 flex justify-center">
             <div className="flex flex-col items-start">
               <div className="flex items-baseline gap-2 sm:gap-4 flex-nowrap">
-                <h1 className="font-black uppercase tracking-tight leading-none text-[#4D1435] text-[2.5rem] sm:text-[5rem] print:text-[5rem]">
+                <h1 className="font-black uppercase tracking-tight leading-none text-[#4D1435] text-[2rem] sm:text-[5.5rem] print:text-[5.5rem]">
                   <span style={{ WebkitTextStroke: '3px #4D1435', color: 'white', marginRight: '2px' }}>ECCTR</span>ACTION
                 </h1>
-                <h2 className="font-bold uppercase text-[#4D1435] tracking-widest text-xl sm:text-[2.2rem] print:text-[2.2rem]">Plan</h2>
+                <h2 className="font-bold uppercase text-[#4D1435] tracking-widest text-[1.2rem] sm:text-[2.5rem] print:text-[2.5rem]">Plan</h2>
               </div>
-              <div className="bg-[#FFE600] text-[#4D1435] tracking-[0.2em] font-bold px-3 py-[2px] mt-1 text-[0.8rem] whitespace-normal sm:whitespace-nowrap print:whitespace-nowrap">
+              <div className="bg-[#FFE600] text-[#4D1435] tracking-[0.2em] font-bold px-3 py-[2px] mt-1 text-[0.6rem] sm:text-[0.7rem] print:text-[0.7rem] whitespace-normal sm:whitespace-nowrap print:whitespace-nowrap">
                 EARLY&nbsp;&nbsp;CHILDHOOD&nbsp;&nbsp;COMPETENCE&nbsp;&nbsp;TRACKING&nbsp;&nbsp;REPORT
               </div>
             </div>
           </div>
           
-          <p className="mt-8 text-[1.1rem] leading-[1.8] text-[#1D1D1B] text-justify font-medium">
+          <p className="mt-8 text-[0.9rem] sm:text-[1.1rem] print:text-[1.1rem] leading-[1.8] text-[#1D1D1B] text-justify font-medium">
             Competency tracking is a broad term that involves assessment of essential milestones in the areas of 6 human Competencies achieved in any child along the seven phases of brain development in the first six years of age. Major portion of the IQ is developed during this time span. Brain development is a cohesive all-competencies-inclusive process. No competency domain exists in isolation.
           </p>
 
@@ -241,19 +258,19 @@ export function ReportDocument({
         {/* Page 2: Progress & Spectrum */}
         <A4Page>
           <div className="border-b-[3px] border-[#4D1435] pb-3 mb-8">
-             <h2 className="text-[1.1rem] font-extrabold uppercase text-[#4D1435] tracking-wide">
+             <h2 className="text-[0.9rem] sm:text-[1.1rem] print:text-[1.1rem] font-extrabold uppercase text-[#4D1435] tracking-wide">
                {child.name}'S KAUSHALYA ECCTRACTION PLAN (PHASE {startStage.roman})
              </h2>
           </div>
-          <div className="flex justify-between items-start mb-6">
-             <div className="flex-1 pr-8">
-                <h3 className="text-lg font-bold uppercase mb-3 text-[#4D1435] tracking-wide">CHILD'S OVERALL DEVELOPMENT ({child.name})</h3>
-                <p className="text-[#1D1D1B] font-medium leading-relaxed">{headline(result, child)}</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4 sm:gap-0">
+             <div className="w-full sm:flex-1 sm:pr-8">
+                <h3 className="text-[0.85rem] sm:text-lg print:text-lg font-bold uppercase mb-3 text-[#4D1435] tracking-wide truncate">CHILD'S OVERALL DEVELOPMENT ({child.name})</h3>
+                <p className="text-[#1D1D1B] font-medium leading-relaxed w-full">{headline(result, child)}</p>
              </div>
-             <div className="flex-shrink-0">
-                <div className="flex flex-col items-center justify-center min-w-[110px] px-5 py-3 rounded-2xl border-[4px] border-[#4D1435] bg-[#4D1435] text-white shadow-lg">
-                  <span className="text-3xl font-black tracking-tight leading-none">{result.overallStatus.replace(/-/g, '\u2212')}</span>
-                  <span className="text-sm font-bold mt-1 opacity-80">{Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1) * 100)}%</span>
+             <div className="flex-shrink-0 self-start sm:self-auto">
+                <div className="flex flex-col items-center justify-center min-w-[90px] sm:min-w-[110px] px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl border-[3px] sm:border-[4px] border-[#4D1435] bg-[#4D1435] text-white shadow-lg">
+                  <span className="text-2xl sm:text-3xl font-black tracking-tight leading-none">{result.overallStatus.replace(/-/g, '\u2212')}</span>
+                  <span className="text-xs sm:text-sm font-bold mt-1 opacity-80">{Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1) * 100)}%</span>
                 </div>
              </div>
           </div>
@@ -268,7 +285,7 @@ export function ReportDocument({
              </h4>
              
              {/* Spectrum Chart */}
-               <div className="w-full overflow-x-auto overflow-y-hidden pb-4 -mb-4">
+               <div className="w-full overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-[4px] [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent pb-2" style={{ scrollbarWidth: 'thin' }}>
                  <div className="relative min-w-[700px] flex-1 min-h-0 w-full border-[2px] border-[#4D1435] flex flex-col font-sans text-xs mb-4 print:min-w-0">
                 
                 {/* Headers */}
@@ -359,14 +376,14 @@ export function ReportDocument({
 
                    return (
                      <div key={score.domain} className="flex-1 flex flex-col border-b-2 border-gray-100 pb-8 last:border-0 last:pb-0">
-                        <div className="flex flex-col sm:flex-row print:flex-row justify-between items-start sm:items-baseline print:items-baseline mb-6 border-b border-[#4D1435] pb-2 gap-4 sm:gap-0 print:gap-0">
-                           <h2 className="text-xl font-bold uppercase text-[#4D1435] tracking-wide">
-                             <span className="mr-3 border-2 border-[#4D1435] rounded-full w-8 h-8 inline-flex items-center justify-center text-sm">{romanDomain}</span>
-                             {domain.name}
+                        <div className="flex flex-row justify-between items-center mb-4 sm:mb-6 border-b border-[#4D1435] pb-2 gap-2 sm:gap-0">
+                           <h2 className="text-[1.1rem] sm:text-xl font-bold uppercase text-[#4D1435] tracking-wide flex items-center">
+                             <span className="mr-2 sm:mr-3 border-2 border-[#4D1435] rounded-full w-7 h-7 sm:w-8 sm:h-8 inline-flex items-center justify-center text-[0.8rem] sm:text-sm shrink-0">{romanDomain}</span>
+                             <span className="truncate">{domain.name}</span>
                            </h2>
-                            <div className="flex flex-col items-center justify-center min-w-[90px] px-4 py-2 rounded-xl border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md">
-                            <span className="text-xl font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
-                            <span className="text-xs font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
+                            <div className="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[90px] px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0">
+                            <span className="text-lg sm:text-xl font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
+                            <span className="text-[10px] sm:text-xs font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
                           </div>
                         </div>
 
@@ -478,7 +495,11 @@ export function ReportDocument({
              </div>
           </A4Page>
 
-      </main>
+                  </TransformComponent>
+          </div>
+        )}
+      </TransformWrapper>
+    </main>
     </>
   );
 }
