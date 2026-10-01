@@ -197,13 +197,13 @@ export function ReportDocument({
         }
       `}} />
       {!isAdmin && <TopBar />}
-      <main className="bg-gray-100 min-h-screen py-8 print:py-0 print:bg-white flex flex-col items-center print:block print:min-h-0 overflow-hidden">
+      <main className="bg-gray-100 min-h-screen py-8 print:py-0 print:bg-white flex flex-col items-center print:block print:min-h-0">
       <TransformWrapper
         initialScale={1}
         minScale={0.2}
         maxScale={4}
         centerOnInit={true}
-        wheel={{ step: 0.1 }}
+        wheel={{ step: 0.1, activationKeys: ["Control", "Meta", "Alt", "Shift"] }}
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
           <div className="w-full flex flex-col relative print:!block">
