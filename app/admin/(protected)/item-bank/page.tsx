@@ -311,7 +311,7 @@ function ItemRow({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold text-ink">{item.text}</p>
-          <Badge size="sm">{item.source}</Badge>
+          
         </div>
         <p className="mt-1 text-sm text-ink-3">{item.how}</p>
         <p className="mt-1 font-mono text-xs text-ink-3">{item.id}</p>
@@ -356,7 +356,6 @@ function ItemForm({
   const needsUnit = kind === "count" || kind === "percent";
   const valid =
     text.trim().length > 0 &&
-    how.trim().length > 0 &&
     (!needsChoices || (choice0.trim().length > 0 && choice1.trim().length > 0));
 
   async function save() {
@@ -410,23 +409,7 @@ function ItemForm({
           />
         </div>
         <div className="flex flex-wrap items-end gap-3">
-          <div>
-            <label className="label" htmlFor="item-source">
-              Source
-            </label>
-            <select
-              id="item-source"
-              className="field !w-auto"
-              value={source}
-              onChange={(e) => setSource(e.target.value as ItemSource)}
-            >
-              {SOURCES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
+          
           <div>
             <label className="label" htmlFor="item-kind">
               Answer type
@@ -457,16 +440,7 @@ function ItemForm({
               onChange={(e) => setMinAgeMonths(e.target.value)}
             />
           </div>
-          {kind === "yesno" && (
-            <label className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-ink-2">
-              <input
-                type="checkbox"
-                checked={invert}
-                onChange={(e) => setInvert(e.target.checked)}
-              />
-              Invert (a &ldquo;no&rdquo; is the pass)
-            </label>
-          )}
+          
         </div>
 
         {needsChoices && (
