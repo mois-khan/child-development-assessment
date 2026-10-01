@@ -215,7 +215,7 @@ export function ReportDocument({
                 </h1>
                 <h2 className="font-bold uppercase text-black tracking-widest text-[18px] sm:text-[38px] print:text-[38px] ml-1">Plan</h2>
               </div>
-              <div className="bg-[#FFE600] text-black font-bold px-2 py-1 sm:py-1.5 mt-1 sm:mt-2 text-[7px] sm:text-[11px] print:text-[11px] w-full flex justify-between items-center tracking-wider sm:tracking-widest print:tracking-widest">
+              <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }} className="bg-[#FFE600] text-black font-bold px-2 sm:px-4 py-1 sm:py-2 mt-1 sm:mt-2 text-[7px] sm:text-[18px] print:text-[18px] w-full flex justify-between items-center tracking-wider sm:tracking-widest print:tracking-widest">
                 <span>EARLY</span>
                 <span>CHILDHOOD</span>
                 <span>COMPETENCE</span>
