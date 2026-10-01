@@ -208,15 +208,19 @@ export function ReportDocument({
              <Wordmark height={140} className="h-[50px] sm:h-[120px] print:h-[120px] w-auto" />
           </div>
           <div className="w-full mt-4 mb-10 flex justify-center px-2 sm:px-0">
-            <div className="flex flex-col items-stretch max-w-full">
-              <div className="flex items-baseline gap-1 sm:gap-4 flex-nowrap justify-center">
-                <h1 className="font-black uppercase tracking-tight leading-none text-black text-[2.4rem] sm:text-[6.5rem] print:text-[6.5rem]">
+            <div className="flex flex-col items-stretch max-w-full w-fit">
+              <div className="flex items-baseline gap-2 sm:gap-4 flex-nowrap justify-center">
+                <h1 className="font-black uppercase tracking-tighter sm:tracking-tight leading-none text-black text-[2.7rem] sm:text-[6.5rem] print:text-[6.5rem]">
                   <span className="text-white mr-[2px] [-webkit-text-stroke:2px_black] sm:[-webkit-text-stroke:3px_black] print:[-webkit-text-stroke:3px_black]">ECCTR</span>ACTION
                 </h1>
                 <h2 className="font-bold uppercase text-black tracking-widest text-[1.4rem] sm:text-[3rem] print:text-[3rem]">Plan</h2>
               </div>
-              <div className="bg-[#FFE600] text-black font-bold px-3 py-[3px] mt-1 sm:mt-2 text-[0.45rem] sm:text-[0.65rem] print:text-[0.65rem] w-full text-center tracking-[0.1em] sm:tracking-[0.3em] print:tracking-[0.3em] whitespace-nowrap">
-                EARLY&nbsp;&nbsp;&nbsp;CHILDHOOD&nbsp;&nbsp;&nbsp;COMPETENCE&nbsp;&nbsp;&nbsp;TRACKING&nbsp;&nbsp;&nbsp;REPORT
+              <div className="bg-[#FFE600] text-black font-bold px-3 py-[3px] sm:py-[5px] mt-1 sm:mt-2 text-[0.45rem] sm:text-[0.65rem] print:text-[0.65rem] w-full flex justify-between items-center tracking-[0.05em] sm:tracking-widest print:tracking-widest">
+                <span>EARLY</span>
+                <span>CHILDHOOD</span>
+                <span>COMPETENCE</span>
+                <span>TRACKING</span>
+                <span>REPORT</span>
               </div>
             </div>
           </div>
