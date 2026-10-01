@@ -207,15 +207,15 @@ export function ReportDocument({
           <div className="text-center mt-4 mb-4 flex justify-center">
              <Wordmark height={140} className="h-[50px] sm:h-[120px] print:h-[120px] w-auto" />
           </div>
-          <div className="w-full mt-4 mb-10 flex justify-center px-2 sm:px-0">
+          <div className="w-full mt-4 mb-2 sm:mb-4 flex justify-center px-2 sm:px-0">
             <div className="flex flex-col items-center max-w-full w-fit mx-auto">
-              <div className="flex justify-center w-full max-w-[90%] mx-auto mb-6 sm:mb-10">
-                <img src="/ecctraction-logo-v2.png" alt="ECCTRACTION PLAN" className="h-auto w-[250px] sm:w-[550px] print:w-[550px] object-contain" />
+              <div className="flex justify-center w-full max-w-[90%] mx-auto mb-2 sm:mb-4">
+                <img src="/ECCTR.svg" alt="ECCTRACTION PLAN" className="h-auto w-[250px] sm:w-[550px] print:w-[550px] object-contain" />
               </div>
             </div>
           </div>
           
-          <p className="mt-8 text-[0.9rem] sm:text-[1.1rem] print:text-[1.1rem] leading-[1.8] text-[#1D1D1B] text-justify font-medium">
+          <p className="mt-4 text-[0.9rem] sm:text-[1.1rem] print:text-[1.1rem] leading-[1.8] text-[#1D1D1B] text-justify font-medium">
             Competency tracking is a broad term that involves assessment of essential milestones in the areas of 6 human Competencies achieved in any child along the seven phases of brain development in the first six years of age. Major portion of the IQ is developed during this time span. Brain development is a cohesive all-competencies-inclusive process. No competency domain exists in isolation.
           </p>
 
