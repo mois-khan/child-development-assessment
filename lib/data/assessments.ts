@@ -5,7 +5,10 @@ import type { Assessment, Child, DomainCode, ResponseValue } from "@/lib/types";
 export interface StoredAssessment extends Assessment {
   stagesByDomain: Record<DomainCode, string[]>;
   id: string;
+  /** Immutable PDF URL stored in Cloudflare R2. NULL means use dynamic render. */
+  reportPdfUrl?: string | null;
 }
+
 
 export async function createAssessment(
   child: Child & { id: string },
@@ -86,7 +89,9 @@ export async function getAssessment(id: string): Promise<StoredAssessment | null
     responses,
     details: a.details,
     bankVersion: a.bank_version,
-    completedAt: a.completed_at ?? undefined
+    completedAt: a.completed_at ?? undefined,
+    // report_pdf_url is added in migration 0027; cast until Supabase types are regenerated
+    reportPdfUrl: (a as any).report_pdf_url ?? null,
   };
 }
 

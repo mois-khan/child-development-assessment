@@ -9,6 +9,7 @@
     "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1144.0",
     "@sendgrid/mail": "^8.1.6",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.114.0",

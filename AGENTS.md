@@ -232,6 +232,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=  # Supabase anon/public key
 SUPABASE_SERVICE_ROLE_KEY=      # Server-only, never expose to client
 RAZORPAY_KEY_ID=                # Payment gateway
 RAZORPAY_KEY_SECRET=            # Server-only
+R2_ACCOUNT_ID=                  # Cloudflare account ID (from R2 dashboard)
+R2_ACCESS_KEY_ID=               # R2 API token "Access Key ID"
+R2_SECRET_ACCESS_KEY=           # R2 API token "Secret Access Key"
+R2_BUCKET_NAME=                 # R2 bucket name (e.g. "kgkp-reports")
+R2_PUBLIC_DOMAIN=               # Public custom domain for bucket (e.g. "https://reports.kaushalya.in")
 ```
 
 ---

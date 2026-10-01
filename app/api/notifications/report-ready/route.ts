@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { notifyUser } from "@/lib/notifications/send";
+import { storeReportSnapshot } from "@/lib/storage/report-storage";
 
 /**
- * Fired right after a parent (or school) finishes an assessment
+ * Fired right after a parent (or school) finishes an assessment.
+ *
+ * Pipeline:
+ *   1. Send push notification to the parent
+ *   2. Generate PDF snapshot → upload to Cloudflare R2 → persist URL in DB
+ *      (This freezes the report at the current design/logic — immutable forever)
+ *   3. Email the PDF to the parent as a best-effort attachment
  */
 export async function POST(request: Request) {
   try {
@@ -36,11 +43,17 @@ export async function POST(request: Request) {
       .eq("id", assessmentId)
       .maybeSingle();
 
-    const child = assessment?.children as unknown as { name: string; profile_id: string; parent_email?: string } | null;
+    const child = assessment?.children as unknown as {
+      name: string;
+      profile_id: string;
+      parent_email?: string;
+    } | null;
+
     if (!assessment || assessment.status !== "complete" || !child || child.profile_id !== user.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    // ── Step 1: Push notification ────────────────────────────────────────────
     await notifyUser({
       userId: user.id,
       type: "report_ready",
@@ -49,20 +62,31 @@ export async function POST(request: Request) {
       url: `/children/${assessment.child_id}`,
     });
 
-    // Generate and send PDF report via email
-    // The client calls this route as a fire-and-forget so we can safely await this
+    // ── Step 2: Generate PDF → upload to R2 → persist URL ────────────────────
+    // This freezes the report at the current design/logic/CMS. Future changes
+    // to the codebase will NOT affect this stored report.
     const origin = new URL(request.url).origin;
     const hostname = new URL(request.url).hostname;
-    
-    // Extract cookies for puppeteer
+    const reportPageUrl = `${origin}/report/${assessmentId}`;
+
     const allCookies = cookieStore.getAll();
     const pptrCookies = allCookies.map(c => ({
       name: c.name,
       value: c.value,
       domain: hostname,
-      path: '/'
+      path: "/",
     }));
 
+    let snapshotUrl: string | null = null;
+
+    try {
+      snapshotUrl = await storeReportSnapshot(assessmentId, reportPageUrl, pptrCookies);
+      console.log(`[report-ready] Snapshot: ${snapshotUrl ?? "R2 not configured, skipped"}`);
+    } catch (snapshotErr) {
+      console.error("[report-ready] Snapshot failed (non-fatal):", snapshotErr);
+    }
+
+    // ── Step 3: Email the PDF (best-effort) ──────────────────────────────────
     const userEmail = user.email;
     const targetEmails = new Set<string>();
     if (userEmail) targetEmails.add(userEmail);
@@ -70,27 +94,27 @@ export async function POST(request: Request) {
 
     if (targetEmails.size > 0 && process.env.SENDGRID_API_KEY) {
       try {
-        console.log(`Starting PDF generation for assessment ${assessmentId}...`);
+        console.log(`[report-ready] Generating PDF for email (${assessmentId})…`);
         const { generateReportPdf } = await import("@/lib/pdf/generate");
-        const reportUrl = `${origin}/report/${assessmentId}`;
-        
-        const pdfBuffer = await generateReportPdf(reportUrl, pptrCookies as any);
-        console.log(`PDF generated successfully, sending email...`);
-        
+        const pdfBuffer = await generateReportPdf(reportPageUrl, pptrCookies as any);
+
         const { sendReportEmail } = await import("@/lib/email/send");
         await sendReportEmail({
           to: Array.from(targetEmails),
           childName: child.name,
-          pdfBuffer
+          pdfBuffer,
         });
-      } catch (error) {
-        console.error("Failed to generate and email PDF report:", error);
+        console.log(`[report-ready] Email sent to: ${Array.from(targetEmails).join(", ")}`);
+      } catch (emailErr) {
+        console.error("[report-ready] Email failed (non-fatal):", emailErr);
       }
     } else {
-      console.log(`Skipped email sending. Target emails: ${targetEmails.size}, SENDGRID_API_KEY set: ${!!process.env.SENDGRID_API_KEY}`);
+      console.log(
+        `[report-ready] Email skipped — emails: ${targetEmails.size}, SENDGRID configured: ${!!process.env.SENDGRID_API_KEY}`
+      );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, snapshotUrl });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
   }
