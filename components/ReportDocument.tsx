@@ -209,11 +209,8 @@ export function ReportDocument({
           </div>
           <div className="w-full mt-4 mb-10 flex justify-center px-2 sm:px-0">
             <div className="flex flex-col items-center max-w-full w-fit mx-auto">
-              <div className="flex items-baseline gap-1 sm:gap-4 flex-nowrap justify-center w-fit">
-                <h1 className="font-black uppercase tracking-tight leading-none text-black text-[32px] sm:text-[72px] print:text-[72px]">
-                  ECCTRACTION
-                </h1>
-                <h2 className="font-bold uppercase text-black tracking-widest text-[18px] sm:text-[40px] print:text-[40px] ml-1">PLAN</h2>
+              <div className="flex justify-center w-fit mx-auto">
+                <img src="/ecctraction-logo.png" alt="ECCTRACTION PLAN" className="h-[40px] sm:h-[85px] print:h-[85px] w-auto object-contain" />
               </div>
               <div className="bg-[#FFE600] text-black font-bold px-4 py-1 sm:py-2 mt-1 sm:mt-2 text-[7px] sm:text-[12px] print:text-[12px] w-full text-center tracking-[0.1em] sm:tracking-[0.25em] print:tracking-[0.25em] whitespace-nowrap">
                 EARLY&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHILDHOOD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;COMPETENCE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TRACKING&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;REPORT
