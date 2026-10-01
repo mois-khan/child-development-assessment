@@ -102,9 +102,9 @@ export default function CourseRecommendationsPage() {
     try {
       const ext = file.name.split('.').pop();
       const filename = `${Math.random().toString(36).slice(2)}_${Date.now()}.${ext}`;
-      const { data, error } = await supabase.storage.from('assets').upload(`thumbnails/${filename}`, file);
+      const { data, error } = await supabase.storage.from("thumbnails").upload(filename, file);
       if (error) throw error;
-      const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(`thumbnails/${filename}`);
+      const { data: { publicUrl } } = supabase.storage.from("thumbnails").getPublicUrl(filename);
       setThumbnailUrl(publicUrl);
     } catch (err: any) {
       banner.showError("Upload failed: " + err.message);
