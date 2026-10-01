@@ -10,7 +10,7 @@ import {
   deleteCourseRecommendation,
   toggleCourseRecommendationActive
 } from "@/lib/data/course-recommendations";
-import { Card, Button, Badge, ConfirmDeleteButton, IconChevronRight, IconClose, IconPlus, InlineBanner, useBanner } from "@/components/ui";
+import { Card, Button, Badge, ConfirmDeleteButton, IconChevronRight, IconClose, IconPlus, IconSparkle, InlineBanner, useBanner } from "@/components/ui";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function CourseRecommendationsPage() {
@@ -19,6 +19,8 @@ export default function CourseRecommendationsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<CourseRecommendation | null>(null);
   
+  const [activeStageId, setActiveStageId] = useState<string>(BRAIN_STAGES[0].id);
+
   // Drawer state
   const [drawerStageId, setDrawerStageId] = useState(BRAIN_STAGES[0].id);
   const [title, setTitle] = useState("");
@@ -48,7 +50,7 @@ export default function CourseRecommendationsPage() {
 
   const openAddDrawer = (stageId?: string) => {
     setEditingCourse(null);
-    setDrawerStageId(stageId || BRAIN_STAGES[0].id);
+    setDrawerStageId(stageId || activeStageId);
     setTitle("");
     setSubtitle("");
     setDescription("");
@@ -65,76 +67,44 @@ export default function CourseRecommendationsPage() {
     setDrawerStageId(course.stage_id);
     setTitle(course.title);
     setSubtitle(course.subtitle);
-    setDescription(course.description);
-    setAgeLabel(course.age_label);
-    setThumbnailUrl(course.thumbnail_url);
+    setDescription(course.description || "");
+    setAgeLabel(course.age_label || "");
+    setThumbnailUrl(course.thumbnail_url || "");
     setRedirectUrl(course.redirect_url);
-    setDemoUrl(course.redirect_url || "");
+    setDemoUrl(course.demo_url || "");
     setIsActive(course.is_active);
     setDrawerOpen(true);
   };
 
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-
-    // Append to the end of this stage's list rather than always inserting at
-    // 0 — otherwise every new card ties for first and ordering is whatever
-    // Postgres happens to return.
-    const stageSiblings = courses.filter(
-      c => c.stage_id === drawerStageId && c.id !== editingCourse?.id
-    );
-    const nextSortOrder = stageSiblings.length > 0
-      ? Math.max(...stageSiblings.map(c => c.sort_order)) + 1
-      : 0;
-
-    const input: CourseRecommendationInput = {
-      stage_id: drawerStageId,
-      title,
-      subtitle,
-      description,
-      age_label: ageLabel,
-      thumbnail_url: thumbnailUrl,
-      redirect_url: redirectUrl,
-      sort_order: editingCourse ? editingCourse.sort_order : nextSortOrder,
-      is_active: isActive
-    };
-
+  const handleDelete = async (id: string) => {
     try {
-      if (editingCourse) {
-        await updateCourseRecommendation(editingCourse.id, input);
-      } else {
-        await createCourseRecommendation(input);
-      }
-      setDrawerOpen(false);
-      fetchCourses();
-      banner.showSuccess(editingCourse ? "Course updated." : "Course added.");
+      await deleteCourseRecommendation(id);
+      banner.showSuccess("Course deleted.");
+      setCourses(courses.filter(c => c.id !== id));
     } catch (err: any) {
-      banner.showError("Failed to save: " + err.message);
-    } finally {
-      setSaving(false);
+      banner.showError(err.message);
+    }
+  };
+
+  const handleToggleActive = async (id: string, current: boolean) => {
+    try {
+      await toggleCourseRecommendationActive(id, !current);
+      setCourses(courses.map(c => c.id === id ? { ...c, is_active: !current } : c));
+    } catch (err: any) {
+      banner.showError(err.message);
     }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
     try {
       const ext = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${ext}`;
-      const { data, error } = await supabase.storage
-        .from("thumbnails")
-        .upload(fileName, file);
-
+      const filename = `${Math.random().toString(36).slice(2)}_${Date.now()}.${ext}`;
+      const { data, error } = await supabase.storage.from('assets').upload(`thumbnails/${filename}`, file);
       if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("thumbnails")
-        .getPublicUrl(fileName);
-
+      const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(`thumbnails/${filename}`);
       setThumbnailUrl(publicUrl);
     } catch (err: any) {
       banner.showError("Upload failed: " + err.message);
@@ -143,40 +113,59 @@ export default function CourseRecommendationsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const input: CourseRecommendationInput = {
+      stage_id: drawerStageId,
+      title,
+      subtitle,
+      description,
+      age_label: ageLabel,
+      thumbnail_url: thumbnailUrl,
+      redirect_url: redirectUrl,
+      demo_url: demoUrl,
+      is_active: isActive,
+      sort_order: editingCourse ? editingCourse.sort_order : 0
+    };
+
     try {
-      await deleteCourseRecommendation(id);
-      fetchCourses();
-      banner.showSuccess("Course deleted.");
+      if (editingCourse) {
+        const updated = await updateCourseRecommendation(editingCourse.id, input);
+        setCourses(courses.map(c => c.id === editingCourse.id ? updated : c));
+        banner.showSuccess("Course updated.");
+      } else {
+        const created = await createCourseRecommendation(input);
+        setCourses([...courses, created]);
+        banner.showSuccess("Course created.");
+        if (drawerStageId !== activeStageId) setActiveStageId(drawerStageId);
+      }
+      setDrawerOpen(false);
     } catch (err: any) {
-      banner.showError("Failed to delete: " + err.message);
+      banner.showError(err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleToggleActive = async (id: string, currentlyActive: boolean) => {
-    try {
-      await toggleCourseRecommendationActive(id, !currentlyActive);
-      setCourses(courses.map(c => c.id === id ? { ...c, is_active: !currentlyActive } : c));
-    } catch (err: any) {
-      banner.showError("Failed to toggle status: " + err.message);
-    }
-  };
-
-  // Group courses by stage
   const groups = new Map<string, CourseRecommendation[]>();
   courses.forEach(c => {
     if (!groups.has(c.stage_id)) groups.set(c.stage_id, []);
     groups.get(c.stage_id)!.push(c);
   });
 
+  const activeStage = BRAIN_STAGES.find(s => s.id === activeStageId)!;
+  const activeStageCourses = groups.get(activeStageId) || [];
+
   return (
-    <div className="space-y-6 pb-10">
+    <div className="mx-auto max-w-7xl pb-12">
       <InlineBanner message={banner.message} onDismiss={banner.clear} />
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
+      
+      <div className="mb-8 border-b border-line pb-6 pt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-ink tracking-tight">Course Recommendations</h1>
-          <p className="mt-1 text-sm text-ink-3">
-            Courses shown at the end of the assessment report, based on the child&apos;s overall phase.
+          <h1 className="text-3xl font-extrabold text-ink tracking-tight">Course Recommendations</h1>
+          <p className="mt-2 max-w-3xl text-base text-ink-3">
+            Manage the suggested courses that appear on the final page of the assessment report.
           </p>
         </div>
         <Button onClick={() => openAddDrawer()} variant="primary" iconLeft={<IconPlus size={16} />}>
@@ -184,111 +173,118 @@ export default function CourseRecommendationsPage() {
         </Button>
       </div>
 
-      <div className="space-y-4">
-        {loading ? (
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-16 animate-pulse rounded-2xl bg-surface-3" />
-            ))}
-          </div>
-        ) : (
-          BRAIN_STAGES.map(stage => {
-            const stageCourses = groups.get(stage.id) || [];
-
-            return (
-              <Card key={stage.id} className="overflow-hidden !p-0">
-                <details className="group" open>
-                  <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-4 transition-colors hover:bg-surface-2">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <IconChevronRight size={16} className="shrink-0 text-ink-3 transition-transform group-open:rotate-90" />
-                      <span className="min-w-0 text-base font-extrabold text-ink">
-                        Phase {stage.roman}{" "}
-                        <span className="whitespace-nowrap text-sm font-medium text-ink-3">
-                          ({stage.averageMonths} mo avg)
-                        </span>
-                      </span>
+      <div className="flex flex-col gap-8 md:flex-row">
+        
+        {/* Sidebar Navigation */}
+        <div className="w-full shrink-0 md:w-64">
+          <div className="sticky top-6 flex flex-col gap-1 rounded-2xl border border-line bg-white p-2 shadow-sm">
+            <h3 className="mb-2 mt-2 px-4 text-[10px] font-extrabold uppercase tracking-widest text-ink-4">Brain Stages</h3>
+            {BRAIN_STAGES.map((stage) => {
+              const isActive = activeStageId === stage.id;
+              const count = (groups.get(stage.id) || []).length;
+              return (
+                <button
+                  key={stage.id}
+                  onClick={() => setActiveStageId(stage.id)}
+                  className={`flex items-center justify-between rounded-xl px-4 py-3 text-left transition-all duration-200 ${
+                    isActive ? "bg-ink text-white shadow-md" : "text-ink-2 hover:bg-surface-2"
+                  }`}
+                >
+                  <span className="font-bold text-sm">Phase {stage.roman}</span>
+                  {count > 0 && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-surface-3 text-ink-3'}`}>
+                      {count}
                     </span>
-                    <Badge size="sm" tone={stageCourses.length > 0 ? "accent" : "neutral"}>
-                      {stageCourses.length} course{stageCourses.length === 1 ? "" : "s"}
-                    </Badge>
-                  </summary>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-                  <div className="border-t border-line-soft px-5 py-5">
-                    {stageCourses.length === 0 ? (
-                      <button
-                        onClick={() => openAddDrawer(stage.id)}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-line px-4 py-6 text-sm font-bold text-ink-3 transition-colors hover:border-accent hover:bg-[var(--accent-soft)] hover:text-accent"
-                      >
-                        <IconPlus size={16} />
-                        Add a course for this phase
-                      </button>
+        {/* Main Content Area */}
+        <div className="flex-1 min-w-0">
+          <div className="mb-6 flex items-center justify-between border-b border-line pb-4">
+            <div>
+              <h2 className="text-2xl font-black text-ink">Phase {activeStage.roman}: {activeStage.name}</h2>
+              <p className="text-ink-3 mt-1 text-sm font-medium">Average Age: {activeStage.averageMonths} months</p>
+            </div>
+            <Button onClick={() => openAddDrawer(activeStageId)} variant="secondary" size="sm" iconLeft={<IconPlus size={14} />}>
+              Add Course to Phase {activeStage.roman}
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="flex h-64 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent"></div>
+            </div>
+          ) : activeStageCourses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-line py-20 text-center">
+              <div className="mb-4 rounded-full bg-surface-2 p-4 text-ink-4">
+                <IconSparkle size={32} />
+              </div>
+              <p className="text-lg font-bold text-ink-3">No courses recommended</p>
+              <p className="mt-1 text-sm text-ink-4 mb-6">Parents will not see any course suggestions for this phase.</p>
+              <Button onClick={() => openAddDrawer(activeStageId)} variant="primary" iconLeft={<IconPlus size={16} />}>
+                Add First Course
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-2">
+              {activeStageCourses.map(course => (
+                <Card key={course.id} className="flex flex-col overflow-hidden border border-line p-0 shadow-sm transition-shadow hover:shadow-md">
+                  <div className="relative h-40 w-full bg-surface-2">
+                    {course.thumbnail_url ? (
+                      <img src={course.thumbnail_url} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          {stageCourses.map(course => (
-                            <Card key={course.id} variant="clay" className="flex h-32 overflow-hidden">
-                              <div className="w-40 shrink-0 bg-surface-3">
-                                {course.thumbnail_url ? (
-                                  <img src={course.thumbnail_url} alt="" className="h-full w-full object-cover" />
-                                ) : (
-                                  <div className="flex h-full w-full flex-col items-center justify-center bg-surface-2 p-2 text-center shadow-inner">
-                                    <span className="text-xs font-bold uppercase tracking-wider text-ink-3">Phase {stage.roman}</span>
-                                    <span className="mt-0.5 text-sm font-extrabold text-ink leading-tight">
-                                      {course.age_label || formatStageMonths(stage.averageMonths)}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex min-w-0 flex-1 flex-col p-4">
-                                <div className="flex items-start justify-between gap-2">
-                                  <h4 className="flex-1 truncate font-bold text-ink">{course.title}</h4>
-                                  <button
-                                    onClick={() => handleToggleActive(course.id, course.is_active)}
-                                    className={`shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold uppercase tracking-wider ${course.is_active ? "bg-green-100 text-green-700" : "bg-surface-3 text-ink-3"}`}
-                                  >
-                                    {course.is_active ? "Active" : "Inactive"}
-                                  </button>
-                                </div>
-                                <p className="truncate text-sm text-ink-2">{course.subtitle || "No subtitle"}</p>
-
-                                <div className="mt-auto flex items-center justify-between gap-2">
-                                  {course.age_label ? (
-                                    <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-2xs font-bold text-[var(--accent)]">
-                                      {course.age_label}
-                                    </span>
-                                  ) : (
-                                    <span />
-                                  )}
-
-                                  <div className="flex shrink-0 gap-2">
-                                    <Button size="sm" variant="ghost" onClick={() => openEditDrawer(course)}>
-                                      Edit
-                                    </Button>
-                                    <ConfirmDeleteButton onConfirm={() => handleDelete(course.id)} />
-                                  </div>
-                                </div>
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                        <button
-                          onClick={() => openAddDrawer(stage.id)}
-                          className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-accent hover:underline"
-                        >
-                          <IconPlus size={14} />
-                          Add another course to this phase
-                        </button>
-                      </>
+                      <div className="flex h-full w-full items-center justify-center text-ink-4">
+                        <IconSparkle size={32} />
+                      </div>
+                    )}
+                    {!course.is_active && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                        <Badge tone="neutral" className="border-white/20 bg-black text-white">Hidden</Badge>
+                      </div>
                     )}
                   </div>
-                </details>
-              </Card>
-            );
-          })
-        )}
+                  <div className="flex flex-1 flex-col p-5">
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <h3 className="font-extrabold text-ink line-clamp-2">{course.title}</h3>
+                      <button
+                        onClick={() => handleToggleActive(course.id, course.is_active)}
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${
+                          course.is_active 
+                            ? "bg-green-100 text-green-700 hover:bg-green-200" 
+                            : "bg-surface-3 text-ink-3 hover:bg-surface-4"
+                        }`}
+                      >
+                        {course.is_active ? "Active" : "Hidden"}
+                      </button>
+                    </div>
+                    {course.subtitle && <p className="mb-3 text-sm font-medium text-ink-3 line-clamp-1">{course.subtitle}</p>}
+                    
+                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-line">
+                      <div className="flex shrink-0 gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => openEditDrawer(course)}>
+                          Edit
+                        </Button>
+                        <ConfirmDeleteButton onConfirm={() => handleDelete(course.id)} />
+                      </div>
+                      {course.age_label && (
+                        <span className="rounded-full bg-surface-2 px-3 py-1 text-[10px] font-bold text-ink-2 uppercase tracking-wider border border-line">
+                          {course.age_label}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Add/Edit dialog */}
+      {/* Drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => !saving && setDrawerOpen(false)} />
@@ -422,7 +418,7 @@ export default function CourseRecommendationsPage() {
                   disabled={saving}
                   className="size-4 rounded border-line-strong accent-[var(--accent)]"
                 />
-                <span className="text-sm font-semibold text-ink-2">Active — visible to parents</span>
+                <span className="text-sm font-semibold text-ink-2">Active - visible to parents</span>
               </label>
 
               <div className="pt-6 border-t border-line flex gap-3 justify-end">
