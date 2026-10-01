@@ -209,8 +209,8 @@ export function ReportDocument({
           </div>
           <div className="w-full mt-4 mb-2 sm:mb-4 flex justify-center px-2 sm:px-0">
             <div className="flex flex-col items-center max-w-full w-fit mx-auto">
-              <div className="flex justify-center w-full max-w-[90%] mx-auto mb-2 sm:mb-4">
-                <img src="/ECCTR.svg" alt="ECCTRACTION PLAN" className="h-auto w-[250px] sm:w-[550px] print:w-[550px] object-contain" />
+              <div className="relative flex justify-center w-full max-w-[320px] sm:max-w-[750px] print:max-w-[750px] mx-auto mb-2 sm:mb-4 overflow-hidden h-[80px] sm:h-[180px] print:h-[180px]">
+                <img src="/ECCTR.svg" alt="ECCTRACTION PLAN" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] sm:w-[180%] max-w-none h-auto object-contain" />
               </div>
             </div>
           </div>
