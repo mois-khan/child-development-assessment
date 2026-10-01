@@ -299,16 +299,9 @@ export default function PayPage({
               <div>
                 <p className="eyebrow eyebrow-accent">Genius Milestone Assessment</p>
                 <h1 className="mt-3">Start {child.name}&rsquo;s assessment</h1>
-                <p className="lede mt-3 max-w-[46ch]">
-                  Built for {child.name}&rsquo;s exact phase: Phase {startStage.roman},{" "}
-                  {startStage.name}.
-                </p>
+                
               </div>
-              <ChildCard
-                name={child.name}
-                photoUrl={child.photoUrl}
-                ageLabel={`${formatAge(age.chronologicalMonths)} old`}
-              />
+              
             </div>
 
             <Card variant="clay" className="clay-lg mt-8 overflow-hidden">
@@ -356,20 +349,21 @@ export default function PayPage({
 
                 {/* the payment decision, answered immediately — no scrolling
                     needed to find the one button that matters */}
-                <div className="mt-6 flex flex-wrap items-center gap-4">
+                <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <Button
                     size="lg"
                     disabled={starting}
                     onClick={startAssessment}
                     iconRight={<IconArrowRight size={18} />}
+                    className="w-full sm:w-auto justify-center"
                   >
-                    {starting ? "Preparing…" : applied ? "Start the assessment" : `Pay ₹${PRICE} & Start`}
+                    {starting ? "Preparing..." : applied ? "Start the assessment" : `Pay ₹${PRICE} & Start`}
                   </Button>
                   {!applied && (
                     <button
                       type="button"
                       onClick={() => setShowCoupon((v) => !v)}
-                      className="text-sm font-bold text-accent hover:underline"
+                      className="flex h-12 w-full sm:w-auto items-center justify-center rounded-[var(--radius)] border-2 border-dashed border-line-heavy px-5 text-sm font-bold text-ink-3 transition-colors hover:border-accent hover:bg-[var(--surface-2)] hover:text-accent"
                     >
                       Have a coupon code?
                     </button>
