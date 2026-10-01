@@ -245,7 +245,7 @@ export function ReportDocument({
         {/* Page 2: Progress & Spectrum */}
         <A4Page>
           <div className="border-b-[2px] border-[#4D1435] pb-2 mb-6">
-               <h2 className="text-[0.75rem] sm:text-[1.1rem] print:text-[1.1rem] font-extrabold uppercase text-[#4D1435] tracking-normal sm:tracking-wide">
+               <h2 className="text-[0.6rem] sm:text-[0.85rem] print:text-[0.85rem] font-extrabold uppercase text-[#4D1435] tracking-normal">
                  {child.name}'S KAUSHALYA ECCTRACTION PLAN (PHASE {startStage.roman})
                </h2>
             </div>
