@@ -209,8 +209,8 @@ export function ReportDocument({
           </div>
           <div className="w-full mt-4 mb-10 flex justify-center px-2 sm:px-0">
             <div className="flex flex-col items-center max-w-full w-fit mx-auto">
-              <div className="flex justify-center w-fit mx-auto mb-4 sm:mb-8">
-                <img src="/ecctraction-logo.png" alt="ECCTRACTION PLAN" className="h-[60px] sm:h-[140px] print:h-[140px] w-auto object-contain" />
+              <div className="flex justify-center w-full max-w-[90%] mx-auto mb-6 sm:mb-10">
+                <img src="/ecctraction-logo.png" alt="ECCTRACTION PLAN" className="h-auto w-[250px] sm:w-[550px] print:w-[550px] object-contain" />
               </div>
             </div>
           </div>
