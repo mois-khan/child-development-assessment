@@ -209,7 +209,7 @@ export function ReportDocument({
           </div>
           <div className="w-full mt-4 mb-10 flex justify-center">
             <div className="flex flex-col items-start">
-              <div className="flex items-baseline gap-2 sm:gap-4 flex-wrap sm:flex-nowrap print:flex-nowrap">
+              <div className="flex items-baseline gap-2 sm:gap-4 flex-nowrap">
                 <h1 className="font-black uppercase tracking-tight leading-none text-[#4D1435] text-[2.5rem] sm:text-[5rem] print:text-[5rem]">
                   <span style={{ WebkitTextStroke: '3px #4D1435', color: 'white', marginRight: '2px' }}>ECCTR</span>ACTION
                 </h1>
@@ -227,13 +227,13 @@ export function ReportDocument({
 
           <div className="mt-12">
             <h3 className="text-lg font-bold uppercase mb-8 tracking-wider text-gray-500 text-center">THIS REPORT IS GENERATED FOR:</h3>
-            <div className="space-y-6 text-[1.1rem] max-w-lg mx-auto">
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-56 text-[#4D1435]">Name:</span> <span className="font-medium text-gray-800">{child.name}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-56 text-[#4D1435]">Date of Birth:</span> <span className="font-medium text-gray-800">{formatDate(child.dob)}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-56 text-[#4D1435]">Gender:</span> <span className="font-medium capitalize text-gray-800">{child.gender === 'boy' ? 'Male' : child.gender === 'girl' ? 'Female' : child.gender}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-56 text-[#4D1435]">School/Clinic/Parent:</span> <span className="font-medium text-gray-800">{child.parentName || "—"}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-56 text-[#4D1435]">Assessment Date:</span> <span className="font-medium text-gray-800">{formatDate(record.assessedOn)}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-56 text-[#4D1435]">Assessment Tool:</span> <span className="font-medium text-gray-800">KECCTR (Phase {startStage.roman})</span></div>
+            <div className="space-y-3 sm:space-y-5 text-[0.85rem] sm:text-[1rem] print:text-[1rem] max-w-lg mx-auto">
+               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Name:</span> <span className="font-medium text-gray-800">{child.name}</span></div>
+               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Date of Birth:</span> <span className="font-medium text-gray-800">{formatDate(child.dob)}</span></div>
+               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Gender:</span> <span className="font-medium capitalize text-gray-800">{child.gender === 'boy' ? 'Male' : child.gender === 'girl' ? 'Female' : child.gender}</span></div>
+               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">School/Clinic/Parent:</span> <span className="font-medium text-gray-800">{child.parentName || "—"}</span></div>
+               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Assessment Date:</span> <span className="font-medium text-gray-800">{formatDate(record.assessedOn)}</span></div>
+               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Assessment Tool:</span> <span className="font-medium text-gray-800">KECCTR (Phase {startStage.roman})</span></div>
             </div>
           </div>
         </A4Page>
@@ -250,8 +250,11 @@ export function ReportDocument({
                 <h3 className="text-lg font-bold uppercase mb-3 text-[#4D1435] tracking-wide">CHILD'S OVERALL DEVELOPMENT ({child.name})</h3>
                 <p className="text-[#1D1D1B] font-medium leading-relaxed">{headline(result, child)}</p>
              </div>
-             <div className="flex-shrink-0 text-left sm:text-right print:text-right border-l-0 sm:border-l-[3px] print:border-l-[3px] border-[#4D1435] pl-0 sm:pl-6 print:pl-6 py-2">
-                <div className="flex items-center justify-center w-auto px-4 h-[80px] rounded-2xl border-[4px] border-[#4D1435] text-4xl font-black text-[#4D1435] bg-white whitespace-nowrap">{result.overallStatus.replace(/\-/g, '\u2212')} <span className="text-xl ml-2 font-bold text-gray-500">({Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1))}%)</span></div>
+             <div className="flex-shrink-0">
+                <div className="flex flex-col items-center justify-center min-w-[110px] px-5 py-3 rounded-2xl border-[4px] border-[#4D1435] bg-[#4D1435] text-white shadow-lg">
+                  <span className="text-3xl font-black tracking-tight leading-none">{result.overallStatus.replace(/-/g, '\u2212')}</span>
+                  <span className="text-sm font-bold mt-1 opacity-80">{Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1) * 100)}%</span>
+                </div>
              </div>
           </div>
 
@@ -361,7 +364,10 @@ export function ReportDocument({
                              <span className="mr-3 border-2 border-[#4D1435] rounded-full w-8 h-8 inline-flex items-center justify-center text-sm">{romanDomain}</span>
                              {domain.name}
                            </h2>
-                            <div className="flex items-center justify-center w-auto px-3 h-[56px] rounded-xl border-[3px] border-[#4D1435] text-2xl font-black text-[#4D1435] whitespace-nowrap">{STATUSES[score.status].code.replace(/\-/g, '\u2212')} <span className="text-sm ml-1 font-bold text-gray-500">({Math.round(score.percent)}%)</span></div>
+                            <div className="flex flex-col items-center justify-center min-w-[90px] px-4 py-2 rounded-xl border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md">
+                            <span className="text-xl font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
+                            <span className="text-xs font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
+                          </div>
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
@@ -434,7 +440,10 @@ export function ReportDocument({
         <A4Page>
            <div className="border-b-[3px] border-[#4D1435] pb-4 mb-10 flex flex-col sm:flex-row print:flex-row justify-between items-start sm:items-baseline print:items-baseline gap-4 mt-4">
              <h2 className="text-2xl font-extrabold uppercase text-[#4D1435] tracking-wide">OVERALL RESULT:</h2>
-              <div className="flex items-center justify-center w-auto px-6 h-[96px] rounded-2xl border-[5px] border-[#4D1435] text-5xl font-black text-[#4D1435] whitespace-nowrap">{result.overallStatus.replace(/\-/g, '\u2212')} <span className="text-2xl ml-3 font-bold text-gray-500">({Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1))}%)</span></div>
+              <div className="flex flex-col items-center justify-center min-w-[140px] px-8 py-4 rounded-2xl border-[5px] border-[#4D1435] bg-[#4D1435] text-white shadow-xl">
+               <span className="text-5xl font-black tracking-tight leading-none">{result.overallStatus.replace(/-/g, '\u2212')}</span>
+               <span className="text-lg font-bold mt-1.5 opacity-80">{Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1) * 100)}%</span>
+             </div>
            </div>
 
            <div className="space-y-12">
