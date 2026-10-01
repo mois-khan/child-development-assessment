@@ -35,6 +35,7 @@ const VALID_CONFIG: R2Config = {
   accessKeyId: "key-id",
   secretAccessKey: "secret",
   bucketName: "kgkp-reports",
+  endpoint: "https://abc123.r2.cloudflarestorage.com",
   publicDomain: "https://reports.example.com",
 };
 
@@ -113,8 +114,14 @@ describe("getReportUrl", () => {
 // ─── validateR2Config ────────────────────────────────────────────────────────
 
 describe("validateR2Config", () => {
-  test("returns null (valid) for a complete config", () => {
+  test("returns null (valid) for a complete config with publicDomain", () => {
     const err = validateR2Config(VALID_CONFIG);
+    assert.equal(err, null);
+  });
+
+  test("returns null (valid) without publicDomain — it is optional", () => {
+    const { publicDomain: _, ...withoutDomain } = VALID_CONFIG;
+    const err = validateR2Config(withoutDomain as R2Config);
     assert.equal(err, null);
   });
 
@@ -123,7 +130,7 @@ describe("validateR2Config", () => {
     "accessKeyId",
     "secretAccessKey",
     "bucketName",
-    "publicDomain",
+    "endpoint",
   ];
 
   for (const field of requiredFields) {
@@ -134,9 +141,22 @@ describe("validateR2Config", () => {
     });
   }
 
-  test("returns error string when publicDomain is not a valid URL", () => {
+  test("returns error string when endpoint is not a valid URL", () => {
+    const bad = { ...VALID_CONFIG, endpoint: "not-a-url" };
+    const err = validateR2Config(bad);
+    assert.ok(typeof err === "string" && err.length > 0);
+  });
+
+  test("returns error string when publicDomain is set but not a valid URL", () => {
     const bad = { ...VALID_CONFIG, publicDomain: "not-a-url" };
     const err = validateR2Config(bad);
     assert.ok(typeof err === "string" && err.length > 0);
+  });
+
+  test("falls back to endpoint URL when publicDomain is absent", () => {
+    const { publicDomain: _, ...noDomain } = VALID_CONFIG;
+    const key = buildR2Key(SAMPLE_UUID);
+    const url = getReportUrl(noDomain as R2Config, key);
+    assert.ok(url.startsWith("https://abc123.r2.cloudflarestorage.com/kgkp-reports/reports/"));
   });
 });

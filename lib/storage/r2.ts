@@ -22,9 +22,11 @@
  *   R2_ACCOUNT_ID          — Cloudflare account ID
  *   R2_ACCESS_KEY_ID       — R2 API token "Access Key ID"
  *   R2_SECRET_ACCESS_KEY   — R2 API token "Secret Access Key"
- *   R2_BUCKET_NAME         — Bucket name (e.g. "kgkp-reports")
- *   R2_PUBLIC_DOMAIN       — Public custom domain for the bucket
- *                            (e.g. "https://reports.kaushalya.in")
+ *   R2_BUCKET_REPORTS      — Bucket name (e.g. "kgkp-reports")
+ *   R2_ENDPOINT            — Full S3 endpoint URL (e.g. "https://<id>.r2.cloudflarestorage.com")
+ *   R2_PUBLIC_DOMAIN       — (Optional) Public custom domain for the bucket.
+ *                            If not set, falls back to R2_ENDPOINT + "/" + key
+ *                            (objects must still be public via R2 bucket settings).
  */
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
@@ -36,8 +38,14 @@ export interface R2Config {
   accessKeyId: string;
   secretAccessKey: string;
   bucketName: string;
-  /** Public-facing domain for the bucket, e.g. "https://reports.example.com" */
-  publicDomain: string;
+  /** Direct S3-compatible endpoint URL, e.g. "https://<accountId>.r2.cloudflarestorage.com" */
+  endpoint: string;
+  /**
+   * Optional public-facing domain for the bucket.
+   * If not set, the endpoint URL is used to construct the object URL.
+   * Example: "https://reports.kaushalya.in"
+   */
+  publicDomain?: string;
 }
 
 export interface UploadResult {
@@ -67,11 +75,19 @@ export function buildR2Key(assessmentId: string): string {
 /**
  * Assemble the public URL for a stored R2 object.
  *
- * Trims any trailing slash from publicDomain so we never produce double-slashes.
+ * If publicDomain is set, uses that. Otherwise falls back to:
+ *   endpoint + "/" + bucketName + "/" + key
+ *
+ * Trims any trailing slash to avoid double-slashes.
  */
 export function getReportUrl(config: R2Config, key: string): string {
-  const domain = config.publicDomain.replace(/\/$/, "");
-  return `${domain}/${key}`;
+  if (config.publicDomain) {
+    const domain = config.publicDomain.replace(/\/$/, "");
+    return `${domain}/${key}`;
+  }
+  // Fall back: endpoint-style URL (e.g. for private dev/staging access)
+  const endpoint = config.endpoint.replace(/\/$/, "");
+  return `${endpoint}/${config.bucketName}/${key}`;
 }
 
 /**
@@ -85,7 +101,7 @@ export function validateR2Config(config: R2Config): string | null {
     "accessKeyId",
     "secretAccessKey",
     "bucketName",
-    "publicDomain",
+    "endpoint",
   ];
 
   for (const field of required) {
@@ -95,9 +111,17 @@ export function validateR2Config(config: R2Config): string | null {
   }
 
   try {
-    new URL(config.publicDomain);
+    new URL(config.endpoint);
   } catch {
-    return `R2 config 'publicDomain' is not a valid URL: "${config.publicDomain}"`;
+    return `R2 config 'endpoint' is not a valid URL: "${config.endpoint}"`;
+  }
+
+  if (config.publicDomain) {
+    try {
+      new URL(config.publicDomain);
+    } catch {
+      return `R2 config 'publicDomain' is not a valid URL: "${config.publicDomain}"`;
+    }
   }
 
   return null;
@@ -107,15 +131,22 @@ export function validateR2Config(config: R2Config): string | null {
 
 /**
  * Read R2 config from environment variables.
- * Returns the config object — call validateR2Config() to check it.
+ * Matches the actual keys in .env.local:
+ *   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY,
+ *   R2_BUCKET_REPORTS, R2_ENDPOINT, R2_PUBLIC_DOMAIN (optional)
  */
 export function getR2ConfigFromEnv(): R2Config {
   return {
     accountId: process.env.R2_ACCOUNT_ID ?? "",
     accessKeyId: process.env.R2_ACCESS_KEY_ID ?? "",
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "",
-    bucketName: process.env.R2_BUCKET_NAME ?? "",
-    publicDomain: process.env.R2_PUBLIC_DOMAIN ?? "",
+    bucketName: process.env.R2_BUCKET_REPORTS ?? "",
+    endpoint:
+      process.env.R2_ENDPOINT ??
+      (process.env.R2_ACCOUNT_ID
+        ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+        : ""),
+    publicDomain: process.env.R2_PUBLIC_DOMAIN || undefined,
   };
 }
 
@@ -124,7 +155,7 @@ export function getR2ConfigFromEnv(): R2Config {
 function makeS3Client(config: R2Config): S3Client {
   return new S3Client({
     region: "auto",
-    endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
+    endpoint: config.endpoint,
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
