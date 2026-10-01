@@ -23,6 +23,8 @@ import { BRAIN_STAGES, STAGE_BY_ID, stageAbove, cellFor } from "@/content/stages
 import { MilestoneVideoRow } from "@/components/report/MilestoneVideoRow";
 import { CourseRow } from "@/components/report/CourseRow";
 import { Avatar, LoadError, TopBar, Wordmark, Button } from "@/components/ui";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { ZoomIn, ZoomOut, Maximize } from "lucide-react";
 
 const STAGE_COLORS: Record<string, string> = {
   s1: "#EF4444",
@@ -38,7 +40,7 @@ const STAGE_COLORS: Record<string, string> = {
 
 const A4Page = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div
-    className={`w-full max-w-[210mm] mx-auto bg-white sm:my-8 sm:shadow-lg print:m-0 print:shadow-none relative overflow-hidden break-after-page print:last:break-after-auto text-black flex flex-col p-4 sm:p-[12mm] md:p-[15mm] border border-gray-200 print:border-none print:h-[297mm] print:max-h-[297mm] min-h-screen sm:min-h-[297mm] h-auto ${className}`}
+    className={`w-[210mm] mx-auto bg-white my-8 shadow-lg print:my-0 print:shadow-none relative overflow-hidden break-after-page print:last:break-after-auto text-black flex flex-col p-[15mm] border border-gray-200 print:border-none print:h-[297mm] print:max-h-[297mm] min-h-[297mm] ${className}`}
     style={{ pageBreakInside: "avoid", breakInside: "avoid" }}
   >
     {children}
@@ -195,7 +197,22 @@ export function ReportDocument({
         }
       `}} />
       {!isAdmin && <TopBar />}
-      <main className="bg-gray-100 min-h-screen py-8 print:py-0 print:bg-white flex flex-col items-center print:block print:min-h-0">
+      <main className="bg-gray-100 min-h-screen py-8 print:py-0 print:bg-white flex flex-col items-center print:block print:min-h-0 overflow-hidden">
+      <TransformWrapper
+        initialScale={1}
+        minScale={0.2}
+        maxScale={4}
+        centerOnInit={true}
+        wheel={{ step: 0.1 }}
+      >
+        {({ zoomIn, zoomOut, resetTransform }) => (
+          <div className="w-full flex flex-col relative print:!block">
+            <div className="no-print fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200">
+              <button onClick={() => zoomOut()} className="p-2 hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><ZoomOut size={20} /></button>
+              <button onClick={() => resetTransform()} className="p-2 hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><Maximize size={18} /></button>
+              <button onClick={() => zoomIn()} className="p-2 hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><ZoomIn size={20} /></button>
+            </div>
+            <TransformComponent wrapperClass="!w-full print:!transform-none print:!w-auto" contentClass="w-full flex flex-col items-center print:!transform-none">
         <div className="no-print fixed bottom-8 right-8 z-50">
           <Button variant="sun" className="shadow-2xl rounded-full px-8 py-6 text-lg font-bold flex items-center gap-2 border-[3px] border-[#4D1435]" onClick={() => window.print()}>
              Download PDF
@@ -268,7 +285,7 @@ export function ReportDocument({
              </h4>
              
              {/* Spectrum Chart */}
-               <div className="w-full overflow-x-auto overflow-y-hidden pb-4 -mb-4">
+               <div className="w-full">
                  <div className="relative min-w-[700px] flex-1 min-h-0 w-full border-[2px] border-[#4D1435] flex flex-col font-sans text-xs mb-4 print:min-w-0">
                 
                 {/* Headers */}
@@ -478,7 +495,11 @@ export function ReportDocument({
              </div>
           </A4Page>
 
-      </main>
+                  </TransformComponent>
+          </div>
+        )}
+      </TransformWrapper>
+    </main>
     </>
   );
 }

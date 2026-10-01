@@ -13,11 +13,13 @@
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.114.0",
     "exceljs": "^4.4.0",
+    "lucide-react": "^1.49.0",
     "next": "^15.5.4",
     "puppeteer": "^25.12.0",
     "razorpay": "^2.9.8",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-zoom-pan-pinch": "^4.2.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
