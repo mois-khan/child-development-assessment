@@ -364,11 +364,11 @@ export function ReportDocument({
                    return (
                      <div key={score.domain} className="flex-1 flex flex-col border-b-2 border-gray-100 pb-8 last:border-0 last:pb-0">
                         <div className="flex flex-row justify-between items-center mb-4 sm:mb-6 border-b border-[#4D1435] pb-2 gap-2 sm:gap-0">
-                             <h2 className="text-[0.75rem] sm:text-lg font-bold uppercase text-[#4D1435] tracking-wide flex items-center">
-                               <span className="mr-1.5 sm:mr-3 border-2 border-[#4D1435] rounded-full w-6 h-6 sm:w-8 sm:h-8 inline-flex items-center justify-center text-[0.65rem] sm:text-sm shrink-0">{romanDomain}</span>
-                               <span className="whitespace-normal leading-tight">{domain.name}</span>
+                             <h2 className="text-[0.6rem] sm:text-[1rem] print:text-[1rem] font-bold uppercase text-[#4D1435] tracking-wide flex items-center shrink min-w-0">
+                               <span className="mr-1.5 sm:mr-3 border-2 border-[#4D1435] rounded-full w-5 h-5 sm:w-8 sm:h-8 inline-flex items-center justify-center text-[0.55rem] sm:text-sm shrink-0">{romanDomain}</span>
+                               <span className="whitespace-nowrap shrink min-w-0 overflow-visible leading-tight">{domain.name}</span>
                              </h2>
-                              <div className="flex flex-col items-center justify-center min-w-[65px] sm:min-w-[90px] px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0">
+                              <div className="flex flex-col items-center justify-center min-w-[50px] sm:min-w-[90px] px-2 py-1 sm:px-4 sm:py-2 rounded-md sm:rounded-xl border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0 ml-1">
                             <span className="text-lg sm:text-xl font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
                             <span className="text-[10px] sm:text-xs font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
                           </div>
