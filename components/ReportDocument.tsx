@@ -208,15 +208,19 @@ export function ReportDocument({
              <Wordmark height={140} className="h-[50px] sm:h-[120px] print:h-[120px] w-auto" />
           </div>
           <div className="w-full mt-4 mb-10 flex justify-center px-2 sm:px-0">
-            <div className="flex flex-col items-stretch max-w-full w-fit">
-              <div className="flex items-baseline gap-2 sm:gap-4 flex-nowrap justify-center">
-                <h1 className="font-black uppercase tracking-tighter sm:tracking-tight leading-none text-black text-[3.5rem] sm:text-[8rem] print:text-[8rem]">
-                  <span className="text-white mr-[2px] [-webkit-text-stroke:2px_black] sm:[-webkit-text-stroke:4px_black] print:[-webkit-text-stroke:4px_black]">ECCTR</span>ACTION
+            <div className="flex flex-col items-stretch max-w-full w-fit mx-auto">
+              <div className="flex items-baseline gap-1 sm:gap-4 flex-nowrap justify-center">
+                <h1 className="font-black uppercase tracking-tighter sm:tracking-tight leading-none text-black text-[32px] sm:text-[72px] print:text-[72px]">
+                  <span className="text-white mr-[2px] [-webkit-text-stroke:1.5px_black] sm:[-webkit-text-stroke:3px_black] print:[-webkit-text-stroke:3px_black]">ECCTR</span>ACTION
                 </h1>
-                <h2 className="font-bold uppercase text-black tracking-widest text-[1.8rem] sm:text-[3.5rem] print:text-[3.5rem]">Plan</h2>
+                <h2 className="font-bold uppercase text-black tracking-widest text-[18px] sm:text-[38px] print:text-[38px] ml-1">Plan</h2>
               </div>
-              <div className="bg-[#FFE600] text-black font-bold px-2 py-[2px] sm:py-[4px] mt-1 sm:mt-2 text-[9px] sm:text-[14px] print:text-[14px] w-full text-center tracking-[0.2em] sm:tracking-[0.6em] print:tracking-[0.6em] whitespace-nowrap">
-                EARLY&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHILDHOOD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;COMPETENCE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TRACKING&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;REPORT
+              <div className="bg-[#FFE600] text-black font-bold px-2 py-1 sm:py-1.5 mt-1 sm:mt-2 text-[7px] sm:text-[11px] print:text-[11px] w-full flex justify-between items-center tracking-wider sm:tracking-widest print:tracking-widest">
+                <span>EARLY</span>
+                <span>CHILDHOOD</span>
+                <span>COMPETENCE</span>
+                <span>TRACKING</span>
+                <span>REPORT</span>
               </div>
             </div>
           </div>
@@ -241,7 +245,7 @@ export function ReportDocument({
         {/* Page 2: Progress & Spectrum */}
         <A4Page>
           <div className="border-b-[2px] border-[#4D1435] pb-2 mb-6">
-               <h2 className="text-[10px] sm:text-[12px] print:text-[12px] font-extrabold uppercase text-[#4D1435] tracking-tight">
+               <h2 className="text-[11px] sm:text-[14px] print:text-[14px] font-extrabold uppercase text-[#4D1435] tracking-tight">
                  {child.name}'S KAUSHALYA ECCTRACTION PLAN (PHASE {startStage.roman})
                </h2>
             </div>
@@ -360,13 +364,13 @@ export function ReportDocument({
                    return (
                      <div key={score.domain} className="flex-1 flex flex-col border-b-2 border-gray-100 pb-8 last:border-0 last:pb-0">
                         <div className="flex flex-row justify-between items-center mb-4 sm:mb-6 border-b border-[#4D1435] pb-2 gap-2 sm:gap-0">
-                             <h2 className="text-[9px] sm:text-[12px] print:text-[12px] font-bold uppercase text-[#4D1435] tracking-normal flex items-center shrink min-w-0 pr-2">
-                               <span className="mr-1.5 sm:mr-3 border-2 border-[#4D1435] rounded-full w-4 h-4 sm:w-6 sm:h-6 inline-flex items-center justify-center text-[8px] sm:text-[10px] shrink-0">{romanDomain}</span>
-                               <span className="whitespace-nowrap shrink min-w-0 overflow-hidden text-ellipsis leading-tight">{domain.name}</span>
+                             <h2 className="text-[10px] sm:text-[14px] print:text-[14px] font-bold uppercase text-[#4D1435] tracking-tight flex items-center shrink-0">
+                               <span className="mr-1 sm:mr-2 border-2 border-[#4D1435] rounded-full w-4 h-4 sm:w-6 sm:h-6 inline-flex items-center justify-center text-[8px] sm:text-[10px] shrink-0">{romanDomain}</span>
+                               <span className="whitespace-nowrap">{domain.name}</span>
                              </h2>
-                              <div className="flex flex-col items-center justify-center min-w-[45px] sm:min-w-[70px] px-2 py-1 sm:px-3 sm:py-2 rounded-md sm:rounded-xl border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0">
-                              <span className="text-sm sm:text-lg font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
-                              <span className="text-[9px] sm:text-[10px] font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
+                              <div className="flex flex-col items-center justify-center min-w-[45px] sm:min-w-[70px] px-2 py-1 sm:px-3 sm:py-2 rounded-md sm:rounded-xl border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0 ml-auto">
+                              <span className="text-[14px] sm:text-[18px] font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
+                              <span className="text-[8px] sm:text-[10px] font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
                             </div>
                           </div>
 
