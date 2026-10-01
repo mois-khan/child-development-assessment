@@ -90,8 +90,7 @@ export default function CmsContentPage() {
         <div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">Report Narratives</h1>
           <p className="mt-1 text-sm text-ink-3">
-            Edit the text shown in the printed reports. You can use these tags: <br/>
-            <code>{'{name}'}</code>, <code>{'{age}'}</code>, <code>{'{domain}'}</code>, <code>{'{grade}'}</code>, <code>{'{he_she}'}</code>, <code>{'{his_her}'}</code>, <code>{'{him_her}'}</code>, <code>{'{He_She}'}</code>, <code>{'{His_Her}'}</code>, <code>{'{Him_Her}'}</code>, <code>{'{strongest_domain}'}</code>, <code>{'{weakest_domains}'}</code>.
+            Edit the text shown in the printed reports. You can use <code>{'{name}'}</code>, <code>{'{domain}'}</code>, <code>{'{grade}'}</code>, and <code>{'{age}'}</code> as placeholders.
           </p>
         </div>
       </div>
