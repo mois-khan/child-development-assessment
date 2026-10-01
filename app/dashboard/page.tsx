@@ -7,10 +7,10 @@ import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { useAuth } from "@/lib/auth/provider";
 import { itemBankReady, primeItemBank } from "@/lib/item-bank";
 import { phaseLabel } from "@/lib/naming";
-import { STATUSES, scoreAssessment } from "@/lib/scoring";
+import { scoreAssessment } from "@/lib/scoring";
 import { stageForAge } from "@/lib/stage";
 import { listAssessments, listChildren, type SavedChild, type StoredAssessment } from "@/lib/store";
-import type { AssessmentResult, DomainCode, StatusCode } from "@/lib/types";
+import type { AssessmentResult, DomainCode } from "@/lib/types";
 import {
   Avatar,
   Badge,
@@ -31,7 +31,6 @@ import {
   Section,
   SectionTile,
   Shell,
-  StatusChip,
   TopBar,
   domainColor,
   domainName,
@@ -205,10 +204,10 @@ export default function DashboardPage() {
                     {totals.children === 0
                       ? "Add your child and we'll work out exactly which of the seven phases they're on."
                       : resumable.length > 0
-                        ? `${resumable[0].child.name}'s check is part-way through; pick it up where you stopped.`
+                        ? `${resumable[0].child.name}'s assessment is part-way through; pick it up where you stopped.`
                         : totals.done === 0
-                          ? "Everything's set up. A calm ten minutes is all the first check takes."
-                          : `${totals.done} check${totals.done === 1 ? "" : "s"} saved across your family.`}
+                          ? "Everything's set up. A calm ten minutes is all the first assessment takes."
+                          : `${totals.done} assessment${totals.done === 1 ? "" : "s"} saved across your family.`}
                   </p>
                 )}
 
@@ -228,7 +227,7 @@ export default function DashboardPage() {
                         variant="sun"
                         iconRight={<IconArrowRight size={17} />}
                       >
-                        Resume {resumable[0].child.name}&rsquo;s check
+                        Resume {resumable[0].child.name}&rsquo;s assessment
                       </ButtonLink>
                     ) : (
                       <ButtonLink
@@ -236,7 +235,7 @@ export default function DashboardPage() {
                         variant="sun"
                         iconRight={<IconArrowRight size={17} />}
                       >
-                        Start a new check
+                        Start a new assessment
                       </ButtonLink>
                     )}
                     <Link
@@ -273,7 +272,7 @@ export default function DashboardPage() {
                 />
                 <StatTile
                   value={totals.done}
-                  label={totals.done === 1 ? "Check done" : "Checks done"}
+                  label={totals.done === 1 ? "Assessment done" : "Assessments done"}
                   icon={<IconCheck size={19} />}
                   gradient="linear-gradient(135deg, var(--st-on-track), var(--sec-language))"
                   href="/children"
@@ -380,7 +379,7 @@ export default function DashboardPage() {
         {/* ══ the six areas ════════════════════════════════════════════════ */}
         <Section size="sm" className="bg-[var(--surface)]">
           <Shell width="wide">
-            <p className="eyebrow eyebrow-accent">What every check covers</p>
+            <p className="eyebrow eyebrow-accent">What every assessment covers</p>
             <h2 className="mt-1.5">Six areas of brain development</h2>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -448,7 +447,7 @@ export default function DashboardPage() {
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/18 px-3 py-1 text-xs font-bold text-white backdrop-blur">
                     <IconSparkle size={13} /> Kaushalya Genius Kid Program
                   </span>
-                  <h3 className="mt-3 text-white">Keep going between checks</h3>
+                  <h3 className="mt-3 text-white">Keep going between assessments</h3>
                   <p className="mt-2 text-sm leading-relaxed text-white/80">
                     Daily ten-minute activities built for the exact phase your child is on.
                   </p>
@@ -517,7 +516,6 @@ function StatTile({
 
 function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: number }) {
   const { child, ageMonths, phase, completed, inProgress, latest } = summary;
-  const status: StatusCode | null = latest?.result.overallStatus ?? null;
 
   return (
     <Card
@@ -530,7 +528,7 @@ function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: numbe
           yet, so an un-assessed child doesn't read as a neutral verdict. */}
       <div
         className="h-1.5 w-full"
-        style={{ background: status ? statusColor(status) : "var(--accent-line)" }}
+        style={{ background: latest?.result ? statusColor(latest.result.overallStatus) : "var(--accent-line)" }}
       />
 
       <div className="flex flex-1 flex-col p-5">
@@ -549,12 +547,25 @@ function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: numbe
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Badge tone="accent">{phaseLabel(phase)}</Badge>
-          {status ? (
-            <StatusChip status={status} label={STATUSES[status].label} />
+          {latest?.result ? (
+            <span
+              className="chip"
+              style={
+                {
+                  "--chip-bg": statusColor(latest.result.overallStatus),
+                  "--chip-fg": "var(--on-status)",
+                  "--chip-bd": "transparent",
+                } as React.CSSProperties
+              }
+            >
+              {latest.result.overallStatus}
+              {" · "}
+              {Math.round(latest.result.overallDq ?? 0)}%
+            </span>
           ) : inProgress ? (
             <Badge tone="sun">In progress</Badge>
           ) : (
-            <Badge tone="neutral">No checks yet</Badge>
+            <Badge tone="neutral">No assessments yet</Badge>
           )}
         </div>
 
@@ -596,7 +607,7 @@ function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: numbe
             </ButtonLink>
           ) : (
             <ButtonLink href={`/children/${child.id}/pay`} size="sm" block>
-              Start check
+              Start assessment
             </ButtonLink>
           )}
         </div>
@@ -619,11 +630,11 @@ function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: numbe
  * Must not mutate `summaries`; return a new array.
  */
 function rankChildren(summaries: ChildSummary[]): ChildSummary[] {
-  // Most actionable first: an unfinished check is one tap away from
+  // Most actionable first: an unfinished assessment is one tap away from
   // "Resume", so it leads. Next, a child never assessed at all — nothing to
-  // show yet, but the clearest next action ("Start check"). Checked children
-  // sort last, oldest completed check first, so a family with one child
-  // overdue for a recheck and one freshly checked sees the overdue one first.
+  // show yet, but the clearest next action ("Start assessment"). Checked children
+  // sort last, oldest completed assessment first, so a family with one child
+  // overdue for a recheck and one freshly assessed sees the overdue one first.
   return [...summaries].sort(
     (a, b) => urgency(a) - urgency(b) || oldestCompletedFirst(a, b),
   );
@@ -644,7 +655,7 @@ function oldestCompletedFirst(a: ChildSummary, b: ChildSummary): number {
 /**
  * The best result any child has for one competence, so the six-areas strip
  * shows the family's own data rather than six identical blurbs. Returns null
- * until someone has completed a check.
+ * until someone has completed an assessment.
  *
  * The number shown is the same one the report bar shows: the development
  * score (the engine's `dq`) when there is one, and the raw pass-rate only

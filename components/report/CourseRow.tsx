@@ -82,7 +82,7 @@ function CourseCard({ course, childName }: { course: CourseRecommendation; child
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(demoUrl)}&color=4D1435&bgcolor=FFFFFF&margin=0`;
 
   return (
-    <div className="w-full rounded-2xl overflow-hidden shadow-md flex flex-row group relative bg-[#F4A93B] border-[2px] border-[#4D1435]/10">
+    <div className="w-full rounded-2xl overflow-hidden shadow-md flex flex-col md:flex-row group relative bg-[#F4A93B] border-[2px] border-[#4D1435]/10">
       
       {/* Background Graphic Accent (Very subtle white bloom for premium gold feel) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -111,12 +111,12 @@ function CourseCard({ course, childName }: { course: CourseRecommendation; child
         </p>
 
         {/* Modern SaaS CTA Buttons */}
-        <div className="mt-auto flex items-center gap-4">
+        <div className="mt-auto flex flex-col sm:flex-row items-center gap-4">
           <a
             href={demoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="no-print inline-flex items-center justify-center gap-2 rounded-lg bg-[#4D1435] px-6 py-3 text-[13px] font-black text-white hover:bg-[#3a0f28] transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-200"
+            className="w-full sm:w-auto no-print inline-flex items-center justify-center gap-2 rounded-lg bg-[#4D1435] px-6 py-3 text-[13px] font-black text-white hover:bg-[#3a0f28] transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-200"
           >
             <SparklesIcon />
             CLAIM 7-DAY FREE DEMO
@@ -125,7 +125,7 @@ function CourseCard({ course, childName }: { course: CourseRecommendation; child
             href={courseUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="no-print inline-flex items-center justify-center gap-2 rounded-lg border-[2px] border-[#4D1435]/20 bg-white/40 backdrop-blur-sm px-6 py-3 text-[13px] font-black text-[#4D1435] hover:bg-white/60 transition-colors"
+            className="w-full sm:w-auto no-print inline-flex items-center justify-center gap-2 rounded-lg border-[2px] border-[#4D1435]/20 bg-white/40 backdrop-blur-sm px-6 py-3 text-[13px] font-black text-[#4D1435] hover:bg-white/60 transition-colors"
           >
             Explore Course
             <ArrowRightIcon />
@@ -134,7 +134,7 @@ function CourseCard({ course, childName }: { course: CourseRecommendation; child
       </div>
 
       {/* Right Block: White Print Ticket Stub */}
-      <div className="w-[170px] shrink-0 border-l-[3px] border-dashed border-[#4D1435]/30 bg-[#fffdfa] flex flex-col items-center justify-center p-5 relative z-10">
+      <div className="w-full md:w-[170px] shrink-0 border-t-[3px] md:border-t-0 md:border-l-[3px] border-dashed border-[#4D1435]/30 bg-[#fffdfa] flex flex-col items-center justify-center p-5 relative z-10">
          <img
             src={qrUrl}
             alt="Scan to demo"

@@ -29,7 +29,7 @@ const poetsen = Poetsen_One({
 export const metadata: Metadata = {
   title: "Kaushalya Developmental Screening Platform",
   description:
-    "A ten-minute milestone check for children aged 0–6, across six areas of brain development, with a keepsake report and activities to do at home.",
+    "A ten-minute milestone assessment for children aged 0–6, across six areas of brain development, with a keepsake report and activities to do at home.",
   manifest: "/manifest.json",
   icons: {
     icon: [{ url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }],

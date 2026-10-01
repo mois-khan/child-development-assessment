@@ -32,14 +32,14 @@ import {
 const PRICE = 99;
 
 /**
- * Start the check — one screen, one decision.
+ * Start the assessment — one screen, one decision.
  *
  * This used to be two pages: a "choose a check" screen that showed the one
  * real option next to two greyed-out "coming soon" cards and made a parent
  * click "Continue" to confirm the only choice available, then a separate
  * "unlock" screen for the coupon. Picking among one option isn't a choice, so
  * that click was pure friction — merged here into a single screen: what the
- * check covers, then the one thing that actually needs a decision (the
+ * assessment covers, then the one thing that actually needs a decision (the
  * coupon), then go.
  */
 export default function PayPage({
@@ -150,12 +150,11 @@ export default function PayPage({
         DOMAINS.map((d) => [d.code, [startStage.id]]),
       ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
       const record = await createAssessment(child, today, stagesByDomain);
-      setCelebrating(true);
-      window.setTimeout(() => router.push(`/assessment/${record.id}`), 1700);
+      router.push(`/assessment/${record.id}`);
     } catch (err) {
       console.error(err);
       setError(
-        "That went through, but we couldn't start the check. Please contact support — don't pay again.",
+        "That went through, but we couldn't start the assessment. Please contact support — don't pay again.",
       );
       setStarting(false);
     }
@@ -187,7 +186,7 @@ export default function PayPage({
         amount: order.amount,
         currency: order.currency,
         name: "Kaushalya Genius",
-        description: "Genius Milestone Check",
+        description: "Genius Milestone Assessment",
         order_id: order.id,
         handler: async function (response: any) {
           // The payment already succeeded on Razorpay's side by the time this
@@ -298,8 +297,8 @@ export default function PayPage({
           <Shell width="reading">
             <div className="flex flex-wrap items-end justify-between gap-5">
               <div>
-                <p className="eyebrow eyebrow-accent">Genius Milestone Check</p>
-                <h1 className="mt-3">Start {child.name}&rsquo;s check</h1>
+                <p className="eyebrow eyebrow-accent">Genius Milestone Assessment</p>
+                <h1 className="mt-3">Start {child.name}&rsquo;s assessment</h1>
                 <p className="lede mt-3 max-w-[46ch]">
                   Built for {child.name}&rsquo;s exact phase: Phase {startStage.roman},{" "}
                   {startStage.name}.
@@ -317,7 +316,7 @@ export default function PayPage({
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex flex-wrap gap-2">
                     <Badge tone="accent" size="lg">
-                      <IconSparkle size={14} /> Phase {startStage.roman} · {startStage.name}
+                      <IconSparkle size={14} /> Phase {startStage.roman}
                     </Badge>
                     <Badge tone="neutral">from {questionCount} questions</Badge>
                     <Badge tone="neutral">
@@ -364,7 +363,7 @@ export default function PayPage({
                     onClick={startAssessment}
                     iconRight={<IconArrowRight size={18} />}
                   >
-                    {starting ? "Preparing…" : applied ? "Start the check" : `Pay ₹${PRICE} & Start`}
+                    {starting ? "Preparing…" : applied ? "Start the assessment" : `Pay ₹${PRICE} & Start`}
                   </Button>
                   {!applied && (
                     <button
@@ -433,7 +432,7 @@ export default function PayPage({
               <p className="text-sm leading-relaxed text-ink-2">
                 Payments are handled by Razorpay; we never see or store your card details.{" "}
                 {child.name}&rsquo;s answers are saved securely to your account so you can pick
-                up the check on any device.
+                up the assessment on any device.
               </p>
             </div>
           </Shell>

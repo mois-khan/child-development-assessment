@@ -35,15 +35,15 @@ import type { BrainStage, CompetenceCode, StageCell } from "@/lib/types";
  * ──────────────────────────────────────────────────────────────────────────*/
 
 export const BRAIN_STAGES: BrainStage[] = [
-  { id: "s1", order: 1, roman: "I", name: "Phase 1", superiorMonths: 0.5, averageMonths: 1, slowMonths: 2.5, hue: 0 },
-  { id: "s2", order: 2, roman: "II", name: "Phase 2", superiorMonths: 1, averageMonths: 2.5, slowMonths: 7, hue: 24 },
-  { id: "s3", order: 3, roman: "III", name: "Phase 3", superiorMonths: 2.5, averageMonths: 7, slowMonths: 12, hue: 50 },
-  { id: "s4", order: 4, roman: "IV", name: "Phase 4", superiorMonths: 7, averageMonths: 12, slowMonths: 18, hue: 140 },
-  { id: "s5", order: 5, roman: "V", name: "Phase 5", superiorMonths: 12, averageMonths: 18, slowMonths: 27, hue: 195 },
-  { id: "s6a", order: 6, roman: "VIA", name: "Phase 6a", superiorMonths: 18, averageMonths: 27, slowMonths: 36, hue: 220 },
-  { id: "s6b", order: 7, roman: "VIB", name: "Phase 6b", superiorMonths: 27, averageMonths: 36, slowMonths: 54, hue: 245 },
-  { id: "s7a", order: 8, roman: "VIIA", name: "Phase 7a", superiorMonths: 36, averageMonths: 54, slowMonths: 72, hue: 275 },
-  { id: "s7b", order: 9, roman: "VIIB", name: "Phase 7b", superiorMonths: 54, averageMonths: 72, slowMonths: 144, hue: 292 }
+  { id: "s1", order: 1, roman: "I", name: "MEDULLA AND CORD", superiorMonths: 0.5, averageMonths: 1, slowMonths: 2.5, hue: 0 },
+  { id: "s2", order: 2, roman: "II", name: "PONS", superiorMonths: 1, averageMonths: 2.5, slowMonths: 7, hue: 24 },
+  { id: "s3", order: 3, roman: "III", name: "MID-BRAIN", superiorMonths: 2.5, averageMonths: 7, slowMonths: 12, hue: 50 },
+  { id: "s4", order: 4, roman: "IV", name: "INITIAL CORTEX", superiorMonths: 7, averageMonths: 12, slowMonths: 18, hue: 140 },
+  { id: "s5", order: 5, roman: "V", name: "EARLY CORTEX", superiorMonths: 12, averageMonths: 18, slowMonths: 27, hue: 195 },
+  { id: "s6a", order: 6, roman: "VIA", name: "PRIMITIVE CORTEX", superiorMonths: 18, averageMonths: 27, slowMonths: 36, hue: 220 },
+  { id: "s6b", order: 7, roman: "VIB", name: "PRIMITIVE CORTEX", superiorMonths: 27, averageMonths: 36, slowMonths: 54, hue: 245 },
+  { id: "s7a", order: 8, roman: "VIIA", name: "SOPHISTICATED CORTEX", superiorMonths: 36, averageMonths: 54, slowMonths: 72, hue: 275 },
+  { id: "s7b", order: 9, roman: "VIIB", name: "SOPHISTICATED CORTEX", superiorMonths: 54, averageMonths: 72, slowMonths: 144, hue: 292 }
 ];
 
 export const STAGE_BY_ID = Object.fromEntries(

@@ -1,15 +1,16 @@
+
 const fs = require('fs');
-let code = fs.readFileSync('components/ReportDocument.tsx', 'utf8');
-code = code.replace(
-  '<main className="bg-gray-100 min-h-screen py-8 print:py-0 print:bg-white flex flex-col items-center">',
-  '<main className="bg-gray-100 min-h-screen py-8 print:py-0 print:bg-white flex flex-col items-center print:block">'
+let content = fs.readFileSync('app/assessment/[id]/page.tsx', 'utf8');
+
+content = content.replace(
+  'title={Phase \$\{stage.roman\}}',
+  'title={\Phase \$\{stage.roman\}\}'
 );
-code = code.replace(
-  '<h1 className="text-[6.5rem] font-black uppercase tracking-tight leading-none text-[#4D1435]">',
-  '<h1 className="text-[6.5rem] font-black uppercase tracking-normal leading-none text-[#4D1435]">'
+
+content = content.replace(
+  'stageLabel={\Stage \}',
+  'stageLabel={\Stage \$\{stage.roman\}\}'
 );
-code = code.replace(
-  '<span style={{ WebkitTextStroke: \'3px #4D1435\', color: \'transparent\' }}>ECCTR</span>ACTION',
-  '<span style={{ WebkitTextStroke: \'3px #4D1435\', color: \'transparent\' }} className="mr-1">ECCTR</span>ACTION'
-);
-fs.writeFileSync('components/ReportDocument.tsx', code);
+
+fs.writeFileSync('app/assessment/[id]/page.tsx', content);
+

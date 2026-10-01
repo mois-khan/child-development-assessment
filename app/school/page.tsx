@@ -119,7 +119,7 @@ export default function SchoolDashboardPage() {
           latest,
         };
       })
-      // Whoever needs attention first: an unfinished check outranks a
+      // Whoever needs attention first: an unfinished assessment outranks a
       // finished one, and within a group the most recently touched student
       // sorts first — a roster is worked top-down, not alphabetically.
       .sort((a, b) => {
@@ -199,7 +199,7 @@ export default function SchoolDashboardPage() {
                     {totals.students === 0
                       ? "Add your first student and we'll work out exactly which of the seven phases they're on."
                       : totals.inProgress > 0
-                        ? `${totals.inProgress} check${totals.inProgress === 1 ? "" : "s"} part-way through; pick up where a student stopped.`
+                        ? `${totals.inProgress} assessment${totals.inProgress === 1 ? "" : "s"} part-way through; pick up where a student stopped.`
                         : `${totals.reportsReady} of ${totals.students} students have a report ready.`}
                   </p>
                 )}
@@ -297,7 +297,7 @@ export default function SchoolDashboardPage() {
                     <p className="text-lg font-extrabold text-ink">No students yet</p>
                     <p className="mt-1 max-w-[36ch] text-sm text-ink-3">
                       Add your first student and their guardian&rsquo;s email, that&rsquo;s all it
-                      takes to start their first check.
+                      takes to start their first assessment.
                     </p>
                   </div>
                   <ButtonLink href="/children?new=1" iconRight={<IconArrowRight size={17} />}>
@@ -395,7 +395,7 @@ function StudentRow({ summary }: { summary: StudentSummary }) {
           </ButtonLink>
         ) : (
           <ButtonLink href={`/children/${child.id}/pay`} variant="secondary" size="sm" iconRight={<IconArrowRight size={15} />}>
-            Start check
+            Start assessment
           </ButtonLink>
         )}
       </div>

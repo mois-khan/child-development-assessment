@@ -176,7 +176,7 @@ function JoinInner() {
             <p className="prose-read mx-auto mt-3 max-w-[42ch]">
               Your account is created. We&rsquo;ve sent a confirmation link to{" "}
               <strong className="font-bold text-ink">{email.trim()}</strong>. Open it, and
-              you can start the check.
+              you can start the assessment.
             </p>
             <Button className="mt-8" onClick={() => setMode("signin")}>
               I&rsquo;ve confirmed, sign me in

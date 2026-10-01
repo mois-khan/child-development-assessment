@@ -136,7 +136,7 @@ export default function ChildProfilePage({
       <TopBar
         right={
           <ButtonLink href={`/children/${child.id}/pay`} size="sm" iconRight={<IconArrowRight size={16} />}>
-            New check
+            New assessment
           </ButtonLink>
         }
       />
@@ -170,7 +170,7 @@ export default function ChildProfilePage({
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <span className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-3.5 py-1.5 text-sm font-bold leading-snug text-white backdrop-blur">
                       <IconSparkle size={15} className="shrink-0" />
-                      Phase {stage.roman} of VII · {stage.name}
+                      Phase {stage.roman}
                     </span>
                     <button
                       type="button"
@@ -213,7 +213,7 @@ export default function ChildProfilePage({
                 size="sm"
                 iconRight={<IconArrowRight size={16} />}
               >
-                Start new check
+                Start new assessment
               </ButtonLink>
             </div>
 
@@ -222,7 +222,7 @@ export default function ChildProfilePage({
                 <Mascot size={88} mood="wave" className="mx-auto" />
                 <h3 className="mt-5 text-xl">No assessments done yet</h3>
                 <p className="mx-auto mt-2 max-w-[40ch] text-base leading-relaxed text-ink-2">
-                  Run {child.name}&rsquo;s first milestone check, about ten minutes, and their
+                  Run {child.name}&rsquo;s first milestone assessment, about ten minutes, and their
                   report will live right here.
                 </p>
                 <ButtonLink
@@ -231,7 +231,7 @@ export default function ChildProfilePage({
                   className="mt-7"
                   iconRight={<IconArrowRight size={18} />}
                 >
-                  Start the check
+                  Start the assessment
                 </ButtonLink>
               </Card>
             ) : (
@@ -251,7 +251,7 @@ export default function ChildProfilePage({
                           {a.completedAt ? <IconStarFilled size={18} /> : <IconRefresh size={18} />}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-base font-extrabold text-ink">Genius Milestone Check</p>
+                          <p className="text-base font-extrabold text-ink">Genius Milestone Assessment</p>
                           <p className="text-xs font-semibold text-ink-2">
                             {formatDateTime(a.completedAt || (a as any).createdAt || a.assessedOn)}
                           </p>
@@ -277,7 +277,7 @@ export default function ChildProfilePage({
                           </>
                         ) : (
                           <ButtonLink href={`/assessment/${a.id}`} size="sm" className="w-full">
-                            Resume Check
+                            Resume Assessment
                           </ButtonLink>
                         )}
                       </div>
@@ -319,7 +319,7 @@ export default function ChildProfilePage({
                                 {a.completedAt ? <IconStarFilled size={18} /> : <IconRefresh size={18} />}
                               </span>
                               <p className="font-extrabold text-ink text-base">
-                                Genius Milestone Check
+                                Genius Milestone Assessment
                               </p>
                             </div>
                           </td>
@@ -348,7 +348,7 @@ export default function ChildProfilePage({
                                 </>
                               ) : (
                                 <ButtonLink href={`/assessment/${a.id}`} size="sm">
-                                  Resume Check
+                                  Resume Assessment
                                 </ButtonLink>
                               )}
                             </div>
@@ -368,12 +368,12 @@ export default function ChildProfilePage({
           <Section size="sm">
             <Shell width="wide">
               {/* No View/Download buttons here — the "Completed" row for this
-                  same check in the table above already has them. This card's
+                  same assessment in the table above already has them. This card's
                   job is the domain-by-domain numbers, not a second set of
                   the same two links. */}
               <div>
                 <p className="eyebrow eyebrow-accent">Latest evaluation</p>
-                <h2 className="mt-1">Recent check breakdown</h2>
+                <h2 className="mt-1">Recent assessment breakdown</h2>
               </div>
 
               <Card variant="clay" className="mt-5 overflow-hidden">
