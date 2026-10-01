@@ -230,7 +230,7 @@ export default function MilestoneVideosPage() {
                     <span className="flex min-w-0 items-center gap-2">
                       <IconChevronRight size={16} className="shrink-0 text-ink-3 transition-transform group-open:rotate-90" />
                       <span className="text-base font-extrabold text-ink">
-                        Phase {stage.roman} · {stage.name}
+                        Phase {stage.roman}
                       </span>
                     </span>
                     <Badge size="sm" tone={stageVideoCount > 0 ? "accent" : "neutral"}>

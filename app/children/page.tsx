@@ -288,14 +288,14 @@ function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
             <Badge tone="neutral">Loading…</Badge>
           ) : state.openId ? (
             <Badge tone="sun" icon={<IconClock size={12} />}>
-              Check unfinished
+              Assessment unfinished
             </Badge>
           ) : state.done > 0 ? (
             <Badge tone="success" icon={<IconCheck size={12} />}>
               {state.done} report{state.done === 1 ? "" : "s"}
             </Badge>
           ) : (
-            <Badge tone="neutral">No checks yet</Badge>
+            <Badge tone="neutral">No assessments yet</Badge>
           )}
         </div>
       </button>
@@ -312,7 +312,7 @@ function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
             block
             iconLeft={<IconBolt size={15} />}
           >
-            Resume the check
+            Resume the assessment
           </ButtonLink>
         ) : (
           <ButtonLink
@@ -322,7 +322,7 @@ function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
             block
             iconRight={<IconArrowRight size={15} />}
           >
-            {state.done > 0 ? "Check again" : "Start the check"}
+            {state.done > 0 ? "Assess again" : "Start the assessment"}
           </ButtonLink>
         )}
       </div>

@@ -279,23 +279,46 @@ export default function AssessmentPage({
     ),
   );
 
-  /** Move on from a finished stage: climb, descend, or close the section. */
+  /** Move on from a finished stage: climb, descend, or close the section.
+   *
+   * IMPORTANT: Only the stages walked up to and including the current
+   * stageOrdinal are considered. If the user went back and re-answered
+   * questions, stageIds may already contain stages that were appended during
+   * the first forward pass. Passing the full array to nextStageFor would make
+   * its "highest" pointer land on an incomplete future stage, causing
+   * cellComplete() to return false and the walk to wrongly skip stageUp /
+   * stageDown and jump straight to sectionDone.
+   *
+   * We also truncate any stale future stages from the list before appending
+   * the newly-decided next stage, so the array stays coherent with the path
+   * the user is actually on now.
+   */
   const advanceStage = useCallback(
     (nextResponses: Record<string, ResponseValue>) => {
-      const next = nextStageFor(domainCode, stageIds, nextResponses, months);
+      // Only the stages the user has actually walked through so far.
+      const walkedIds = stageIds.slice(0, stageOrdinal + 1);
+      const next = nextStageFor(domainCode, walkedIds, nextResponses, months);
       if (!next) {
+        // Trim any stale future stages that are now obsolete after going back.
+        if (stageIds.length > stageOrdinal + 1) {
+          setStages((prev) => ({
+            ...prev,
+            [domainCode]: walkedIds,
+          }));
+        }
         setPhase(sectionIndex + 1 < DOMAIN_ORDER.length ? "sectionDone" : "finish");
         return;
       }
       appendStage(id, domainCode, next.id);
       setStages((prev) => ({
         ...prev,
-        [domainCode]: [...(prev[domainCode] ?? []), next.id],
+        // Truncate stale stages beyond current ordinal, then append the new one.
+        [domainCode]: [...walkedIds, next.id],
       }));
       const climbing = !!stage && next.order > stage.order;
       setPhase(climbing ? "stageUp" : "stageDown");
     },
-    [domainCode, stageIds, months, id, sectionIndex, stage],
+    [domainCode, stageIds, stageOrdinal, months, id, sectionIndex, stage],
   );
 
   const answer = useCallback(
@@ -488,7 +511,7 @@ export default function AssessmentPage({
               <button
                 type="button"
                 onClick={() => router.push(`/children/${record.child.id}`)}
-                aria-label={`Save and exit ${record.child.name}'s check`}
+                aria-label={`Save and exit ${record.child.name}'s assessment`}
                 title="Your answers are saved, come back any time"
                 className="btn btn-ghost !min-h-11 !min-w-11 !px-0"
               >
@@ -513,7 +536,7 @@ export default function AssessmentPage({
               name={domain.name}
               blurb={domain.blurb.replace("your child", record.child.name)}
               questionCount={items.length}
-              stageLabel={`Stage ${stage.roman} · ${stage.name}`}
+              stageLabel={`Stage ${stage.roman}`}
               onStart={() => setPhase("question")}
             />
           )}
@@ -699,7 +722,7 @@ function StageChip({ stage, muted }: { stage: BrainStage; muted?: boolean }) {
         fontFamily: "var(--font-display)",
         opacity: muted ? 0.65 : 1,
       }}
-      title={stage.name}
+      title={`Phase ${stage.roman}`}
     >
       {stage.roman}
     </span>
@@ -1239,9 +1262,9 @@ function NotFound({ onStart }: { onStart: () => void }) {
       <Shell width="narrow">
         <div className="pt-20 text-center">
           <Mascot size={92} mood="think" className="mx-auto" />
-          <h1 className="mt-6">We couldn&rsquo;t find that check</h1>
+          <h1 className="mt-6">We couldn&rsquo;t find that assessment</h1>
           <p className="prose-read mx-auto mt-3 max-w-[42ch]">
-            This check doesn&rsquo;t exist, or isn&rsquo;t linked to your account.
+            This assessment doesn&rsquo;t exist, or isn&rsquo;t linked to your account.
           </p>
           <Button className="mt-8" onClick={onStart}>
             Go to your children

@@ -54,7 +54,7 @@ const STEPS: {
   },
   {
     title: "Answer what you see today",
-    body: "Short, friendly questions, one at a time, each with a simple way to check together. Around ten minutes, and you can stop and come back.",
+    body: "Short, friendly questions, one at a time, each with a simple way to assess together. Around ten minutes, and you can stop and come back.",
     image: "/images/parent-reading.jpg",
     alt: "A parent reading a book with their child",
     tint: "var(--sec-language)",
@@ -104,7 +104,7 @@ export default function Home() {
                   className="lede animate-rise mt-6 max-w-[52ch]"
                   style={{ animationDelay: "120ms" }}
                 >
-                  A ten-minute milestone check across the six areas of your child&rsquo;s brain
+                  A ten-minute milestone assessment across the six areas of your child&rsquo;s brain
                   development, with a keepsake report, videos, and the exact next step for
                   the stage they&rsquo;re in right now.
                 </p>
@@ -114,7 +114,7 @@ export default function Home() {
                   style={{ animationDelay: "180ms" }}
                 >
                   <ButtonLink href="/children" size="lg" iconRight={<IconArrowRight size={18} />}>
-                    Start the check
+                    Start the assessment
                   </ButtonLink>
                   <ButtonLink href="#how" variant="secondary" size="lg">
                     See how it works
@@ -189,7 +189,7 @@ export default function Home() {
           <Shell width="wide">
             <SectionHeading
               eyebrow="What we look at"
-              title="Six areas, checked one by one"
+              title="Six areas, assessed one by one"
               description="The same six competences the Kaushalya programme is built around. Each one gets its own short set of questions, chosen for your child's stage."
               align="center"
             />
@@ -218,7 +218,7 @@ export default function Home() {
             <SectionHeading
               eyebrow="The KGKP method"
               title="Seven stages of brain development"
-              description="Your child climbs one stage at a time, from the newborn reflexes of the medulla to the sophisticated cortex of a six-year-old. We find the stage they are on today, then check all six areas at exactly that level."
+              description="Your child climbs one stage at a time, from the newborn reflexes of the medulla to the sophisticated cortex of a six-year-old. We find the stage they are on today, then assess all six areas at exactly that level."
               align="center"
             />
 
@@ -334,7 +334,7 @@ export default function Home() {
                 <SectionHeading
                   eyebrow="The report"
                   title="A keepsake, not a verdict"
-                  description="Every check ends with a report written in plain language, no jargon, no scores you have to decode. It lives on your child's profile so you can open or download it any time."
+                  description="Every assessment ends with a report written in plain language, no jargon, no scores you have to decode. It lives on your child's profile so you can open or download it any time."
                 />
                 <ul className="mt-7 list-none space-y-3.5 p-0">
                   {[

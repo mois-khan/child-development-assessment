@@ -25,11 +25,17 @@ export function NavLink({ href, label }: { href: string; label: string }) {
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className="relative rounded-full px-4 py-2 text-sm font-bold transition-colors"
-      style={{
-        color: active ? "var(--accent)" : "var(--ink-2)",
-        background: active ? "var(--accent-soft)" : "transparent",
-      }}
+      className={[
+        "relative rounded-full px-4 py-2 text-sm font-bold transition-all",
+        active
+          ? "shadow-sm"
+          : "hover:bg-[var(--surface-2)] hover:text-[var(--ink)]",
+      ].join(" ")}
+      style={
+        active
+          ? { background: "var(--brand-600)", color: "#fff" }
+          : { color: "var(--ink-2)" }
+      }
     >
       {label}
     </Link>

@@ -4,7 +4,7 @@ import { notifyUser } from "@/lib/notifications/send";
 
 /**
  * The one time-based notification in this app: nudge a family (or school)
- * back to a child who hasn't had a fresh check in a while. Runs on a
+ * back to a child who hasn't had a fresh assessment in a while. Runs on a
  * schedule (see vercel.json) rather than from any user action, which is
  * why it needs its own auth — there's no signed-in session to check
  * against, only a secret only Vercel's scheduler and this route know.
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
     await notifyUser({
       userId: child.profile_id,
       type: "reminder",
-      title: `Time for ${child.name}'s next check`,
+      title: `Time for ${child.name}'s next assessment`,
       body: "A few minutes now keeps their phase and their report up to date.",
       url: `/children/${child.id}`,
     });
@@ -104,7 +104,7 @@ interface ReminderContext {
  * Quarterly cadence, monthly cooldown — picked rather than asked for, so
  * they're a starting point, not a spec:
  *
- *  - 90 days since the last completed check (or since signup, for a child
+ *  - 90 days since the last completed assessment (or since signup, for a child
  *    never checked at all) before a nudge is due. Matches how fast a young
  *    child's development actually moves — a monthly nudge would be noise,
  *    a yearly one would miss a phase change entirely.

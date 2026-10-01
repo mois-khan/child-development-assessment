@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { notifyUser } from "@/lib/notifications/send";
 
 /**
- * Fired right after a parent (or school) finishes a check — see
+ * Fired right after a parent (or school) finishes an assessment — see
  * completeAssessment() in lib/data/assessments.ts, which calls this
  * fire-and-forget immediately after its own Supabase write succeeds.
  *

@@ -238,7 +238,7 @@ export function EditChildDialog({
               )}
               {tooOld && (
                 <p className="hint hint-error">
-                  This check covers children up to six years old.
+                  This assessment covers children up to six years old.
                 </p>
               )}
               {dobChanged && !tooOld && age !== null && (
@@ -246,7 +246,7 @@ export function EditChildDialog({
                   className="mt-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm"
                   style={{ background: "var(--st-mild-soft)", color: "var(--st-mild-ink)" }}
                 >
-                  Reports already saved keep the age they were scored at. Only new checks will
+                  Reports already saved keep the age they were scored at. Only new assessments will
                   use this date.
                 </div>
               )}

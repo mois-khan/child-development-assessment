@@ -94,13 +94,15 @@ export function MobileNav() {
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
-            // 40px tall with the padding below, which keeps the row itself
-            // short while the link's own tap area stays comfortable.
-            className="shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-bold transition-colors"
-            style={{
-              color: active ? "var(--accent)" : "var(--ink-2)",
-              background: active ? "var(--accent-soft)" : "transparent",
-            }}
+            className={[
+              "shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-bold transition-all",
+              active ? "shadow-sm" : "hover:bg-[var(--surface-2)] hover:text-[var(--ink)]",
+            ].join(" ")}
+            style={
+              active
+                ? { background: "var(--brand-600)", color: "#fff" }
+                : { color: "var(--ink-2)" }
+            }
           >
             {label}
           </Link>

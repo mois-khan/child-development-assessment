@@ -57,7 +57,11 @@ export const SCORE_HINT = "100 is on track for age";
  * Pass `withName: false` for tight spaces where the roman numeral is enough.
  */
 export function phaseLabel(stage: BrainStage, withName = true): string {
-  return withName ? `${PHASE_WORD} ${stage.roman} · ${stage.name}` : `${PHASE_WORD} ${stage.roman}`;
+  // If the stage name is literally "Phase 1" etc., we omit it to avoid "Phase I · Phase 1"
+  if (withName && !stage.name.toLowerCase().startsWith("phase ")) {
+    return `${PHASE_WORD} ${stage.roman} · ${stage.name}`;
+  }
+  return `${PHASE_WORD} ${stage.roman}`;
 }
 
 /**

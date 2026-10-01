@@ -174,7 +174,7 @@ export default function AdminDashboardPage() {
               <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center">
                 <div className="lg:w-52 lg:shrink-0">
                   <p className="text-lg font-extrabold text-white" style={{ fontFamily: "var(--font-display)" }}>
-                    From lead to finished check
+                    From lead to finished assessment
                   </p>
                   {analytics.direct.overdueFollowUps > 0 && (
                     <Link

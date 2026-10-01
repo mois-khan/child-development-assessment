@@ -399,7 +399,7 @@ function ItemForm({
         </div>
         <div>
           <label className="label" htmlFor="item-how">
-            How to check
+            How to assess
           </label>
           <textarea
             id="item-how"

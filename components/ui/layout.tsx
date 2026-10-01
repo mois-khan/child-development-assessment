@@ -167,7 +167,7 @@ export function Footer() {
             <ul className="mt-3 list-none space-y-2 p-0 text-sm text-white/65">
               <li>
                 <Link href="/children" className="hover:text-white">
-                  Milestone check
+                  Milestone assessment
                 </Link>
               </li>
               <li>
