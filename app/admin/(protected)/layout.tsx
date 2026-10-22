@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAdminSession, type AdminSession } from "@/lib/admin/auth";
+import { SignOutConfirmDialog } from "@/components/SignOutConfirmDialog";
 import {
   Badge,
   Button,
@@ -207,20 +208,42 @@ function AdminSessionFooter({
   session: AdminSession;
   onSignOut: () => void;
 }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
   return (
-    <div className="mt-auto space-y-3 border-t border-line pt-4">
-      {session.isDevSession && (
-        <Badge tone="warn" icon={<IconLock size={13} />} className="w-full !justify-center">
-          Dev session
-        </Badge>
-      )}
-      <div className="px-1">
-        <p className="truncate text-sm font-semibold text-ink">{session.email}</p>
-        <p className="text-xs uppercase tracking-wide text-ink-3">{session.role}</p>
+    <>
+      <div className="mt-auto space-y-3 border-t border-line pt-4">
+        {session.isDevSession && (
+          <Badge tone="warn" icon={<IconLock size={13} />} className="w-full !justify-center">
+            Dev session
+          </Badge>
+        )}
+        <div className="px-1">
+          <p className="truncate text-sm font-semibold text-ink">{session.email}</p>
+          <p className="text-xs uppercase tracking-wide text-ink-3">{session.role}</p>
+        </div>
+        <Button variant="ghost" size="sm" block onClick={() => setConfirmOpen(true)}>
+          Sign out
+        </Button>
       </div>
-      <Button variant="ghost" size="sm" block onClick={onSignOut}>
-        Sign out
-      </Button>
-    </div>
+
+      <SignOutConfirmDialog
+        isOpen={confirmOpen}
+        title="Sign out of admin console?"
+        description="Are you sure you want to end your admin session?"
+        busy={busy}
+        onClose={() => !busy && setConfirmOpen(false)}
+        onConfirm={async () => {
+          setBusy(true);
+          try {
+            await onSignOut();
+          } finally {
+            setBusy(false);
+            setConfirmOpen(false);
+          }
+        }}
+      />
+    </>
   );
 }

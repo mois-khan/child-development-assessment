@@ -35,6 +35,7 @@
  */
 import type { DomainCode, Item, ItemKind, ItemSource } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { itemsFor as shippedItemsFor } from "@/content/items";
 
 const BANK_KEY = "kaushalya.admin.item-drafts.v1";
 
@@ -118,11 +119,14 @@ async function fetchBank(): Promise<Bank> {
     .from("item_overrides")
     .select("*");
 
-  if (error || !data) {
-    throw new Error(error?.message ?? "Couldn't load the question bank.");
-  }
 
   const bank: Bank = {};
+  if (error || !data) {
+    console.warn("Could not load item_overrides from Supabase:", error?.message);
+    return bank;
+  }
+
+
   for (const row of data) bank[row.id] = rowToEntry(row);
   return bank;
 }
@@ -212,14 +216,16 @@ export function liveItemsFor(
   domain: DomainCode,
   assessedMonths?: number,
 ): Item[] {
-  if (cache === null) return [];
+  if (cache === null) return shippedItemsFor(stage, domain, assessedMonths);
 
-  return allItems({ domain, stage }).filter(
+  const active = allItems({ domain, stage }).filter(
     (i) =>
       assessedMonths === undefined ||
       i.minAgeMonths === undefined ||
       assessedMonths >= i.minAgeMonths,
   );
+  if (active.length > 0) return active;
+  return shippedItemsFor(stage, domain, assessedMonths);
 }
 
 /** Only the questions that count towards passing a stage. */

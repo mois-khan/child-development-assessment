@@ -134,6 +134,7 @@ milestone_videos (id, stage_id, domain, title, description, redirect_url, thumbn
 | B5 | Cell shading hardcoded at 50% instead of proportional | `components/ReportDocument.tsx` | ✅ Fixed — uses `score.percent * 100` clamped to 0-99 |
 | B6 | MilestoneVideoRow never rendered in report | `components/ReportDocument.tsx` | ✅ Fixed — added after Recommendation paragraph per competence |
 | B7 | Duplicate buttons in CourseRow | `components/report/CourseRow.tsx` | ✅ Fixed — removed second button, added null fallback |
+| B8 | Assessments showing A-- (0%) across all domains due to question bank ID mismatch and RLS lock | `lib/item-bank.ts`, `lib/scoring.ts`, `supabase/migrations/0029_fix_item_overrides_read_rls.sql` | ✅ Fixed — RLS unlocked for public select, dual-lookup logic in scoring engine matches both legacy & new bank IDs |
 
 ### ⚠️ Action Required After These Fixes
 1. **Apply migration 0023**: `npx supabase db push` — fixes the RLS policy

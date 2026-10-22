@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/provider";
@@ -8,10 +9,13 @@ import { useAuth } from "@/lib/auth/provider";
 // it would make the import graph circular.
 import { Avatar, Button, ButtonLink } from "@/components/ui/primitives";
 import { IconArrowRight } from "@/components/ui/icons";
+import { SignOutConfirmDialog } from "@/components/SignOutConfirmDialog";
 
 export function AuthNav() {
   const { user, profile, loading, signOut } = useAuth();
   const pathname = usePathname();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   // Reserves the bar's right-hand width while we find out who this is, so the
   // header doesn't jump once auth resolves.
@@ -20,33 +24,48 @@ export function AuthNav() {
   if (user) {
     const name = profile?.fullName || user.email || "Parent";
     return (
-      <div className="flex items-center gap-2.5">
-        <Link
-          href="/settings/account"
-          className="group hidden items-center gap-2.5 rounded-full py-1 pl-1 pr-3.5 transition-colors md:inline-flex"
-          style={{ background: "var(--surface-2)" }}
-        >
-          <Avatar name={name} size={30} />
-          <span className="max-w-[16ch] truncate text-sm font-bold text-ink transition-colors group-hover:text-accent">
-            {profile?.fullName || user.email}
-          </span>
-        </Link>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={async () => {
-            await signOut();
-            // A hard navigation, not router.push: the middleware now redirects
-            // signed-in visitors off "/", and a client-side push can reach it
-            // before the cleared auth cookie has made it back to the server —
-            // which would bounce the parent who just signed out straight to
-            // /dashboard. A full load guarantees the server sees no session.
-            window.location.href = "/";
+      <>
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/settings/account"
+            className="group hidden items-center gap-2.5 rounded-full py-1 pl-1 pr-3.5 transition-colors md:inline-flex"
+            style={{ background: "var(--surface-2)" }}
+          >
+            <Avatar name={name} size={30} />
+            <span className="max-w-[16ch] truncate text-sm font-bold text-ink transition-colors group-hover:text-accent">
+              {profile?.fullName || user.email}
+            </span>
+          </Link>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setConfirmOpen(true)}
+          >
+            Sign out
+          </Button>
+        </div>
+
+        <SignOutConfirmDialog
+          isOpen={confirmOpen}
+          busy={busy}
+          onClose={() => !busy && setConfirmOpen(false)}
+          onConfirm={async () => {
+            setBusy(true);
+            try {
+              await signOut();
+              // A hard navigation, not router.push: the middleware now redirects
+              // signed-in visitors off "/", and a client-side push can reach it
+              // before the cleared auth cookie has made it back to the server —
+              // which would bounce the parent who just signed out straight to
+              // /dashboard. A full load guarantees the server sees no session.
+              window.location.href = "/";
+            } catch {
+              setBusy(false);
+              setConfirmOpen(false);
+            }
           }}
-        >
-          Sign out
-        </Button>
-      </div>
+        />
+      </>
     );
   }
 

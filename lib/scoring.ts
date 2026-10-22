@@ -13,6 +13,10 @@ import { DOMAINS } from "@/content/domains";
 // Before lib/item-bank.ts has been primed (server render, first paint) these
 // return the shipped bank unchanged — see the note at the top of that file.
 import { liveItemsFor as itemsFor, liveScoredItemsFor as scoredItemsFor } from "@/lib/item-bank";
+import {
+  itemsFor as shippedItemsFor,
+  scoredItemsFor as shippedScoredItemsFor,
+} from "@/content/items";
 import type {
   AssessmentResult,
   BrainStage,
@@ -146,13 +150,47 @@ export interface CellResult {
  * is what scores. Unanswered questions leave the denominator rather than
  * counting as "no".
  */
+export function getScoredItems(
+  stage: string,
+  domain: DomainCode,
+  responses: Record<string, ResponseValue>,
+  assessedMonths?: number,
+): Item[] {
+  const live = scoredItemsFor(stage, domain, assessedMonths);
+  if (live.some((i) => responses[i.id] !== undefined)) {
+    return live;
+  }
+  const shipped = shippedScoredItemsFor(stage, domain, assessedMonths);
+  if (shipped.some((i) => responses[i.id] !== undefined)) {
+    return shipped;
+  }
+  return live.length > 0 ? live : shipped;
+}
+
+export function getItems(
+  stage: string,
+  domain: DomainCode,
+  responses: Record<string, ResponseValue>,
+  assessedMonths?: number,
+): Item[] {
+  const live = itemsFor(stage, domain, assessedMonths);
+  if (live.some((i) => responses[i.id] !== undefined)) {
+    return live;
+  }
+  const shipped = shippedItemsFor(stage, domain, assessedMonths);
+  if (shipped.some((i) => responses[i.id] !== undefined)) {
+    return shipped;
+  }
+  return live.length > 0 ? live : shipped;
+}
+
 export function readCell(
   stage: string,
   domain: DomainCode,
   responses: Record<string, ResponseValue>,
   assessedMonths?: number,
 ): CellResult {
-  const items = scoredItemsFor(stage, domain, assessedMonths);
+  const items = getScoredItems(stage, domain, responses, assessedMonths);
   let raw = 0;
   let answered = 0;
   for (const item of items) {
@@ -177,7 +215,7 @@ export function cellComplete(
   responses: Record<string, ResponseValue>,
   assessedMonths?: number,
 ): boolean {
-  const items = scoredItemsFor(stage, domain, assessedMonths);
+  const items = getScoredItems(stage, domain, responses, assessedMonths);
   return items.length > 0 && items.every((i) => responses[i.id] !== undefined);
 }
 
@@ -325,7 +363,7 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
     const stageIds = stagesByDomain[domain.code] ?? [];
     const asked = sortStages(stageIds);
     const start = startStageFor(months);
-    const startItems = itemsFor(start.id, domain.code, months).filter(i => i.kind === "yesno");
+    const startItems = getItems(start.id, domain.code, responses, months).filter(i => i.kind === "yesno");
     const numBaseItems = startItems.length > 0 ? startItems.length : 1;
     const baseValuePerYes = 100 / numBaseItems;
 
@@ -340,7 +378,7 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
     const observed: Record<string, string> = {};
 
     for (const stage of asked) {
-      const items = itemsFor(stage.id, domain.code, months);
+      const items = getItems(stage.id, domain.code, responses, months);
       for (const item of items) {
         if (item.kind !== "yesno") {
           const note = details[item.id];
