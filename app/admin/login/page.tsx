@@ -32,12 +32,12 @@ function AdminLoginInner() {
   const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
-    if (!loading && session) router.replace("/admin");
-  }, [loading, session, router]);
+    if (!loading && session) window.location.replace("/admin");
+  }, [loading, session]);
 
   async function handleDevContinue() {
     startDevSession();
-    router.replace("/admin");
+    window.location.replace("/admin");
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -52,7 +52,7 @@ function AdminLoginInner() {
         setError(signInError.message);
         return;
       }
-      router.replace("/admin");
+      window.location.replace("/admin");
     } finally {
       setSubmitting(false);
     }
@@ -122,6 +122,7 @@ function AdminLoginInner() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="username"
+                  suppressHydrationWarning
                 />
               </div>
               {error && (
@@ -156,6 +157,7 @@ function AdminLoginInner() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="username"
+                  suppressHydrationWarning
                 />
               </div>
               <div>
@@ -170,6 +172,7 @@ function AdminLoginInner() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
+                  suppressHydrationWarning
                 />
               </div>
               {error && (

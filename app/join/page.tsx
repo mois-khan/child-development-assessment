@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/provider";
 import {
   Button,
@@ -32,7 +32,6 @@ export default function JoinPage() {
 }
 
 function JoinInner() {
-  const router = useRouter();
   const params = useSearchParams();
   const { user, loading, signUp, signIn, resetPassword } = useAuth();
 
@@ -41,7 +40,8 @@ function JoinInner() {
   // a page they wanted. /dashboard is a parent's home — it is what the top-bar
   // link, the middleware's own signed-in redirect and this page must all agree
   // on, or "sign in" lands somewhere different depending on how you got here.
-  const next = !rawNext || rawNext === "/" || rawNext === "/join" ? "/dashboard" : rawNext;
+  const next =
+    !rawNext || rawNext === "/" || rawNext.startsWith("/join") ? "/dashboard" : rawNext;
   const [mode, setMode] = useState<"signup" | "signin" | "forgot">(
     params.get("mode") === "signin" ? "signin" : "signup",
   );
@@ -58,8 +58,10 @@ function JoinInner() {
 
   // Already signed in? Don't make them look at a login form.
   useEffect(() => {
-    if (!loading && user) router.replace(next);
-  }, [loading, user, next, router]);
+    if (!loading && user) {
+      window.location.replace(next);
+    }
+  }, [loading, user, next]);
 
   const nameOk = fullName.trim().length > 1;
   const phoneOk = /^[0-9+\-\s()]{8,15}$/.test(phone.trim());
@@ -81,46 +83,53 @@ function JoinInner() {
     setSubmitting(true);
     setError(null);
 
-    if (mode === "forgot") {
-      const result = await resetPassword(email.trim());
-      setSubmitting(false);
-      if (result.error) {
-        setError(result.error);
+    try {
+      if (mode === "forgot") {
+        const result = await resetPassword(email.trim());
+        setSubmitting(false);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+        setResetSent(true);
         return;
       }
-      setResetSent(true);
-      return;
-    }
 
-    const result =
-      mode === "signup"
-        ? await signUp({
-            fullName: fullName.trim(),
-            phone: phone.trim(),
-            email: email.trim(),
-            password,
-          })
-        : await signIn(email.trim(), password);
+      const result =
+        mode === "signup"
+          ? await signUp({
+              fullName: fullName.trim(),
+              phone: phone.trim(),
+              email: email.trim(),
+              password,
+            })
+          : await signIn(email.trim(), password);
 
-    if (result.error) {
-      setError(result.error);
-      setSubmitting(false);
-      return;
-    }
-
-    if (mode === "signup") {
-      // With email confirmation switched on in Supabase, signUp succeeds but
-      // hands back no session. Try to sign in; if that's refused, the account
-      // exists and is simply waiting on the confirmation link.
-      const signInResult = await signIn(email.trim(), password);
-      if (signInResult.error) {
-        setCheckEmail(true);
+      if (result.error) {
+        setError(result.error);
         setSubmitting(false);
         return;
       }
-    }
 
-    router.replace(next);
+      if (mode === "signup") {
+        // With email confirmation switched on in Supabase, signUp succeeds but
+        // hands back no session. Try to sign in; if that's refused, the account
+        // exists and is simply waiting on the confirmation link.
+        const signInResult = await signIn(email.trim(), password);
+        if (signInResult.error) {
+          setCheckEmail(true);
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      // Hard navigation ensures browser cookie commit and avoids Next.js App Router
+      // client-side RSC navigation race conditions when transitioning from unauth to auth.
+      window.location.replace(next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setSubmitting(false);
+    }
   }
 
   if (resetSent) {
@@ -394,6 +403,7 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          suppressHydrationWarning
         />
         {valid && !showError && (
           <span

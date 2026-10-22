@@ -42,6 +42,18 @@ function pageIdForPath(path: string): string | null {
   return null;
 }
 
+/**
+ * Ensures that any cookies set/refreshed on sourceResponse (e.g. by updateSession)
+ * are carried over to the redirect response instead of being dropped.
+ */
+function redirectWithCookies(url: URL | string, sourceResponse: NextResponse): NextResponse {
+  const redirectResponse = NextResponse.redirect(url);
+  for (const cookie of sourceResponse.cookies.getAll()) {
+    redirectResponse.cookies.set(cookie);
+  }
+  return redirectResponse;
+}
+
 export async function middleware(request: NextRequest) {
   const response = await updateSession(request);
   const path = request.nextUrl.pathname;
@@ -69,8 +81,9 @@ export async function middleware(request: NextRequest) {
     // 1. Must be authenticated at all
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.redirect(
-        new URL(`/admin/login?next=${encodeURIComponent(path)}`, request.url)
+      return redirectWithCookies(
+        new URL(`/admin/login?next=${encodeURIComponent(path)}`, request.url),
+        response,
       );
     }
 
@@ -82,8 +95,9 @@ export async function middleware(request: NextRequest) {
       .maybeSingle();
 
     if (!adminRow) {
-      return NextResponse.redirect(
-        new URL("/admin/login?error=not_admin", request.url)
+      return redirectWithCookies(
+        new URL("/admin/login?error=not_admin", request.url),
+        response,
       );
     }
 
@@ -98,8 +112,9 @@ export async function middleware(request: NextRequest) {
     if (pageId) {
       const { data: hasAccess } = await supabase.rpc("has_page_access", { page: pageId });
       if (!hasAccess) {
-        return NextResponse.redirect(
-          new URL("/admin/unauthorized", request.url)
+        return redirectWithCookies(
+          new URL("/admin/unauthorized", request.url),
+          response,
         );
       }
     }
@@ -146,8 +161,9 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (needsAuth && !user) {
-      return NextResponse.redirect(
-        new URL(`/join?next=${encodeURIComponent(path)}`, request.url)
+      return redirectWithCookies(
+        new URL(`/join?next=${encodeURIComponent(path)}`, request.url),
+        response,
       );
     }
 
@@ -166,10 +182,10 @@ export async function middleware(request: NextRequest) {
       const isSchool = !!schoolRow;
 
       if (path === "/dashboard" && isSchool) {
-        return NextResponse.redirect(new URL("/school", request.url));
+        return redirectWithCookies(new URL("/school", request.url), response);
       }
       if (isSchoolPath && !isSchool) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
+        return redirectWithCookies(new URL("/dashboard", request.url), response);
       }
     }
 
@@ -179,7 +195,7 @@ export async function middleware(request: NextRequest) {
       // should land on the report, not on a generic dashboard.
       const next = request.nextUrl.searchParams.get("next");
       if (next && next.startsWith("/") && !next.startsWith("//")) {
-        return NextResponse.redirect(new URL(next, request.url));
+        return redirectWithCookies(new URL(next, request.url), response);
       }
 
       // Staff are auth.users too, and a staff account usually has no children
@@ -191,7 +207,7 @@ export async function middleware(request: NextRequest) {
         .eq("id", user.id)
         .maybeSingle();
       if (adminRow) {
-        return NextResponse.redirect(new URL("/admin", request.url));
+        return redirectWithCookies(new URL("/admin", request.url), response);
       }
 
       // Same idea for a school account: /dashboard is a parent's family
@@ -202,8 +218,9 @@ export async function middleware(request: NextRequest) {
         .eq("id", user.id)
         .maybeSingle();
 
-      return NextResponse.redirect(
-        new URL(schoolRow ? "/school" : "/dashboard", request.url)
+      return redirectWithCookies(
+        new URL(schoolRow ? "/school" : "/dashboard", request.url),
+        response,
       );
     }
   }

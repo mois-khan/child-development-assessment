@@ -184,7 +184,7 @@ function ResetPasswordInner() {
                         className="field"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        autoComplete="new-password"
+                        autoComplete="new-password" suppressHydrationWarning
                       />
                     </div>
                     <div>
@@ -199,7 +199,7 @@ function ResetPasswordInner() {
                         className="field"
                         value={confirm}
                         onChange={(e) => setConfirm(e.target.value)}
-                        autoComplete="new-password"
+                        autoComplete="new-password" suppressHydrationWarning
                       />
                     </div>
                     {error && (

@@ -97,7 +97,7 @@ export function InstallPrompt() {
     <div
       role="complementary"
       aria-label="Install this app"
-      className="clay fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-md items-center gap-3 !p-4 sm:inset-x-auto sm:right-6"
+      className="no-print clay fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-md items-center gap-3 !p-4 sm:inset-x-auto sm:right-6"
     >
       <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-accent">
         <IconDownload size={20} />

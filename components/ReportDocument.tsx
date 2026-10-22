@@ -36,10 +36,19 @@ const STAGE_COLORS: Record<string, string> = {
   s7b: "#A855F7",
 };
 
-const A4Page = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+const A4Page = ({
+  children,
+  className = "",
+  isFirstPage = false,
+  isLastPage = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  isFirstPage?: boolean;
+  isLastPage?: boolean;
+}) => (
   <div
-    className={`w-full max-w-[210mm] mx-auto bg-white sm:my-8 sm:shadow-lg print:m-0 print:shadow-none relative overflow-hidden break-after-page print:last:break-after-auto text-black flex flex-col p-4 sm:p-[12mm] md:p-[15mm] border border-gray-200 print:border-none print:h-[297mm] print:max-h-[297mm] min-h-screen sm:min-h-[297mm] h-auto ${className}`}
-    style={{ pageBreakInside: "avoid", breakInside: "avoid" }}
+    className={`a4-page ${isFirstPage ? "a4-page-first" : ""} ${isLastPage ? "a4-page-last" : ""} w-full max-w-[210mm] mx-auto bg-white sm:my-8 sm:shadow-lg print:m-0 print:shadow-none relative overflow-hidden text-black flex flex-col p-4 sm:p-[10mm] print:p-[8mm] border border-gray-200 print:border-none min-h-screen sm:min-h-[296mm] h-auto ${className}`}
   >
     {children}
   </div>
@@ -149,8 +158,6 @@ export function ReportDocument({
     const achievedOrder = STAGE_BY_ID[score.achievedStage]?.order || 0;
     if (stage.order <= achievedOrder) return 100;
     if (stage.order === achievedOrder + 1) {
-      // Proportional shading based on partial completion can go here, using 50% for now.
-      // Alternatively, we map the exact raw vs max.
       if (score.percent === 1) return 100;
       return Math.max(0, Math.min(99, Math.round(score.percent * 100)));
     }
@@ -173,7 +180,7 @@ export function ReportDocument({
         />
         <div className="absolute inset-0 p-[2px] flex flex-col justify-center items-center text-center z-10 overflow-hidden">
           <p 
-            className="text-[6px] sm:text-[7px] leading-[1.1] font-bold text-gray-900 drop-shadow-md"
+            className="text-[7px] sm:text-[7.5px] leading-[1.15] font-bold text-gray-900 drop-shadow-md"
             style={{ textShadow: "0 0 2px white, 0 0 3px white, 0 0 4px white" }}
           >
             {cell?.description}
@@ -190,148 +197,197 @@ export function ReportDocument({
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
-        @media print { @page { size: A4; margin: 0; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0 !important;
+          }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 210mm !important;
+            background: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          header, nav, footer, .no-print {
+            display: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+          main {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 0 !important;
+            display: block !important;
+            width: 210mm !important;
+            background: #fff !important;
+          }
+          .a4-page {
+            width: 210mm !important;
+            max-width: 210mm !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: 285mm !important;
+            box-sizing: border-box !important;
+            page-break-after: always !important;
+            break-after: page !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            border: none !important;
+          }
+          .a4-page-first {
+            page-break-before: avoid !important;
+            break-before: avoid !important;
+            margin-top: 0 !important;
+          }
+          .a4-page-last {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+            height: auto !important;
+            min-height: auto !important;
+            max-height: 285mm !important;
+          }
         }
       `}} />
       {!isAdmin && <TopBar />}
       <main className="bg-gray-100 min-h-screen py-8 print:py-0 print:bg-white flex flex-col items-center print:block print:min-h-0">
-        <div className="no-print fixed bottom-8 right-8 z-50">
-          <Button variant="sun" className="shadow-2xl rounded-full px-8 py-6 text-lg font-bold flex items-center gap-2 border-[3px] border-[#4D1435]" onClick={() => window.print()}>
-             Download PDF
-          </Button>
-        </div>
 
         {/* Page 1: Cover */}
-        <A4Page>
-          <div className="text-center mt-4 mb-4 flex justify-center">
-             <Wordmark height={140} className="h-[50px] sm:h-[120px] print:h-[120px] w-auto" />
+        <A4Page isFirstPage>
+          <div className="text-center mt-2 sm:mt-4 mb-3 sm:mb-4 flex justify-center">
+             <Wordmark height={140} className="h-[45px] sm:h-[100px] print:h-[90px] w-auto" />
           </div>
-          <div className="w-full mt-4 mb-2 sm:mb-4 flex justify-center px-2 sm:px-0">
+          <div className="w-full mt-2 sm:mt-4 mb-2 sm:mb-4 flex justify-center px-2 sm:px-0">
             <div className="flex flex-col items-center max-w-full w-fit mx-auto">
               <div className="flex justify-center w-full max-w-[95%] mx-auto mb-0 sm:mb-2">
-                <img src="/ECCTR.svg" alt="ECCTRACTION PLAN" className="w-[350px] sm:w-[750px] print:w-[750px] h-[60px] sm:h-[120px] print:h-[120px] object-cover object-center" />
+                <img src="/ECCTR.svg" alt="ECCTRACTION PLAN" className="w-[320px] sm:w-[650px] print:w-[620px] h-[55px] sm:h-[100px] print:h-[85px] object-cover object-center" />
               </div>
             </div>
           </div>
           
-          <p className="mt-4 text-[0.9rem] sm:text-[1.1rem] print:text-[1.1rem] leading-[1.8] text-[#1D1D1B] text-justify font-medium">
+          <p className="mt-3 sm:mt-4 text-[0.85rem] sm:text-[1rem] print:text-[13px] leading-relaxed text-[#1D1D1B] text-justify font-medium">
             Competency tracking is a broad term that involves assessment of essential milestones in the areas of 6 human Competencies achieved in any child along the seven phases of brain development in the first six years of age. Major portion of the IQ is developed during this time span. Brain development is a cohesive all-competencies-inclusive process. No competency domain exists in isolation.
           </p>
 
-          <div className="mt-12">
-            <h3 className="text-lg font-bold uppercase mb-8 tracking-wider text-gray-500 text-center">THIS REPORT IS GENERATED FOR:</h3>
-            <div className="space-y-3 sm:space-y-5 text-[0.85rem] sm:text-[1rem] print:text-[1rem] max-w-lg mx-auto">
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Name:</span> <span className="font-medium text-gray-800">{child.name}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Date of Birth:</span> <span className="font-medium text-gray-800">{formatDate(child.dob)}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Gender:</span> <span className="font-medium capitalize text-gray-800">{child.gender === 'boy' ? 'Male' : child.gender === 'girl' ? 'Female' : child.gender}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">School/Clinic/Parent:</span> <span className="font-medium text-gray-800">{child.parentName || "—"}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Assessment Date:</span> <span className="font-medium text-gray-800">{formatDate(record.assessedOn)}</span></div>
-               <div className="flex border-b border-gray-300 pb-2"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Assessment Tool:</span> <span className="font-medium text-gray-800">KECCTR (Phase {startStage.roman})</span></div>
+          <div className="mt-8 sm:mt-10 print:mt-6">
+            <h3 className="text-base sm:text-lg font-bold uppercase mb-4 sm:mb-6 print:mb-4 tracking-wider text-gray-500 text-center">THIS REPORT IS GENERATED FOR:</h3>
+            <div className="space-y-2.5 sm:space-y-4 print:space-y-2.5 text-[0.85rem] sm:text-[1rem] print:text-[13px] max-w-lg mx-auto">
+               <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Name:</span> <span className="font-medium text-gray-800">{child.name}</span></div>
+               <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Date of Birth:</span> <span className="font-medium text-gray-800">{formatDate(child.dob)}</span></div>
+               <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Gender:</span> <span className="font-medium capitalize text-gray-800">{child.gender === 'boy' ? 'Male' : child.gender === 'girl' ? 'Female' : child.gender}</span></div>
+               <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">School/Clinic/Parent:</span> <span className="font-medium text-gray-800">{child.parentName || "—"}</span></div>
+               <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Assessment Date:</span> <span className="font-medium text-gray-800">{formatDate(record.assessedOn)}</span></div>
+               <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Assessment Tool:</span> <span className="font-medium text-gray-800">KECCTR (Phase {startStage.roman})</span></div>
             </div>
           </div>
         </A4Page>
 
         {/* Page 2: Progress & Spectrum */}
         <A4Page>
-          <div className="border-b-[2px] border-[#4D1435] pb-2 mb-6">
+          <div className="border-b-[2px] border-[#4D1435] pb-2 mb-4">
                <h2 className="text-[8px] sm:text-[12px] print:text-[12px] font-extrabold uppercase text-[#4D1435] tracking-tight">
                  {child.name}'S KAUSHALYA ECCTRACTION PLAN (PHASE {startStage.roman})
                </h2>
             </div>
-            <div className="flex flex-row justify-between items-center mb-6 gap-3 sm:gap-6">
+            <div className="flex flex-row justify-between items-center mb-4 gap-3 sm:gap-6">
                <div className="flex-1">
-                  <h3 className="text-[0.75rem] sm:text-lg print:text-lg font-bold uppercase mb-1.5 sm:mb-3 text-[#4D1435] tracking-wide">CHILD'S OVERALL DEVELOPMENT ({child.name})</h3>
-                  <p className="text-[0.8rem] sm:text-base print:text-base text-[#1D1D1B] font-medium leading-relaxed">{headline(result, child)}</p>
+                  <h3 className="text-[0.75rem] sm:text-base print:text-base font-bold uppercase mb-1 sm:mb-2 text-[#4D1435] tracking-wide">CHILD'S OVERALL DEVELOPMENT ({child.name})</h3>
+                  <p className="text-[0.8rem] sm:text-sm print:text-sm text-[#1D1D1B] font-medium leading-relaxed">{headline(result, child)}</p>
                </div>
                <div className="flex-shrink-0">
-                <div className="flex flex-col items-center justify-center min-w-[90px] sm:min-w-[110px] px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl border-[3px] sm:border-[4px] border-[#4D1435] bg-[#4D1435] text-white shadow-lg">
-                  <span className="text-2xl sm:text-3xl font-black tracking-tight leading-none">{result.overallStatus.replace(/-/g, '\u2212')}</span>
-                  <span className="text-xs sm:text-sm font-bold mt-1 opacity-80">{Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1) * 100)}%</span>
+                <div className="flex flex-col items-center justify-center min-w-[80px] sm:min-w-[100px] px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md">
+                  <span className="text-xl sm:text-2xl font-black tracking-tight leading-none">{result.overallStatus.replace(/-/g, '\u2212')}</span>
+                  <span className="text-xs sm:text-xs font-bold mt-0.5 opacity-80">{Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1) * 100)}%</span>
                 </div>
              </div>
           </div>
 
-          <p className="text-sm font-bold text-[#4D1435] mb-6 tracking-wide">
+          <p className="text-xs sm:text-sm font-bold text-[#4D1435] mb-3 tracking-wide">
             Following are the milestones achieved corresponding to {child.name}'s age.
           </p>
 
           <div className="w-full flex-1 flex flex-col items-center">
-             <h4 className="text-center font-bold uppercase tracking-widest mb-4 text-[#4D1435] text-lg">
+             <h4 className="text-center font-bold uppercase tracking-widest mb-3 text-[#4D1435] text-base sm:text-lg">
                {child.name}'S COMPETENCIES SPECTRUM
              </h4>
              
              {/* Spectrum Chart */}
-               <div className="w-full overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-[4px] [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent pb-2" style={{ scrollbarWidth: 'thin' }}>
-                 <div className="relative min-w-[700px] flex-1 min-h-0 w-full border-[2px] border-[#4D1435] flex flex-col font-sans text-xs mb-4 print:min-w-0">
-                
-                {/* Headers */}
-                <div className="flex border-b-[2px] border-[#4D1435] font-extrabold text-[#ffffff] text-[8px] uppercase text-center bg-[#4d4d4d]">
-                   <div className="w-[100px] border-r-[2px] border-[#4D1435] flex items-center justify-center py-2">BRAIN STAGE</div>
-                     <div className="w-[80px] border-r-[2px] border-[#4D1435] flex items-center justify-center py-2">TIME FRAME</div>
-                   {inputDomainCodes.map(c => (
-                     <div key={c} className="flex-1 border-r-[2px] border-[#4D1435] py-2">{DOMAIN_BY_CODE[c].name}</div>
-                   ))}
-                   
-                   {outputDomainCodes.map((c, i) => (
-                     <div key={c} className={`flex-1 py-2 ${i !== outputDomainCodes.length - 1 ? 'border-r-[2px] border-[#4D1435]' : ''}`}>{DOMAIN_BY_CODE[c].name}</div>
-                   ))}
-                </div>
+             <div className="w-full overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-[4px] [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent pb-2" style={{ scrollbarWidth: 'thin' }}>
+               <div className="relative min-w-[700px] flex-1 min-h-0 w-full border-[2px] border-[#4D1435] flex flex-col font-sans text-xs mb-4 print:min-w-0">
+              
+              {/* Headers */}
+              <div className="flex border-b-[2px] border-[#4D1435] font-extrabold text-[#ffffff] text-[8px] uppercase text-center bg-[#4d4d4d]">
+                 <div className="w-[100px] border-r-[2px] border-[#4D1435] flex items-center justify-center py-2">BRAIN STAGE</div>
+                   <div className="w-[80px] border-r-[2px] border-[#4D1435] flex items-center justify-center py-2">TIME FRAME</div>
+                 {inputDomainCodes.map(c => (
+                   <div key={c} className="flex-1 border-r-[2px] border-[#4D1435] py-2">{DOMAIN_BY_CODE[c].name}</div>
+                 ))}
+                 
+                 {outputDomainCodes.map((c, i) => (
+                   <div key={c} className={`flex-1 py-2 ${i !== outputDomainCodes.length - 1 ? 'border-r-[2px] border-[#4D1435]' : ''}`}>{DOMAIN_BY_CODE[c].name}</div>
+                 ))}
+              </div>
 
-                {/* Rows */}
-                <div className="flex-1 flex flex-col relative">
-                  {/* Red dotted line for age */}
-                <div 
-                  className="absolute left-0 w-full border-t-2 border-red-500 border-dashed z-10 flex items-center"
-                  style={{ top: `${getAgeTopPercent(age.assessedMonths)}%` }}
-                >
-                  <span className="absolute left-0 -translate-y-full text-red-600 font-bold flex-wrap sm:flex-nowrap text-[10px] bg-white px-1 leading-none">
-                    {age.assessedMonths} MONTHS
-                  </span>
-                </div>
-                  {reversedStages.map((stage, idx) => {
-                    const isLastRow = idx === reversedStages.length - 1;
-                    return (
-                      <div key={stage.id} className={`flex-1 flex ${!isLastRow ? 'border-b border-gray-400' : ''}`}>
-                        {/* Brain Stage column */}
-                          <div className="w-[100px] border-r-[2px] border-[#4D1435] flex flex-col items-center justify-center text-[9px] font-extrabold text-center px-1" style={{ backgroundColor: STAGE_COLORS[stage.id], color: (stage.id === 's3' || stage.id === 's2' || stage.id === 's4') ? '#000' : '#fff' }}>
-                             <span className="text-[11px] mb-0.5">{stage.roman}</span>
-                             <span>{stage.name}</span>
+              {/* Rows */}
+              <div className="flex-1 flex flex-col relative">
+                {/* Red dotted line for age */}
+              <div 
+                className="absolute left-0 w-full border-t-2 border-red-500 border-dashed z-10 flex items-center"
+                style={{ top: `${getAgeTopPercent(age.assessedMonths)}%` }}
+              >
+                <span className="absolute left-0 -translate-y-full text-red-600 font-bold flex-wrap sm:flex-nowrap text-[10px] bg-white px-1 leading-none">
+                  {age.assessedMonths} MONTHS
+                </span>
+              </div>
+                {reversedStages.map((stage, idx) => {
+                  const isLastRow = idx === reversedStages.length - 1;
+                  return (
+                    <div key={stage.id} className={`flex-1 flex ${!isLastRow ? 'border-b border-gray-400' : ''}`}>
+                      {/* Brain Stage column */}
+                        <div className="w-[100px] border-r-[2px] border-[#4D1435] flex flex-col items-center justify-center text-[9px] font-extrabold text-center px-1" style={{ backgroundColor: STAGE_COLORS[stage.id], color: (stage.id === 's3' || stage.id === 's2' || stage.id === 's4') ? '#000' : '#fff' }}>
+                           <span className="text-[11px] mb-0.5">{stage.roman}</span>
+                           <span>{stage.name}</span>
+                        </div>
+                        {/* Time Frame column */}
+                        <div className="w-[80px] border-r-[2px] border-[#4D1435] flex flex-col items-start justify-center text-[8px] font-medium px-2 leading-tight" style={{ backgroundColor: STAGE_COLORS[stage.id], color: (stage.id === 's3' || stage.id === 's2' || stage.id === 's4') ? '#000' : '#fff' }}>
+                           <div className="w-full flex justify-between"><i className="font-serif">Superior</i><span>{stage.superiorMonths} Mon.</span></div>
+                           <div className="w-full flex justify-between"><i className="font-serif">Average</i><span>{stage.averageMonths} Mon.</span></div>
+                           <div className="w-full flex justify-between"><i className="font-serif">Slow</i><span>{stage.slowMonths} Mon.</span></div>
+                        </div>
+                      
+                      {/* Input Domains */}
+                      {inputDomainCodes.map(c => {
+                        const score = result.domainScores.find(d => d.domain === c)!;
+                        return (
+                          <div key={c} className="flex-1 border-r border-gray-300 relative">
+                             {renderCellFill(stage, score)}
                           </div>
-                          {/* Time Frame column */}
-                          <div className="w-[80px] border-r-[2px] border-[#4D1435] flex flex-col items-start justify-center text-[8px] font-medium px-2 leading-tight" style={{ backgroundColor: STAGE_COLORS[stage.id], color: (stage.id === 's3' || stage.id === 's2' || stage.id === 's4') ? '#000' : '#fff' }}>
-                             <div className="w-full flex justify-between"><i className="font-serif">Superior</i><span>{stage.superiorMonths} Mon.</span></div>
-                             <div className="w-full flex justify-between"><i className="font-serif">Average</i><span>{stage.averageMonths} Mon.</span></div>
-                             <div className="w-full flex justify-between"><i className="font-serif">Slow</i><span>{stage.slowMonths} Mon.</span></div>
-                          </div>
-                        
-                        {/* Input Domains */}
-                        {inputDomainCodes.map(c => {
-                          const score = result.domainScores.find(d => d.domain === c)!;
-                          return (
-                            <div key={c} className="flex-1 border-r border-gray-300 relative">
-                               {renderCellFill(stage, score)}
-                            </div>
-                          )
-                        })}
-                          {/* Output Domains */}
+                        )
+                      })}
+                        {/* Output Domains */}
 
-                        {outputDomainCodes.map((c, i) => {
-                          const score = result.domainScores.find(d => d.domain === c)!;
-                          return (
-                            <div key={c} className={`flex-1 relative ${i !== outputDomainCodes.length - 1 ? 'border-r border-gray-300' : ''}`}>
-                               {renderCellFill(stage, score)}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )
-                  })}
-                </div>
-             </div>
-             </div>
-          </div>
-        </A4Page>
+                      {outputDomainCodes.map((c, i) => {
+                        const score = result.domainScores.find(d => d.domain === c)!;
+                        return (
+                          <div key={c} className={`flex-1 relative ${i !== outputDomainCodes.length - 1 ? 'border-r border-gray-300' : ''}`}>
+                             {renderCellFill(stage, score)}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+           </div>
+           </div>
+        </div>
+      </A4Page>
 
         {/* Page 3+: Breakdowns */}
         {(() => {
@@ -344,82 +400,78 @@ export function ReportDocument({
 
            return pages.map((pair, pIdx) => (
              <A4Page key={pIdx}>
-               <div className="flex-1 flex flex-col gap-10">
-                 {pair.map((score, idxInPage) => {
+               <div className="flex-1 flex flex-col justify-between">
+                 {pair.map((score) => {
                    const domain = DOMAIN_BY_CODE[score.domain];
                    const romanDomain = ["I", "II", "III", "IV", "V", "VI"][domain.order - 1];
-                   const nextStageId = stageAbove(STAGE_BY_ID[score.achievedStage])?.roman || startStage.roman;
-                   const scoreValue = score.dq !== null ? Math.round(score.dq) : Math.round(score.percent * 100);
 
                    return (
-                     <div key={score.domain} className="flex-1 flex flex-col border-b-2 border-gray-100 pb-8 last:border-0 last:pb-0">
-                        <div className="flex flex-row justify-between items-center mb-4 sm:mb-6 border-b border-[#4D1435] pb-2 gap-2 sm:gap-0">
-                             <h2 className="text-[7px] sm:text-[12px] print:text-[12px] font-bold uppercase text-[#4D1435] tracking-tight flex items-center shrink-0">
-                               <span className="mr-1 sm:mr-2 border-2 border-[#4D1435] rounded-full w-3.5 h-3.5 sm:w-5 sm:h-5 inline-flex items-center justify-center text-[6px] sm:text-[9px] shrink-0">{romanDomain}</span>
+                     <div key={score.domain} className="flex flex-col border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+                        <div className="flex flex-row justify-between items-center mb-2.5 border-b border-[#4D1435] pb-1.5 gap-2">
+                             <h2 className="text-[12px] sm:text-[14px] font-bold uppercase text-[#4D1435] tracking-tight flex items-center shrink-0">
+                               <span className="mr-2 border-2 border-[#4D1435] rounded-full w-4 h-4 sm:w-5 sm:h-5 inline-flex items-center justify-center text-[8px] sm:text-[9.5px] shrink-0 font-bold">{romanDomain}</span>
                                <span className="whitespace-nowrap">{domain.name}</span>
                              </h2>
-                              <div className="flex flex-col items-center justify-center min-w-[45px] sm:min-w-[70px] px-2 py-1 sm:px-3 sm:py-2 rounded-md sm:rounded-xl border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0 ml-auto">
-                              <span className="text-[12px] sm:text-[18px] font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
-                              <span className="text-[7px] sm:text-[10px] font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
+                              <div className="flex flex-col items-center justify-center min-w-[55px] sm:min-w-[70px] px-2.5 py-1 rounded-lg border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0 ml-auto">
+                              <span className="text-[15px] sm:text-[18px] font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
+                              <span className="text-[8px] sm:text-[10px] font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
                             </div>
                           </div>
 
-                        <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-                           {/* Mini Chart */}
-                           <div className="w-[280px] shrink-0 border-[2px] border-[#4D1435] flex flex-col font-sans text-[9px] relative">
-                             
-
-                              <div className="flex border-b-[2px] border-[#4D1435] text-center font-extrabold text-white py-1 bg-[#4d4d4d] uppercase text-[7px]">
-                                  <div className="w-[85px] border-r-[2px] border-[#4D1435] flex items-center justify-center">BRAIN STAGE</div>
-                                  <div className="w-[75px] border-r-[2px] border-[#4D1435] flex items-center justify-center">TIME FRAME</div>
+                        <div className="flex flex-col sm:flex-row gap-5 items-start">
+                           {/* Mini Chart — h-fit self-start ensures border hugs rows tightly with no extra white space */}
+                           <div className="w-[290px] shrink-0 border-[2px] border-[#4D1435] flex flex-col font-sans text-[9px] h-fit self-start relative">
+                              <div className="flex border-b-[2px] border-[#4D1435] text-center font-extrabold text-white py-1 bg-[#4d4d4d] uppercase text-[7.5px] tracking-wide">
+                                  <div className="w-[84px] border-r-[2px] border-[#4D1435] flex items-center justify-center shrink-0">BRAIN STAGE</div>
+                                  <div className="w-[76px] border-r-[2px] border-[#4D1435] flex items-center justify-center shrink-0">TIME FRAME</div>
                                   <div className="flex-1 flex items-center justify-center">{domain.short} COMPETENCE</div>
-                                </div>
-                              <div className="flex-1 flex flex-col relative">
-                                {/* Age Line */}
-                              <div 
-                                className="absolute left-0 w-full border-t border-red-500 border-dashed z-10 flex items-center"
-                                style={{ top: `${getAgeTopPercent(age.assessedMonths)}%` }}
-                              >
-                                <span className="absolute left-0 -translate-y-full text-red-600 font-bold flex-wrap sm:flex-nowrap text-[8px] bg-white px-1 leading-none">
-                                  {age.assessedMonths} MONTHS
-                                </span>
                               </div>
+                              <div className="flex flex-col relative">
+                                {/* Age Line */}
+                                <div 
+                                  className="absolute left-0 w-full border-t border-red-500 border-dashed z-10 flex items-center"
+                                  style={{ top: `${getAgeTopPercent(age.assessedMonths)}%` }}
+                                >
+                                  <span className="absolute left-0 -translate-y-full text-red-600 font-bold flex-wrap sm:flex-nowrap text-[8px] bg-white px-1 leading-none">
+                                    {age.assessedMonths} MONTHS
+                                  </span>
+                                </div>
                                 {reversedStages.map((stage, sIdx) => {
-                                const isLast = sIdx === reversedStages.length - 1;
-                                return (
-                                  <div key={stage.id} className={`flex h-10 ${!isLast ? 'border-b border-gray-400' : ''}`}>
-                                     <div className="w-[75px] border-r border-[#4D1435] flex flex-col items-center justify-center font-bold text-[6px] text-center px-1 leading-tight" style={{ backgroundColor: STAGE_COLORS[stage.id], color: (stage.id === 's3' || stage.id === 's2' || stage.id === 's4') ? '#000' : '#fff' }}>
-                                         <span className="text-[8px] mb-0.5">{stage.roman}</span>
-                                         <span>{stage.name}</span>
+                                  const isLast = sIdx === reversedStages.length - 1;
+                                  return (
+                                    <div key={stage.id} className={`flex h-[35px] ${!isLast ? 'border-b border-gray-400' : ''}`}>
+                                       <div className="w-[84px] border-r border-[#4D1435] flex flex-col items-center justify-center font-bold text-[7px] text-center px-1 leading-tight shrink-0" style={{ backgroundColor: STAGE_COLORS[stage.id], color: (stage.id === 's3' || stage.id === 's2' || stage.id === 's4') ? '#000' : '#fff' }}>
+                                           <span className="text-[9px] mb-0.5 font-extrabold">{stage.roman}</span>
+                                           <span className="truncate max-w-full font-bold">{stage.name}</span>
                                        </div>
-                                       <div className="w-[65px] border-r border-[#4D1435] flex flex-col items-start justify-center font-medium text-[6px] px-1 leading-[1.1]" style={{ backgroundColor: STAGE_COLORS[stage.id], color: (stage.id === 's3' || stage.id === 's2' || stage.id === 's4') ? '#000' : '#fff' }}>
+                                       <div className="w-[76px] border-r border-[#4D1435] flex flex-col items-start justify-center font-medium text-[6.5px] px-1.5 leading-[1.15] shrink-0" style={{ backgroundColor: STAGE_COLORS[stage.id], color: (stage.id === 's3' || stage.id === 's2' || stage.id === 's4') ? '#000' : '#fff' }}>
                                           <div className="w-full flex justify-between"><i>Superior</i><span>{stage.superiorMonths} Mon.</span></div>
                                           <div className="w-full flex justify-between"><i>Average</i><span>{stage.averageMonths} Mon.</span></div>
                                           <div className="w-full flex justify-between"><i>Slow</i><span>{stage.slowMonths} Mon.</span></div>
                                        </div>
-                                     <div className="flex-1 relative border-r border-[#4D1435]">
-                                       {renderCellFill(stage, score)}
-                                     </div>
-                                  </div>
-                                )
-                              })}
+                                       <div className="flex-1 relative border-r border-[#4D1435]">
+                                         {renderCellFill(stage, score)}
+                                       </div>
+                                    </div>
+                                  )
+                                })}
                               </div>
                            </div>
 
                            {/* Narrative */}
-                           <div className="flex-1 flex flex-col">
-                              <div className="mb-4">
-                                <h3 className="text-[1.1rem] font-bold text-[#4D1435] mb-2 uppercase tracking-wide">Summary:</h3>
-                                <div className="text-[1rem] leading-relaxed text-gray-800 border-b border-gray-300 pb-3">
+                           <div className="flex-1 flex flex-col min-w-0">
+                              <div>
+                                <h3 className="text-[13px] sm:text-[14px] font-bold text-[#4D1435] mb-1.5 uppercase tracking-wide">Summary:</h3>
+                                <div className="text-[11.5px] sm:text-[12px] leading-relaxed text-gray-800 border-b border-gray-300 pb-2.5">
                                   {domainNote(score, child)}
                                 </div>
                               </div>
-                              {/* Milestone QR video card — replaces hardcoded Recommendation text */}
+                              {/* Milestone QR video card */}
                               <MilestoneVideoRow
                                   stageId={score.achievedStage}
                                   domain={score.domain}
                                   domainName={domain.name}
-                                />
+                              />
                            </div>
                         </div>
                      </div>
@@ -457,20 +509,27 @@ export function ReportDocument({
              </div>
            </div>
 
-           </A4Page>
+        </A4Page>
 
-          {/* Page 6: Disclaimer */}
-          <A4Page>
-             <div className="pt-8">
-               <h4 className="text-lg font-bold uppercase text-[#4D1435] tracking-wider mb-3">Disclaimer:</h4>
-               <p className="text-[0.85rem] leading-relaxed text-gray-600 text-justify whitespace-pre-wrap">
-                 {DISCLAIMER}
-               </p>
-               <p className="mt-4 text-[0.85rem] text-gray-500 font-medium">
-                  Milestones adapted from the CDC <em>Learn the Signs. Act Early.</em> checklists, the NIDCD hearing and communication checklist, and WHO motor milestone data.
-               </p>
-             </div>
-          </A4Page>
+        {/* Page 6: Disclaimer */}
+        <A4Page isLastPage>
+           <div className="pt-8">
+             <h4 className="text-lg font-bold uppercase text-[#4D1435] tracking-wider mb-3">Disclaimer:</h4>
+             <p className="text-[0.85rem] leading-relaxed text-gray-600 text-justify whitespace-pre-wrap">
+               {DISCLAIMER}
+             </p>
+             <p className="mt-4 text-[0.85rem] text-gray-500 font-medium">
+                Milestones adapted from the CDC <em>Learn the Signs. Act Early.</em> checklists, the NIDCD hearing and communication checklist, and WHO motor milestone data.
+             </p>
+           </div>
+        </A4Page>
+
+        {/* Download PDF floating button */}
+        <div className="no-print fixed bottom-8 right-8 z-50">
+          <Button variant="sun" className="shadow-2xl rounded-full px-8 py-6 text-lg font-bold flex items-center gap-2 border-[3px] border-[#4D1435]" onClick={() => window.print()}>
+             Download PDF
+          </Button>
+        </div>
 
       </main>
     </>
