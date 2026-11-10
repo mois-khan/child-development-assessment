@@ -60,7 +60,7 @@ export default function RootLayout({
           {children}
           <InstallPrompt />
         </AuthProvider>
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       </body>
     </html>
   );

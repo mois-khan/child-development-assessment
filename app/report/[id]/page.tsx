@@ -20,6 +20,8 @@ export default function ReportPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [view, setView] = useState<
     | { mode: "loading" }
     | { mode: "frozen"; url: string }
@@ -36,6 +38,7 @@ export default function ReportPage({
           setView({ mode: "error", message: "Assessment not found." });
           return;
         }
+        setShareToken(assessment.shareToken || null);
         const resolved = resolveReportView(assessment.reportPdfUrl);
         setView(resolved);
       })
@@ -47,14 +50,41 @@ export default function ReportPage({
     };
   }, [id]);
 
+  const copyShareLink = () => {
+    const url = shareToken
+      ? `${window.location.origin}/share/${shareToken}`
+      : window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
   // ── Frozen: serve the immutable PDF snapshot ───────────────────────────────
   if (view.mode === "frozen") {
     return (
       <>
         <TopBar />
         <main className="flex flex-col min-h-screen bg-gray-100">
-          {/* Download button */}
-          <div className="no-print flex justify-end px-6 py-3 bg-white border-b border-gray-200 shadow-sm">
+          {/* Actions bar: Share & Download */}
+          <div className="no-print flex items-center justify-end gap-3 px-6 py-3 bg-white border-b border-gray-200 shadow-sm">
+            <button
+              type="button"
+              onClick={copyShareLink}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-gray-300 bg-white text-gray-800 font-bold text-sm shadow-sm hover:bg-gray-50 transition-colors"
+            >
+              {copied ? (
+                <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Link Copied!
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  Share Report
+                </span>
+              )}
+            </button>
             <a
               href={view.url}
               target="_blank"

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Card, Button, domainColor, domainName, InlineBanner, useBanner } from "@/components/ui";
 import { ADMIN_DOMAINS } from "@/lib/admin/content";
+import { invalidateCmsCache } from "@/lib/cms";
 import { IconCheck, IconShield, IconVisual, IconAuditory, IconTactile, IconMobility, IconLanguage, IconManual } from "@/components/ui/icons";
 
 interface CmsBlock {
@@ -51,6 +52,7 @@ export default function CmsContentPage() {
     if (error) {
       banner.showError("Failed to save: " + error.message);
     } else {
+      invalidateCmsCache();
       banner.showSuccess("Changes saved successfully!");
     }
     setSavingId(null);

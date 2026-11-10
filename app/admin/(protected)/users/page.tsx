@@ -49,6 +49,7 @@ function PageAccessToggles({
               type="button"
               role="switch"
               aria-checked={checked}
+              aria-label={`Toggle access for ${page.label}`}
               onClick={() => onToggle(page.id)}
               disabled={disabled}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${checked ? "bg-[var(--accent)]" : "bg-[var(--surface-3)]"} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}

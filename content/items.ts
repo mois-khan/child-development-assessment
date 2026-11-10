@@ -638,7 +638,7 @@ const RAW: Record<string, Partial<Record<DomainCode, Row[]>>> = {
 function build(): Item[] {
   const items: Item[] = [];
   for (const stage of BRAIN_STAGES) {
-    const cell = RAW[stage.id];
+    const cell = RAW[stage.id] ?? RAW[stage.id.replace(/[ab]/, "")];
     if (!cell) continue;
     for (const [domain, rows] of Object.entries(cell) as [DomainCode, Row[]][]) {
       rows.forEach((row, i) => {

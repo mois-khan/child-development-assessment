@@ -5,6 +5,7 @@ import type { Assessment, Child, DomainCode, ResponseValue } from "@/lib/types";
 export interface StoredAssessment extends Assessment {
   stagesByDomain: Record<DomainCode, string[]>;
   id: string;
+  shareToken?: string;
   /** Immutable PDF URL stored in Cloudflare R2. NULL means use dynamic render. */
   reportPdfUrl?: string | null;
 }
@@ -31,7 +32,12 @@ export async function createAssessment(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    const err = new Error(error.message || "Failed to create assessment");
+    (err as any).code = error.code;
+    (err as any).details = error.details;
+    throw err;
+  }
   
   return {
     id: data.id,
@@ -41,6 +47,7 @@ export async function createAssessment(
     responses: {},
     details: data.details,
     bankVersion: data.bank_version,
+    shareToken: (data as any).share_token,
     completedAt: data.completed_at ?? undefined
   };
 }
@@ -89,6 +96,7 @@ export async function getAssessment(id: string): Promise<StoredAssessment | null
     responses,
     details: a.details,
     bankVersion: a.bank_version,
+    shareToken: (a as any).share_token,
     completedAt: a.completed_at ?? undefined,
     // report_pdf_url is added in migration 0027; cast until Supabase types are regenerated
     reportPdfUrl: (a as any).report_pdf_url ?? null,
@@ -105,52 +113,67 @@ export async function saveResponse(id: string, itemId: string, value: ResponseVa
       value
     }, { onConflict: "assessment_id, item_id" });
     
-  if (error) throw error;
+  if (error) {
+    const err = new Error(error.message || "Failed to save response");
+    (err as any).code = error.code;
+    (err as any).details = error.details;
+    throw err;
+  }
 }
+
+let detailQueue = Promise.resolve();
 
 export async function saveDetail(id: string, itemId: string, value: string): Promise<void> {
-  const supabase = getSupabaseBrowserClient();
-  
-  const { data, error: getErr } = await supabase
-    .from("assessments")
-    .select("details")
-    .eq("id", id)
-    .single();
+  detailQueue = detailQueue.then(async () => {
+    const supabase = getSupabaseBrowserClient();
     
-  if (getErr) throw getErr;
+    const { data, error: getErr } = await supabase
+      .from("assessments")
+      .select("details")
+      .eq("id", id)
+      .single();
+      
+    if (getErr) throw getErr;
 
-  const newDetails = { ...(data.details || {}), [itemId]: value };
+    const newDetails = { ...(data.details || {}), [itemId]: value };
 
-  const { error: updErr } = await supabase
-    .from("assessments")
-    .update({ details: newDetails })
-    .eq("id", id);
-    
-  if (updErr) throw updErr;
+    const { error: updErr } = await supabase
+      .from("assessments")
+      .update({ details: newDetails })
+      .eq("id", id);
+      
+    if (updErr) throw updErr;
+  });
+  return detailQueue;
 }
 
+let stageQueue = Promise.resolve();
+
 export async function appendStage(id: string, domain: DomainCode, stage: string): Promise<void> {
-  const supabase = getSupabaseBrowserClient();
-  
-  const { data, error: getErr } = await supabase
-    .from("assessments")
-    .select("stages_by_domain")
-    .eq("id", id)
-    .single();
+  stageQueue = stageQueue.then(async () => {
+    const supabase = getSupabaseBrowserClient();
     
-  if (getErr) throw getErr;
+    const { data, error: getErr } = await supabase
+      .from("assessments")
+      .select("stages_by_domain")
+      .eq("id", id)
+      .single();
+      
+    if (getErr) throw getErr;
 
-  const existing = data.stages_by_domain[domain] ?? [];
-  if (existing.includes(stage)) return;
+    const existing = data.stages_by_domain[domain] ?? [];
+    if (existing.includes(stage)) return;
 
-  const newStages = { ...data.stages_by_domain, [domain]: [...existing, stage] };
+    const newStages = { ...data.stages_by_domain, [domain]: [...existing, stage] };
 
-  const { error: updErr } = await supabase
-    .from("assessments")
-    .update({ stages_by_domain: newStages })
-    .eq("id", id);
-    
-  if (updErr) throw updErr;
+    const { error: updErr } = await supabase
+      .from("assessments")
+      .update({ stages_by_domain: newStages })
+      .eq("id", id);
+      
+    if (updErr) throw updErr;
+  });
+  return stageQueue;
 }
 
 export async function completeAssessment(id: string): Promise<void> {
@@ -163,7 +186,12 @@ export async function completeAssessment(id: string): Promise<void> {
     })
     .eq("id", id);
 
-  if (error) throw error;
+  if (error) {
+    const err = new Error(error.message || "Failed to complete assessment");
+    (err as any).code = error.code;
+    (err as any).details = error.details;
+    throw err;
+  }
 
   // Best-effort: the report existing is the actual outcome of this
   // function, and a failed or slow notification call must never turn into
@@ -183,7 +211,12 @@ export async function deleteAssessment(id: string): Promise<void> {
     .delete()
     .eq("id", id);
     
-  if (error) throw error;
+  if (error) {
+    const err = new Error(error.message || "Failed to delete assessment");
+    (err as any).code = error.code;
+    (err as any).details = error.details;
+    throw err;
+  }
 }
 
 export async function assessmentsForChild(childId: string): Promise<StoredAssessment[]> {
@@ -233,6 +266,8 @@ export async function assessmentsForChild(childId: string): Promise<StoredAssess
       responses: responsesByAssessment[a.id] || {},
       details: a.details,
       bankVersion: a.bank_version,
+      shareToken: (a as any).share_token,
+      reportPdfUrl: (a as any).report_pdf_url ?? null,
       completedAt: a.completed_at ?? undefined
     };
   });
@@ -289,6 +324,8 @@ export async function listAssessments(): Promise<StoredAssessment[]> {
       responses: responsesByAssessment[a.id] || {},
       details: a.details,
       bankVersion: a.bank_version,
+      shareToken: (a as any).share_token,
+      reportPdfUrl: (a as any).report_pdf_url ?? null,
       completedAt: a.completed_at ?? undefined
     };
   });

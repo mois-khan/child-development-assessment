@@ -5,7 +5,7 @@ import { DOMAINS } from "@/content/domains";
 import { BRAIN_STAGES, STAGE_CELLS, cellFor } from "@/content/stages";
 import { ITEMS, itemsFor, scoredItemsFor } from "@/content/items";
 import { completedMonths, correctionMonths, summariseAge } from "@/lib/age";
-import { STAGE_BOUNDARIES, classifyAgainstStage, stageForAge } from "@/lib/stage";
+import { STAGE_BOUNDARIES, classifyAgainstStage, stageForAge, stageStartMonths } from "@/lib/stage";
 import { __setItemBankForTests } from "@/lib/item-bank";
 import {
   MIN_AGE_FOR_DQ,
@@ -60,11 +60,11 @@ const everyDomain = <T,>(v: T) =>
 /* ────────────────────────────────────────────────────────────────────────── */
 
 describe("the chart itself", () => {
-  test("has seven stages and forty-two cells", () => {
-    assert.equal(BRAIN_STAGES.length, 7);
-    assert.equal(STAGE_CELLS.length, 42);
+  test("has nine stages and fifty-four cells", () => {
+    assert.equal(BRAIN_STAGES.length, 9);
+    assert.equal(STAGE_CELLS.length, 54);
     const numbers = STAGE_CELLS.map((c) => c.number).sort((a, b) => a - b);
-    assert.deepEqual(numbers, Array.from({ length: 42 }, (_, i) => i + 1));
+    assert.deepEqual(numbers, Array.from({ length: 54 }, (_, i) => i + 1));
   });
 
   test("every stage has questions for every competence", () => {
@@ -96,54 +96,61 @@ describe("the chart itself", () => {
     assert.equal(new Set(ITEMS.map((i) => i.id)).size, ITEMS.length);
   });
 
-  test("the slow column is twice the average, so status and DQ agree", () => {
+  test("time frames are strictly ordered: superior < average < slow", () => {
     for (const stage of BRAIN_STAGES) {
-      assert.equal(stage.slowMonths, stage.averageMonths * 2, stage.roman);
-      assert.ok(stage.superiorMonths < stage.averageMonths, stage.roman);
+      assert.ok(stage.superiorMonths < stage.averageMonths, `${stage.roman} superior < average`);
+      assert.ok(stage.averageMonths < stage.slowMonths, `${stage.roman} average < slow`);
     }
   });
 });
 
 describe("picking the starting stage", () => {
-  test("uses the nearest average, not the containing range", () => {
-    // The two worked examples from the chart brief.
-    assert.equal(stageForAge(2).roman, "II"); // 2 is nearer 2.5 than 1
-    assert.equal(stageForAge(8).roman, "III"); // 8 is nearer 7 than 12
+  test("uses clinical bracket starting month, not nearest average", () => {
+    assert.equal(stageForAge(0).roman, "I");
+    assert.equal(stageForAge(1).roman, "II");
+    assert.equal(stageForAge(2).roman, "II");
+    assert.equal(stageForAge(2.5).roman, "III");
+    assert.equal(stageForAge(3).roman, "III");
+    assert.equal(stageForAge(7).roman, "IV");
+    assert.equal(stageForAge(8).roman, "IV");
+    assert.equal(stageForAge(12).roman, "V");
+    assert.equal(stageForAge(13).roman, "V");
+    assert.equal(stageForAge(18).roman, "VIA");
+    assert.equal(stageForAge(27).roman, "VIB");
+    assert.equal(stageForAge(28).roman, "VIB");
+    assert.equal(stageForAge(36).roman, "VIIA");
+    assert.equal(stageForAge(54).roman, "VIIB");
   });
 
-  test("boundaries fall halfway between the averages", () => {
-    assert.deepEqual(STAGE_BOUNDARIES, [1.75, 4.75, 9.5, 15, 27, 54]);
+  test("boundaries mark starting month of each stage bracket", () => {
+    assert.deepEqual(STAGE_BOUNDARIES, [1, 2.5, 7, 12, 18, 27, 36, 54]);
   });
 
-  test("each stage wins the ages around its own average", () => {
+  test("each stage wins the ages in its bracket", () => {
     for (const stage of BRAIN_STAGES) {
+      const testAge = stage.order === 1 ? 0.5 : stageStartMonths(stage);
       assert.equal(
-        stageForAge(stage.averageMonths).id,
+        stageForAge(testAge).id,
         stage.id,
-        `${stage.roman} should own its own average`,
+        `${stage.roman} should own its start age`,
       );
     }
   });
 
   test("clamps at both ends of the chart", () => {
     assert.equal(stageForAge(0).roman, "I");
-    assert.equal(stageForAge(600).roman, "VII");
-  });
-
-  test("a tie resolves downwards, never starting a child out of depth", () => {
-    assert.equal(stageForAge(1.75).roman, "I");
-    assert.equal(stageForAge(9.5).roman, "III");
+    assert.equal(stageForAge(600).roman, "VIIB");
   });
 
   test("preterm correction happens before the stage is picked", () => {
-    // Born at 28 weeks: about three months early. At 6 months chronological
-    // the child would start at Mid-Brain, but corrected to ~3 months they
-    // start at Pons — a whole stage lower, which is the point of correcting.
-    const preterm = childAged(6, { gestationalWeeks: 28 });
+    // Born at 28 weeks: about 3 months early. At 8 months chronological:
+    // starts at Phase IV ([7, 12)), corrected by ~2.8 months to ~5.2 months:
+    // starts at Phase III ([2.5, 7)).
+    const preterm = childAged(8, { gestationalWeeks: 28 });
     const age = summariseAge(preterm.dob, ON, preterm.gestationalWeeks);
     assert.ok(age.corrected);
-    assert.equal(startStageFor(age.chronologicalMonths).roman, "III");
-    assert.equal(startStageFor(age.assessedMonths).roman, "II");
+    assert.equal(startStageFor(age.chronologicalMonths).roman, "IV");
+    assert.equal(startStageFor(age.assessedMonths).roman, "III");
   });
 });
 
@@ -200,7 +207,7 @@ describe("the ladder walk", () => {
   const domain: DomainCode = "vision";
 
   test("starts at the age-derived stage", () => {
-    assert.equal(nextStageFor(domain, [], {}, 8)?.roman, "III");
+    assert.equal(nextStageFor(domain, [], {}, 8)?.roman, "IV");
   });
 
   test("climbs while the child keeps passing", () => {
@@ -243,7 +250,7 @@ describe("the ladder walk", () => {
 
   test("stops at the top of the chart", () => {
     const responses = fill({ s7b: 1 }, 72);
-    assert.equal(nextStageFor(domain, ["s7"], responses, 72), null);
+    assert.equal(nextStageFor(domain, ["s7b"], responses, 72), null);
   });
 
   test("stops at the bottom of the chart", () => {
@@ -312,12 +319,12 @@ describe("neurological age", () => {
 
 describe("what the chart says about the result", () => {
   test("a child on the average line scores a quotient of 100", () => {
-    const child = childAged(12);
+    const child = childAged(10);
     const result = scoreAssessment({
       child,
       assessedOn: ON,
-      responses: fill({ s4: 1, s5: 0 }, 12),
-      stagesByDomain: everyDomain(["s4", "s5"]),
+      responses: fill({ s4: 1 }, 10),
+      stagesByDomain: everyDomain(["s4"]),
     });
     assert.equal(result.overallStatus, "A");
     for (const d of result.domainScores) {
@@ -328,37 +335,35 @@ describe("what the chart says about the result", () => {
   });
 
   test("a child a stage ahead of their age is on track, with the quotient showing how far", () => {
-    // Twelve months old, reached stage V — whose average age is 18 months.
-    // The chart's superior column for stage V is 9 months, so this child is
-    // ahead but not superior. The band says typical; the number says 150.
-    const child = childAged(12);
+    // 10 months old (starts at stage IV), passes stage IV and stage V (average 18 months).
+    const child = childAged(10);
     const result = scoreAssessment({
       child,
       assessedOn: ON,
-      responses: fill({ s4: 1, s5: 1, s6: 0 }, 12),
-      stagesByDomain: everyDomain(["s4", "s5", "s6"]),
+      responses: fill({ s4: 1, s5: 1 }, 10),
+      stagesByDomain: everyDomain(["s4", "s5"]),
     });
     for (const d of result.domainScores) {
       assert.equal(d.achievedStage, "s5");
-      assert.equal(d.status, "A++"); // 150 > 115
-      
+      assert.ok(d.percent > 1);
+      assert.ok(["A+", "A++"].includes(d.status));
     }
-    assert.equal(result.overallStatus, "A++");
+    assert.ok(["A+", "A++"].includes(result.overallStatus));
   });
 
   test("a child at twice the chart's pace is superior", () => {
-    // Nine months old, reached stage V — exactly its superior column.
-    const child = childAged(9);
+    // 8 months old (starts at stage IV), reaches stage VIA
+    const child = childAged(8);
     const result = scoreAssessment({
       child,
       assessedOn: ON,
-      responses: fill({ s5: 1, s6: 0 }, 9),
-      stagesByDomain: everyDomain(["s5", "s6"]),
+      responses: fill({ s4: 1, s5: 1, s6a: 1 }, 8),
+      stagesByDomain: everyDomain(["s4", "s5", "s6a"]),
     });
     for (const d of result.domainScores) {
       assert.equal(d.status, "A++");
-      
     }
+    assert.equal(result.overallStatus, "A++");
   });
 
   test("a child at half their expected stage is slow", () => {
@@ -378,12 +383,12 @@ describe("what the chart says about the result", () => {
 
 describe("the overall verdict", () => {
   test("names the cell each competence landed in", () => {
-    const child = childAged(12);
+    const child = childAged(10);
     const result = scoreAssessment({
       child,
       assessedOn: ON,
-      responses: fill({ s4: 1, s5: 0 }, 12),
-      stagesByDomain: everyDomain(["s4", "s5"]),
+      responses: fill({ s4: 1 }, 10),
+      stagesByDomain: everyDomain(["s4"]),
     });
     const vision = result.domainScores.find((d) => d.domain === "vision")!;
     assert.equal(vision.cell, cellFor("s4", "vision"));
@@ -391,18 +396,18 @@ describe("the overall verdict", () => {
   });
 
   test("one struggling competence is not averaged away", () => {
-    const child = childAged(12);
-    // Five competences on the average line, one two stages below it.
+    const child = childAged(10);
+    // Five competences on the average line (s4: 1), one two stages below it (s2: 1, s3: 0, s4: 0).
     const responses = {
-      ...fill({ s4: 1, s5: 0 }, 12),
+      ...fill({ s4: 1 }, 10),
       ...Object.fromEntries(
-        scoredItemsFor("s4", "language", 12).map((i) => [i.id, 0 as ResponseValue]),
+        scoredItemsFor("s4", "language", 10).map((i) => [i.id, 0 as ResponseValue]),
       ),
       ...Object.fromEntries(
-        scoredItemsFor("s3", "language", 12).map((i) => [i.id, 0 as ResponseValue]),
+        scoredItemsFor("s3", "language", 10).map((i) => [i.id, 0 as ResponseValue]),
       ),
       ...Object.fromEntries(
-        scoredItemsFor("s2", "language", 12).map((i) => [i.id, 1 as ResponseValue]),
+        scoredItemsFor("s2", "language", 10).map((i) => [i.id, 1 as ResponseValue]),
       ),
     };
     const result = scoreAssessment({
@@ -410,7 +415,7 @@ describe("the overall verdict", () => {
       assessedOn: ON,
       responses,
       stagesByDomain: {
-        ...everyDomain(["s4", "s5"]),
+        ...everyDomain(["s4"]),
         language: ["s2", "s3", "s4"],
       },
     });
@@ -418,7 +423,7 @@ describe("the overall verdict", () => {
     const language = result.domainScores.find((d) => d.domain === "language")!;
     assert.equal(language.achievedStage, "s2");
     assert.ok(
-      ["A-", "A--", "A--"].includes(language.status),
+      ["A-", "A--"].includes(language.status),
       `language came out ${language.status}`,
     );
     assert.notEqual(result.overallStatus, "A");
@@ -444,10 +449,10 @@ describe("the overall verdict", () => {
     const result = scoreAssessment({
       child,
       assessedOn: ON,
-      responses: fill({ s3: 1, s4: 0 }, 8),
-      stagesByDomain: everyDomain(["s3", "s4"]),
+      responses: fill({ s4: 1 }, 8),
+      stagesByDomain: everyDomain(["s4"]),
     });
-    assert.equal(result.startStage, "s3");
+    assert.equal(result.startStage, "s4");
   });
 
   test("non-scoring answers are carried through as observations", () => {

@@ -25,6 +25,11 @@ export function cmsReady(): boolean {
   return loaded;
 }
 
+export function invalidateCmsCache(): void {
+  loaded = false;
+  cmsCache = {};
+}
+
 export function getCmsText(id: string, defaultText: string, variables?: Record<string, string>): string {
   // If we haven't registered this default yet in dev, we could theoretically do it,
   // but it's cleaner to just let the admin dashboard seed it if missing.

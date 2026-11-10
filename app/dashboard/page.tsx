@@ -164,6 +164,33 @@ export default function DashboardPage() {
       />
 
       <main className="pb-4">
+        {/* ══ Sticky Resume Alert if an assessment is in-progress ══ */}
+        {!loading && resumable[0] && (
+          <Shell width="wide" className="pt-4 sm:pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border-2 border-[var(--sun-400)] bg-[var(--sun-50)] p-4 shadow-sm animate-rise">
+              <div className="flex items-center gap-3">
+                <Avatar name={resumable[0].child.name} photoUrl={resumable[0].child.photoUrl} size={44} ring />
+                <div>
+                  <p className="text-sm font-extrabold text-ink">
+                    Resume {resumable[0].child.name}&rsquo;s Assessment
+                  </p>
+                  <p className="text-xs font-semibold text-ink-3">
+                    {Object.keys(resumable[0].inProgress!.responses).length} question{Object.keys(resumable[0].inProgress!.responses).length === 1 ? "" : "s"} answered · Pick up right where you left off
+                  </p>
+                </div>
+              </div>
+              <ButtonLink
+                href={`/assessment/${resumable[0].inProgress!.id}`}
+                size="sm"
+                iconLeft={<IconBolt size={14} />}
+                className="shrink-0 justify-center bg-[var(--sun-500)] text-ink hover:bg-[var(--sun-600)]"
+              >
+                Resume Assessment
+              </ButtonLink>
+            </div>
+          </Shell>
+        )}
+
         {/* ══ greeting ═════════════════════════════════════════════════════ */}
         <Shell width="wide">
           <div
