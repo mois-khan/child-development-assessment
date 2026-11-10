@@ -6,6 +6,8 @@ import { DOMAINS } from "@/content/domains";
 import { itemBankReady, liveScoredItemsFor, primeItemBank } from "@/lib/item-bank";
 import { stageForAge } from "@/lib/stage";
 import { formatAge, summariseAge, todayISO } from "@/lib/age";
+import { useAuth } from "@/lib/auth/provider";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createAssessment, getChild, type SavedChild } from "@/lib/store";
 import {
   Badge,
@@ -49,6 +51,9 @@ export default function PayPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { profile } = useAuth();
+  const isSchool = profile?.accountType === "school";
+  const [hasPaidCredit, setHasPaidCredit] = useState(false);
   const [child, setChild] = useState<SavedChild | null | undefined | "error">(undefined);
   const [coupon, setCoupon] = useState("");
   const [applied, setApplied] = useState(false);
@@ -85,6 +90,33 @@ export default function PayPage({
       });
     return () => { active = false; };
   }, [loadAttempt]);
+
+  useEffect(() => {
+    let active = true;
+    if (isSchool) {
+      setHasPaidCredit(true);
+      return;
+    }
+    const supabase = getSupabaseBrowserClient();
+    Promise.all([
+      supabase.from("payments").select("*", { count: "exact", head: true }).eq("status", "paid"),
+      supabase.from("assessments").select("id", { count: "exact", head: true }),
+    ])
+      .then(([payRes, assessRes]) => {
+        if (!active) return;
+        const paid = payRes.count ?? 0;
+        const assessed = assessRes.count ?? 0;
+        if (paid > assessed) {
+          setHasPaidCredit(true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [isSchool]);
+
+  const isUnlocked = applied || isSchool || hasPaidCredit;
 
   const today = todayISO();
   const age = useMemo(
@@ -165,9 +197,8 @@ export default function PayPage({
     setStarting(true);
     setError("");
 
-    if (applied) {
-      // Coupon already redeemed server-side in applyCoupon() — the payments
-      // row that unlocks assessment creation already exists.
+    if (isUnlocked) {
+      // Unlocked via coupon, school institutional exemption, or existing credit
       await celebrateThenGo();
       return;
     }
@@ -317,19 +348,65 @@ export default function PayPage({
                     </Badge>
                   </div>
                   <div className="text-right">
-                    <p
-                      className="tnum text-3xl font-extrabold leading-none text-ink"
-                      style={{ fontFamily: "var(--font-display)" }}
-                    >
-                      {applied ? "₹0" : `₹${PRICE}`}
-                    </p>
-                    {applied && (
-                      <p className="tnum mt-1 text-sm font-bold text-ink-3 line-through">
+                    {isSchool ? (
+                      <div>
+                        <Badge tone="success" size="lg">Institutional Plan</Badge>
+                        <p className="mt-1 text-xs font-bold text-ink-3">Included with school</p>
+                      </div>
+                    ) : isUnlocked ? (
+                      <div>
+                        <p
+                          className="tnum text-3xl font-extrabold leading-none text-ink"
+                          style={{ fontFamily: "var(--font-display)" }}
+                        >
+                          ₹0
+                        </p>
+                        <p className="tnum mt-1 text-sm font-bold text-ink-3 line-through">
+                          ₹{PRICE}
+                        </p>
+                      </div>
+                    ) : (
+                      <p
+                        className="tnum text-3xl font-extrabold leading-none text-ink"
+                        style={{ fontFamily: "var(--font-display)" }}
+                      >
                         ₹{PRICE}
                       </p>
                     )}
                   </div>
                 </div>
+
+                {isSchool && (
+                  <div className="animate-rise mt-5 flex items-center gap-4 rounded-[var(--radius)] bg-[var(--st-on-track-soft)] p-4">
+                    <span className="animate-pop grid size-11 shrink-0 place-items-center rounded-full bg-[var(--surface)] text-[var(--st-on-track)]">
+                      <IconCheck size={22} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-extrabold text-[var(--st-on-track-ink)]">
+                        School Account Active
+                      </p>
+                      <p className="text-xs font-semibold text-ink-3">
+                        {profile?.school?.name ? `${profile.school.name} · ` : ""}Assessments included for enrolled students
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!isSchool && hasPaidCredit && !applied && (
+                  <div className="animate-rise mt-5 flex items-center gap-4 rounded-[var(--radius)] bg-[var(--st-on-track-soft)] p-4">
+                    <span className="animate-pop grid size-11 shrink-0 place-items-center rounded-full bg-[var(--surface)] text-[var(--st-on-track)]">
+                      <IconCheck size={22} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-extrabold text-[var(--st-on-track-ink)]">
+                        Assessment Credit Active
+                      </p>
+                      <p className="text-xs font-semibold text-ink-3">
+                        You have an active assessment credit available on your account
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {applied && (
                   <div className="animate-rise mt-5 flex items-center gap-4 rounded-[var(--radius)] bg-[var(--st-on-track-soft)] p-4">
@@ -357,9 +434,15 @@ export default function PayPage({
                     iconRight={<IconArrowRight size={18} />}
                     className="w-full sm:w-auto justify-center"
                   >
-                    {starting ? "Preparing..." : applied ? "Start the assessment" : `Pay ₹${PRICE} & Start`}
+                    {starting
+                      ? "Preparing..."
+                      : isSchool
+                        ? "Begin Student Assessment"
+                        : isUnlocked
+                          ? "Start the assessment"
+                          : `Pay ₹${PRICE} & Start`}
                   </Button>
-                  {!applied && (
+                  {!isUnlocked && (
                     <button
                       type="button"
                       onClick={() => setShowCoupon((v) => !v)}
@@ -370,7 +453,7 @@ export default function PayPage({
                   )}
                 </div>
 
-                {!applied && showCoupon && (
+                {!isUnlocked && showCoupon && (
                   <form onSubmit={applyCoupon} className="animate-rise mt-4 flex flex-wrap items-start gap-3">
                     <div className="min-w-[13rem] flex-1">
                       <input

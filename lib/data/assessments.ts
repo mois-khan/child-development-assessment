@@ -108,49 +108,59 @@ export async function saveResponse(id: string, itemId: string, value: ResponseVa
   if (error) throw error;
 }
 
+let detailQueue = Promise.resolve();
+
 export async function saveDetail(id: string, itemId: string, value: string): Promise<void> {
-  const supabase = getSupabaseBrowserClient();
-  
-  const { data, error: getErr } = await supabase
-    .from("assessments")
-    .select("details")
-    .eq("id", id)
-    .single();
+  detailQueue = detailQueue.then(async () => {
+    const supabase = getSupabaseBrowserClient();
     
-  if (getErr) throw getErr;
+    const { data, error: getErr } = await supabase
+      .from("assessments")
+      .select("details")
+      .eq("id", id)
+      .single();
+      
+    if (getErr) throw getErr;
 
-  const newDetails = { ...(data.details || {}), [itemId]: value };
+    const newDetails = { ...(data.details || {}), [itemId]: value };
 
-  const { error: updErr } = await supabase
-    .from("assessments")
-    .update({ details: newDetails })
-    .eq("id", id);
-    
-  if (updErr) throw updErr;
+    const { error: updErr } = await supabase
+      .from("assessments")
+      .update({ details: newDetails })
+      .eq("id", id);
+      
+    if (updErr) throw updErr;
+  });
+  return detailQueue;
 }
 
+let stageQueue = Promise.resolve();
+
 export async function appendStage(id: string, domain: DomainCode, stage: string): Promise<void> {
-  const supabase = getSupabaseBrowserClient();
-  
-  const { data, error: getErr } = await supabase
-    .from("assessments")
-    .select("stages_by_domain")
-    .eq("id", id)
-    .single();
+  stageQueue = stageQueue.then(async () => {
+    const supabase = getSupabaseBrowserClient();
     
-  if (getErr) throw getErr;
+    const { data, error: getErr } = await supabase
+      .from("assessments")
+      .select("stages_by_domain")
+      .eq("id", id)
+      .single();
+      
+    if (getErr) throw getErr;
 
-  const existing = data.stages_by_domain[domain] ?? [];
-  if (existing.includes(stage)) return;
+    const existing = data.stages_by_domain[domain] ?? [];
+    if (existing.includes(stage)) return;
 
-  const newStages = { ...data.stages_by_domain, [domain]: [...existing, stage] };
+    const newStages = { ...data.stages_by_domain, [domain]: [...existing, stage] };
 
-  const { error: updErr } = await supabase
-    .from("assessments")
-    .update({ stages_by_domain: newStages })
-    .eq("id", id);
-    
-  if (updErr) throw updErr;
+    const { error: updErr } = await supabase
+      .from("assessments")
+      .update({ stages_by_domain: newStages })
+      .eq("id", id);
+      
+    if (updErr) throw updErr;
+  });
+  return stageQueue;
 }
 
 export async function completeAssessment(id: string): Promise<void> {

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE, INPUT_DOMAINS, OUTPUT_DOMAINS } from "@/content/domains";
 import { formatAge, summariseAge } from "@/lib/age";
 import { PLATFORM_NAME, PLATFORM_SHORT, phaseLabel, reportName } from "@/lib/naming";
-import { DISCLAIMER, domainNote, headline, nextSteps, summary, overallSummary } from "@/lib/narrative";
+import { DISCLAIMER, getDisclaimer, domainNote, headline, nextSteps, summary, overallSummary } from "@/lib/narrative";
 import { STATUS_SEVERITY, STATUSES, scoreAssessment } from "@/lib/scoring";
 import { itemBankReady, primeItemBank } from "@/lib/item-bank";
 import { primeCmsBank, cmsReady } from "@/lib/cms";
@@ -516,7 +516,7 @@ export function ReportDocument({
            <div className="pt-8">
              <h4 className="text-lg font-bold uppercase text-[#4D1435] tracking-wider mb-3">Disclaimer:</h4>
              <p className="text-[0.85rem] leading-relaxed text-gray-600 text-justify whitespace-pre-wrap">
-               {DISCLAIMER}
+               {getDisclaimer()}
              </p>
              <p className="mt-4 text-[0.85rem] text-gray-500 font-medium">
                 Milestones adapted from the CDC <em>Learn the Signs. Act Early.</em> checklists, the NIDCD hearing and communication checklist, and WHO motor milestone data.
@@ -525,8 +525,8 @@ export function ReportDocument({
         </A4Page>
 
         {/* Download PDF floating button */}
-        <div className="no-print fixed bottom-8 right-8 z-50">
-          <Button variant="sun" className="shadow-2xl rounded-full px-8 py-6 text-lg font-bold flex items-center gap-2 border-[3px] border-[#4D1435]" onClick={() => window.print()}>
+        <div className="no-print fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">
+          <Button variant="sun" className="shadow-2xl rounded-full px-5 py-3 sm:px-8 sm:py-6 text-sm sm:text-lg font-bold flex items-center gap-2 border-[2px] sm:border-[3px] border-[#4D1435]" onClick={() => window.print()}>
              Download PDF
           </Button>
         </div>
