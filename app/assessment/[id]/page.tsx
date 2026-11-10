@@ -134,6 +134,7 @@ export default function AssessmentPage({
   const [phase, setPhase] = useState<Phase>("intro");
   const [reward, setReward] = useState<{ key: number; amount: number } | null>(null);
   const [pending, setPending] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [resumed, setResumed] = useState(false);
   const [loadError, setLoadError] = useState(false);
   /** The question bank has to be in memory before the first question renders
@@ -330,6 +331,8 @@ export default function AssessmentPage({
       saveResponse(id, target.id, value);
       if (isNew) setReward({ key: Date.now(), amount: XP_PER_ANSWER });
       setPending(true);
+      setJustSaved(true);
+      window.setTimeout(() => setJustSaved(false), 2200);
 
       // A beat of feedback, then move on by itself. The parent never hunts for
       // a "next" button — that hunt is what makes a long form feel long.
@@ -350,6 +353,8 @@ export default function AssessmentPage({
     (target: Item, value: string) => {
       setDetails((prev) => ({ ...prev, [target.id]: value }));
       saveDetail(id, target.id, value);
+      setJustSaved(true);
+      window.setTimeout(() => setJustSaved(false), 2200);
     },
     [id],
   );
@@ -484,6 +489,17 @@ export default function AssessmentPage({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold">
+                {justSaved ? (
+                  <span className="flex items-center gap-1 text-[var(--st-on-track)] font-bold animate-pulse">
+                    <IconCheck size={14} /> Saved
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-ink-3 opacity-60">
+                    <IconClock size={13} /> Auto-saving
+                  </span>
+                )}
+              </span>
               <span
                 className="chip"
                 style={
@@ -537,6 +553,9 @@ export default function AssessmentPage({
               blurb={domain.blurb.replace("your child", record.child.name)}
               questionCount={items.length}
               stageLabel={`Stage ${stage.roman}`}
+              childName={record.child.name}
+              ageMonths={months}
+              stageRoman={stage.roman}
               onStart={() => setPhase("question")}
             />
           )}
@@ -554,6 +573,7 @@ export default function AssessmentPage({
               detail={details[item.id]}
               minutesLeft={minutesLeft}
               disabled={pending}
+              justSaved={justSaved}
               onAnswer={(v) => answer(item, v)}
               onObserve={(v) => observe(item, v)}
               onSkip={skipObservation}
@@ -753,6 +773,9 @@ function SectionIntro({
   blurb,
   questionCount,
   stageLabel,
+  childName,
+  ageMonths,
+  stageRoman,
   onStart,
 }: {
   index: number;
@@ -762,6 +785,9 @@ function SectionIntro({
   blurb: string;
   questionCount: number;
   stageLabel: string;
+  childName: string;
+  ageMonths: number;
+  stageRoman: string;
   onStart: () => void;
 }) {
   return (
@@ -769,6 +795,24 @@ function SectionIntro({
       <p className="eyebrow justify-center">
         Section {index + 1} of {total} · {stageLabel}
       </p>
+
+      {index === 0 && (
+        <div className="mt-4 rounded-2xl border border-line bg-[var(--surface)] p-4 text-left shadow-sm sm:p-5">
+          <div className="flex items-start gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+              <IconSparkle size={18} />
+            </span>
+            <div>
+              <p className="text-sm font-extrabold text-ink">
+                Personalized to {childName}&rsquo;s Age ({ageMonths} months)
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-ink-3">
+                Starting with <strong>Phase {stageRoman}</strong> based on {childName}&rsquo;s age bracket. The questions adapt automatically — if they pass everything, the assessment climbs higher; if an area is still developing, it explores foundational milestones to locate their true level.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="animate-pop mt-7 flex justify-center">
         <SectionTile code={code} size={104} />
@@ -819,6 +863,7 @@ function QuestionView({
   detail,
   minutesLeft,
   disabled,
+  justSaved = false,
   onAnswer,
   onObserve,
   onSkip,
@@ -833,6 +878,7 @@ function QuestionView({
   detail: string | undefined;
   minutesLeft: number;
   disabled: boolean;
+  justSaved?: boolean;
   onAnswer: (v: ResponseValue) => void;
   onObserve: (v: string) => void;
   onSkip: () => void;
@@ -921,8 +967,16 @@ function QuestionView({
       )}
 
       <p className="mt-7 flex items-center justify-center gap-2 text-sm font-semibold text-ink-3">
-        <IconClock size={15} />
-        About {minutesLeft} min left · your answers save as you go
+        {justSaved ? (
+          <span className="inline-flex items-center gap-1.5 font-bold text-[var(--st-on-track)] animate-pop">
+            <IconCheck size={16} /> Saved to your account
+          </span>
+        ) : (
+          <>
+            <IconClock size={15} />
+            About {minutesLeft} min left · your answers save as you go
+          </>
+        )}
       </p>
     </div>
   );

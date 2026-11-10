@@ -5,6 +5,7 @@ import type { Assessment, Child, DomainCode, ResponseValue } from "@/lib/types";
 export interface StoredAssessment extends Assessment {
   stagesByDomain: Record<DomainCode, string[]>;
   id: string;
+  shareToken?: string;
   /** Immutable PDF URL stored in Cloudflare R2. NULL means use dynamic render. */
   reportPdfUrl?: string | null;
 }
@@ -41,6 +42,7 @@ export async function createAssessment(
     responses: {},
     details: data.details,
     bankVersion: data.bank_version,
+    shareToken: (data as any).share_token,
     completedAt: data.completed_at ?? undefined
   };
 }
@@ -89,6 +91,7 @@ export async function getAssessment(id: string): Promise<StoredAssessment | null
     responses,
     details: a.details,
     bankVersion: a.bank_version,
+    shareToken: (a as any).share_token,
     completedAt: a.completed_at ?? undefined,
     // report_pdf_url is added in migration 0027; cast until Supabase types are regenerated
     reportPdfUrl: (a as any).report_pdf_url ?? null,
@@ -243,6 +246,8 @@ export async function assessmentsForChild(childId: string): Promise<StoredAssess
       responses: responsesByAssessment[a.id] || {},
       details: a.details,
       bankVersion: a.bank_version,
+      shareToken: (a as any).share_token,
+      reportPdfUrl: (a as any).report_pdf_url ?? null,
       completedAt: a.completed_at ?? undefined
     };
   });
@@ -299,6 +304,8 @@ export async function listAssessments(): Promise<StoredAssessment[]> {
       responses: responsesByAssessment[a.id] || {},
       details: a.details,
       bankVersion: a.bank_version,
+      shareToken: (a as any).share_token,
+      reportPdfUrl: (a as any).report_pdf_url ?? null,
       completedAt: a.completed_at ?? undefined
     };
   });

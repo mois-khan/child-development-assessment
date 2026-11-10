@@ -57,16 +57,30 @@ const A4Page = ({
 export function ReportDocument({
   id,
   isAdmin = false,
+  initialAssessment,
 }: {
   id: string;
   isAdmin?: boolean;
+  initialAssessment?: StoredAssessment | null;
 }) {
   const searchParams = useSearchParams();
-  const [record, setRecord] = useState<StoredAssessment | null | undefined>(undefined);
+  const [record, setRecord] = useState<StoredAssessment | null | undefined>(initialAssessment ?? undefined);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [bankReady, setBankReady] = useState(itemBankReady());
   const [cmsLoaded, setCmsLoaded] = useState(cmsReady());
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    if (!record) return;
+    const shareUrl = record.shareToken
+      ? `${window.location.origin}/share/${record.shareToken}`
+      : window.location.href;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2500);
+    });
+  };
 
   useEffect(() => {
     let active = true;
@@ -87,6 +101,10 @@ export function ReportDocument({
   }, []);
 
   useEffect(() => {
+    if (initialAssessment) {
+      setRecord(initialAssessment);
+      return;
+    }
     let active = true;
     setLoadError(false);
     getAssessment(id)
@@ -97,7 +115,7 @@ export function ReportDocument({
         if (active) setLoadError(true);
       });
     return () => { active = false; };
-  }, [id, loadAttempt]);
+  }, [id, initialAssessment, loadAttempt]);
 
   const result = useMemo<AssessmentResult | null>(() => {
     if (!record || !bankReady) return null;
@@ -524,10 +542,31 @@ export function ReportDocument({
            </div>
         </A4Page>
 
-        {/* Download PDF floating button */}
-        <div className="no-print fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">
-          <Button variant="sun" className="shadow-2xl rounded-full px-5 py-3 sm:px-8 sm:py-6 text-sm sm:text-lg font-bold flex items-center gap-2 border-[2px] sm:border-[3px] border-[#4D1435]" onClick={() => window.print()}>
-             Download PDF
+        {/* Floating actions: Share & Download PDF */}
+        <div className="no-print fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 flex items-center gap-2.5 sm:gap-3">
+          <Button
+            variant="secondary"
+            className="shadow-2xl rounded-full px-4 py-3 sm:px-6 sm:py-5 text-xs sm:text-base font-bold flex items-center gap-2 border border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
+            onClick={handleShare}
+          >
+            {copied ? (
+              <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Link Copied!
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                Share Report
+              </span>
+            )}
+          </Button>
+          <Button
+            variant="sun"
+            className="shadow-2xl rounded-full px-5 py-3 sm:px-8 sm:py-6 text-sm sm:text-lg font-bold flex items-center gap-2 border-[2px] sm:border-[3px] border-[#4D1435]"
+            onClick={() => window.print()}
+          >
+            Download PDF
           </Button>
         </div>
 
