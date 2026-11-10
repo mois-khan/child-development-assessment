@@ -139,6 +139,7 @@ milestone_videos (id, stage_id, domain, title, description, redirect_url, thumbn
 | B10 | Overall grade demoted to A- or A despite high DQ (>100% or 122%) due to aggressive `worstDomain === "A--"` override | `lib/scoring.ts` | ✅ Fixed — overall status driven by overall percentage with 1-tier guardrail softening, never crashing >100% DQ to A- |
 | B11 | Report typo "raise the DQ" instead of "raise the IQ" and squished ECCTRACTION PLAN banner | `components/ReportDocument.tsx`, `public/ECCTR.svg` | ✅ Fixed — corrected wording to "raise the IQ.", SVG viewBox cropped to artwork bounding box with `object-contain` |
 | B12 | Security & UX improvements: /admin/content RBAC gate, school payment exemption, Razorpay load strategy, image downscaling, accessible toggle switches | `middleware.ts`, `supabase/migrations/0030_admin_content_and_schools.sql`, `app/layout.tsx`, `app/children/page.tsx`, `app/admin/(protected)/users/page.tsx` | ✅ Fixed — migration 0030 created, middleware updated, afterInteractive script, canvas compression, aria-labels |
+| B13 | School assessment paywall blocker, JSONB write race conditions, and CMS stale cache | `app/children/[id]/pay/page.tsx`, `lib/data/assessments.ts`, `lib/cms.ts`, `components/ReportDocument.tsx` | ✅ Fixed — school accounts and active credits bypass paywall, async write queues serialize responses, cache invalidation wired |
 
 ### ⚠️ Action Required After These Fixes
 1. **Apply migration 0023**: `npx supabase db push` — fixes the RLS policy
