@@ -266,7 +266,7 @@ export function ReportDocument({
           <div className="w-full mt-2 sm:mt-4 mb-2 sm:mb-4 flex justify-center px-2 sm:px-0">
             <div className="flex flex-col items-center max-w-full w-fit mx-auto">
               <div className="flex justify-center w-full max-w-[95%] mx-auto mb-0 sm:mb-2">
-                <img src="/ECCTR.svg" alt="ECCTRACTION PLAN" className="w-[320px] sm:w-[650px] print:w-[620px] h-[55px] sm:h-[100px] print:h-[85px] object-cover object-center" />
+                <img src="/ECCTR.svg" alt="ECCTRACTION PLAN" className="w-[320px] sm:w-[650px] print:w-[620px] h-auto object-contain object-center" />
               </div>
             </div>
           </div>
@@ -500,7 +500,7 @@ export function ReportDocument({
              <div>
                <h3 className="text-xl font-bold uppercase text-[#4D1435] tracking-wider mb-4">Recommendation:</h3>
                <p className="text-xl leading-[2] text-gray-800 font-medium">
-                  <span className="font-bold underline px-1">{child.name}</span> needs to join <span className="font-bold">Phase {startStage.roman} Course</span> of the KGKP for further enhancement of his/her Competencies to raise the DQ. Please use the link below to explore the Course to help you make a decision to continue further.
+                  <span className="font-bold underline px-1">{child.name}</span> needs to join <span className="font-bold">Phase {startStage.roman} Course</span> of the KGKP for further enhancement of his/her Competencies to raise the IQ. Please use the link below to explore the Course to help you make a decision to continue further.
                </p>
                
                <div className="mt-8">

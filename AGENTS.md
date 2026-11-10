@@ -68,19 +68,19 @@ The client rule: *"If the child's age in months is less than even 1 month of the
 
 This means **strict bracket assignment**, NOT nearest-average:
 ```
-Phase I:    0 ≤ age < 1 months     (averageMonths = 1)
-Phase II:   1 ≤ age < 2.5 months   (averageMonths = 2.5)
-Phase III:  2.5 ≤ age < 7 months   (averageMonths = 7)
-Phase IV:   7 ≤ age < 12 months    (averageMonths = 12)
-Phase V:    12 ≤ age < 18 months   (averageMonths = 18)
-Phase VI-A: 18 ≤ age < 27 months   (averageMonths = 27)
-Phase VI-B: 27 ≤ age < 36 months   (averageMonths = 36)
-Phase VII-A:36 ≤ age < 54 months   (averageMonths = 54)
-Phase VII-B:54 ≤ age ≤ 72 months   (averageMonths = 72)
+Phase I:    0 ≤ age < 1 months     (Start: 0,   averageMonths = 1)
+Phase II:   1 ≤ age < 2.5 months   (Start: 1,   averageMonths = 2.5)
+Phase III:  2.5 ≤ age < 7 months   (Start: 2.5, averageMonths = 7)
+Phase IV:   7 ≤ age < 12 months    (Start: 7,   averageMonths = 12)
+Phase V:    12 ≤ age < 18 months   (Start: 12,  averageMonths = 18)
+Phase VI-A: 18 ≤ age < 27 months   (Start: 18,  averageMonths = 27)
+Phase VI-B: 27 ≤ age < 36 months   (Start: 27,  averageMonths = 36)
+Phase VII-A:36 ≤ age < 54 months   (Start: 36,  averageMonths = 54)
+Phase VII-B:54 ≤ age ≤ 72 months   (Start: 54,  averageMonths = 72)
 ```
-Implementation: `stageForAge()` in `lib/stage.ts` uses `assessedMonths >= stage.averageMonths`
-iterating from highest to lowest. This correctly returns the highest phase whose averageMonths
-the child has reached or exceeded. **This is correct and should NOT be changed.**
+Implementation: `stageForAge()` in `lib/stage.ts` uses `assessedMonths >= stageStartMonths(stage)`
+iterating from highest to lowest. This correctly returns the highest phase whose starting month
+the child has reached or exceeded (e.g. 3 months -> Phase III; 28 months -> Phase VI-B). **This is correct and should NOT be changed.**
 
 ### 2.5 CMS System (CRITICAL — Must Prime Before Use)
 
@@ -135,12 +135,17 @@ milestone_videos (id, stage_id, domain, title, description, redirect_url, thumbn
 | B6 | MilestoneVideoRow never rendered in report | `components/ReportDocument.tsx` | ✅ Fixed — added after Recommendation paragraph per competence |
 | B7 | Duplicate buttons in CourseRow | `components/report/CourseRow.tsx` | ✅ Fixed — removed second button, added null fallback |
 | B8 | Assessments showing A-- (0%) across all domains due to question bank ID mismatch and RLS lock | `lib/item-bank.ts`, `lib/scoring.ts`, `supabase/migrations/0029_fix_item_overrides_read_rls.sql` | ✅ Fixed — RLS unlocked for public select, dual-lookup logic in scoring engine matches both legacy & new bank IDs |
+| B9 | Starting phase mapped to descending phase for all child ages (e.g. 3mo -> Phase II instead of III; 28mo -> Phase VIA instead of VIB) | `lib/stage.ts` | ✅ Fixed — evaluated against `stageStartMonths(stage)` instead of upper `averageMonths` |
+| B10 | Overall grade demoted to A- or A despite high DQ (>100% or 122%) due to aggressive `worstDomain === "A--"` override | `lib/scoring.ts` | ✅ Fixed — overall status driven by overall percentage with 1-tier guardrail softening, never crashing >100% DQ to A- |
+| B11 | Report typo "raise the DQ" instead of "raise the IQ" and squished ECCTRACTION PLAN banner | `components/ReportDocument.tsx`, `public/ECCTR.svg` | ✅ Fixed — corrected wording to "raise the IQ.", SVG viewBox cropped to artwork bounding box with `object-contain` |
+| B12 | Security & UX improvements: /admin/content RBAC gate, school payment exemption, Razorpay load strategy, image downscaling, accessible toggle switches | `middleware.ts`, `supabase/migrations/0030_admin_content_and_schools.sql`, `app/layout.tsx`, `app/children/page.tsx`, `app/admin/(protected)/users/page.tsx` | ✅ Fixed — migration 0030 created, middleware updated, afterInteractive script, canvas compression, aria-labels |
 
 ### ⚠️ Action Required After These Fixes
 1. **Apply migration 0023**: `npx supabase db push` — fixes the RLS policy
 2. **Apply migration 0024**: `npx supabase db push` — seeds all correct CMS block IDs
-3. **OR run**: `SUPABASE_SERVICE_ROLE_KEY=<key> node seed_cms.js` to seed CMS blocks directly
-4. After seeding, edit block content in admin at `/admin/content`
+3. **Apply migration 0030**: `npx supabase db push` — registers /admin/content and exempts schools from assessment payment gate
+4. **OR run**: `SUPABASE_SERVICE_ROLE_KEY=<key> node seed_cms.js` to seed CMS blocks directly
+5. After seeding, edit block content in admin at `/admin/content`
 
 ---
 

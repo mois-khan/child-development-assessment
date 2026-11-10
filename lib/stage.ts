@@ -2,19 +2,35 @@ import { BRAIN_STAGES, FIRST_STAGE, LAST_STAGE } from "@/content/stages";
 import type { BrainStage } from "./types";
 
 /**
+ * Starting month for each stage's developmental bracket:
+ *   Phase I:    0 <= age < 1 months     (Start: 0)
+ *   Phase II:   1 <= age < 2.5 months   (Start: 1)
+ *   Phase III:  2.5 <= age < 7 months   (Start: 2.5)
+ *   Phase IV:   7 <= age < 12 months    (Start: 7)
+ *   Phase V:    12 <= age < 18 months   (Start: 12)
+ *   Phase VI-A: 18 <= age < 27 months   (Start: 18)
+ *   Phase VI-B: 27 <= age < 36 months   (Start: 27)
+ *   Phase VII-A:36 <= age < 54 months   (Start: 36)
+ *   Phase VII-B:54 <= age <= 72 months  (Start: 54)
+ */
+export function stageStartMonths(stage: BrainStage): number {
+  if (stage.order === 1) return 0;
+  const prevStage = BRAIN_STAGES[stage.order - 2];
+  return prevStage ? prevStage.averageMonths : stage.superiorMonths;
+}
+
+/**
  * Which stage of the Developmental Profile a child of a given age starts at.
  *
- * The chart gives every stage three ages — superior, average, slow. The one
- * that decides where to begin is the average: a child starts at the stage
- * whose AVERAGE month is nearest their own age. Not the stage whose range
- * contains them, which is a different and wrong answer.
+ * Evaluates against the clinical start month of each phase bracket from
+ * highest to lowest. A child belongs to the phase whose starting month they
+ * have reached or exceeded.
  *
- *   2 months  → nearest average is 2.5 (Pons)       → stage II
- *   8 months  → nearest average is 7 (Mid-Brain)    → stage III, not IV
- *
- * The averages are 1, 2.5, 7, 12, 18, 36 and 72 months, so the boundaries fall
- * at 1.75, 4.75, 9.5, 15, 27 and 54 months. Those are derived here rather than
- * written down, so editing the chart's time frames moves them automatically.
+ *   2 months   -> in [1, 2.5)   -> Phase II
+ *   3 months   -> in [2.5, 7)   -> Phase III
+ *   8 months   -> in [7, 12)    -> Phase IV
+ *   13 months  -> in [12, 18)   -> Phase V
+ *   28 months  -> in [27, 36)   -> Phase VI-B
  *
  * Pass the CORRECTED age for a child born preterm — see lib/age.ts. Correcting
  * first and then picking the stage is the whole point of doing them in that
@@ -23,7 +39,7 @@ import type { BrainStage } from "./types";
 export function stageForAge(months: number): BrainStage {
   for (let i = BRAIN_STAGES.length - 1; i >= 0; i--) {
     const stage = BRAIN_STAGES[i];
-    if (months >= stage.averageMonths) {
+    if (months >= stageStartMonths(stage)) {
       return stage;
     }
   }
@@ -34,8 +50,8 @@ export function stageForAge(months: number): BrainStage {
  * The age boundaries between stages, for display and for tests. Boundary `i`
  * is where a child stops starting at stage `i` and starts at stage `i + 1`.
  */
-export const STAGE_BOUNDARIES: number[] = BRAIN_STAGES.slice(0, -1).map(
-  (stage, i) => (stage.averageMonths + BRAIN_STAGES[i + 1].averageMonths) / 2,
+export const STAGE_BOUNDARIES: number[] = BRAIN_STAGES.slice(1).map(
+  (stage) => stageStartMonths(stage),
 );
 
 /**

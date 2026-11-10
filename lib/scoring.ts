@@ -130,6 +130,22 @@ export const STATUS_SEVERITY: Record<StatusCode, number> = {
 
 const SEVERITY_STATUS: StatusCode[] = ["A++", "A+", "A", "A-", "A--"];
 
+/**
+ * Standard grade status determined by developmental quotient / percentage:
+ *   A++: > 120%
+ *   A+:  101% – 120%
+ *   A:   80% – 100%
+ *   A-:  50% – 79%
+ *   A--: < 50%
+ */
+export function statusFromPercent(percent: number): StatusCode {
+  if (percent > 120) return "A++";
+  if (percent > 100) return "A+";
+  if (percent >= 80) return "A";
+  if (percent >= 50) return "A-";
+  return "A--";
+}
+
 /* ────────────────────────────────────────────────────────────────────────────
  * Reading one cell of the chart
  * ──────────────────────────────────────────────────────────────────────────*/
@@ -416,12 +432,7 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
     if (finalPercent < 0) finalPercent = 0;
     finalPercent = Math.round(finalPercent);
 
-    let status: StatusCode;
-    if (finalPercent > 120) status = "A++";
-    else if (finalPercent > 100) status = "A+";
-    else if (finalPercent >= 80) status = "A";
-    else if (finalPercent >= 50) status = "A-";
-    else status = "A--";
+    const status: StatusCode = statusFromPercent(finalPercent);
 
     let highestPassedStage = null;
     for (const stage of asked) {
@@ -456,7 +467,10 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
   });
 
   const dqs = domainScores.map((d) => d.dq).filter((d): d is number => d !== null);
-  const overallDq = dqs.length === 0 ? null : Math.round(dqs.reduce((a, b) => a + b, 0) / dqs.length);
+  const overallDq =
+    months < MIN_AGE_FOR_DQ || dqs.length === 0
+      ? null
+      : Math.round(dqs.reduce((a, b) => a + b, 0) / dqs.length);
 
   const severities = domainScores.map((d) => STATUS_SEVERITY[d.status]).sort((a, b) => a - b);
   const median = Math.ceil(
@@ -464,21 +478,31 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
       severities[Math.ceil((severities.length - 1) / 2)]) /
       2,
   );
-  let overallStatus: StatusCode = SEVERITY_STATUS[median] || "A";
-
-  const statusFromMedian = overallStatus;
+  const medianStatus: StatusCode = SEVERITY_STATUS[median] || "A";
   const worstDomain = worstOf(domainScores.map((d) => d.status));
-  
-  if (worstDomain === "A--" && STATUS_SEVERITY[overallStatus] < 3) {
-    overallStatus = "A-";
-  } else if (worstDomain === "A-" && STATUS_SEVERITY[overallStatus] < 2) {
-    overallStatus = "A";
-  } else if (worstDomain === "A" && STATUS_SEVERITY[overallStatus] < 1) {
-    overallStatus = "A+";
+
+  // Determine base grade primarily from overall performance quotient (or median if dq is null)
+  let overallStatus: StatusCode = overallDq !== null ? statusFromPercent(overallDq) : medianStatus;
+  const statusBeforeGuardrail = overallStatus;
+
+  // Guardrail: if one domain is severely lagging (A--), overall status is softened by at most
+  // one tier, and never drops below 'A' if overall performance is above average (> 100%).
+  if (worstDomain === "A--") {
+    if (overallStatus === "A++") {
+      overallStatus = "A+";
+    } else if (overallStatus === "A+") {
+      overallStatus = "A";
+    } else if (overallStatus === "A") {
+      overallStatus = "A-";
+    }
+  } else if (worstDomain === "A-") {
+    if (overallStatus === "A++") {
+      overallStatus = "A+";
+    }
   }
 
   const overallRaisedBy =
-    STATUS_SEVERITY[overallStatus] > STATUS_SEVERITY[statusFromMedian]
+    STATUS_SEVERITY[overallStatus] > STATUS_SEVERITY[statusBeforeGuardrail]
       ? ([...domainScores].sort(
           (a, b) => STATUS_SEVERITY[b.status] - STATUS_SEVERITY[a.status],
         )[0]?.domain ?? null)
