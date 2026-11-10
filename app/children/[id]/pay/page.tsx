@@ -54,6 +54,7 @@ export default function PayPage({
   const { profile } = useAuth();
   const isSchool = profile?.accountType === "school";
   const [hasPaidCredit, setHasPaidCredit] = useState(false);
+  const [existingInProgressId, setExistingInProgressId] = useState<string | null>(null);
   const [child, setChild] = useState<SavedChild | null | undefined | "error">(undefined);
   const [coupon, setCoupon] = useState("");
   const [applied, setApplied] = useState(false);
@@ -99,22 +100,40 @@ export default function PayPage({
     }
     const supabase = getSupabaseBrowserClient();
     Promise.all([
-      supabase.from("payments").select("*", { count: "exact", head: true }).eq("status", "paid"),
-      supabase.from("assessments").select("id", { count: "exact", head: true }),
+      supabase
+        .from("payments")
+        .select("*", { count: "exact", head: true })
+        .eq("child_id", id)
+        .eq("status", "paid"),
+      supabase
+        .from("assessments")
+        .select("id", { count: "exact", head: true })
+        .eq("child_id", id),
+      supabase
+        .from("assessments")
+        .select("id")
+        .eq("child_id", id)
+        .eq("status", "in_progress")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ])
-      .then(([payRes, assessRes]) => {
+      .then(([payRes, assessRes, inProgressRes]) => {
         if (!active) return;
         const paid = payRes.count ?? 0;
         const assessed = assessRes.count ?? 0;
-        if (paid > assessed) {
-          setHasPaidCredit(true);
+        setHasPaidCredit(paid > assessed);
+        if (inProgressRes?.data?.id) {
+          setExistingInProgressId(inProgressRes.data.id);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Failed to check assessment credits:", err);
+      });
     return () => {
       active = false;
     };
-  }, [isSchool]);
+  }, [id, isSchool]);
 
   const isUnlocked = applied || isSchool || hasPaidCredit;
 
@@ -183,11 +202,23 @@ export default function PayPage({
       ) as Record<(typeof DOMAINS)[number]["code"], string[]>;
       const record = await createAssessment(child, today, stagesByDomain);
       router.push(`/assessment/${record.id}`);
-    } catch (err) {
-      console.error(err);
-      setError(
-        "That went through, but we couldn't start the assessment. Please contact support — don't pay again.",
-      );
+    } catch (err: any) {
+      console.error("Failed to start assessment:", err?.message || err);
+      const isPaymentGateErr =
+        err?.message?.includes("No unconsumed paid payment") ||
+        err?.code === "42501";
+      if (isPaymentGateErr) {
+        setHasPaidCredit(false);
+        setShowCoupon(true);
+        setError(
+          "No active assessment credit found for this child. Please apply coupon GENIUS99 or proceed with payment below."
+        );
+      } else {
+        setError(
+          err?.message ||
+          "That went through, but we couldn't start the assessment. Please contact support — don't pay again."
+        );
+      }
       setStarting(false);
     }
   }
@@ -330,10 +361,28 @@ export default function PayPage({
               <div>
                 <p className="eyebrow eyebrow-accent">Genius Milestone Assessment</p>
                 <h1 className="mt-3">Start {child.name}&rsquo;s assessment</h1>
-                
               </div>
-              
             </div>
+
+            {existingInProgressId && (
+              <div className="animate-rise mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[var(--radius)] border border-amber-300 bg-amber-50 p-4">
+                <div>
+                  <p className="text-sm font-extrabold text-amber-900">
+                    Assessment already in progress
+                  </p>
+                  <p className="text-xs font-semibold text-amber-800">
+                    {child.name} already has an assessment in progress. You can resume without paying again.
+                  </p>
+                </div>
+                <ButtonLink
+                  href={`/assessment/${existingInProgressId}`}
+                  size="sm"
+                  className="shrink-0"
+                >
+                  Resume Assessment
+                </ButtonLink>
+              </div>
+            )}
 
             <Card variant="clay" className="clay-lg mt-8 overflow-hidden">
               <div className="p-6 sm:p-7">
@@ -474,6 +523,12 @@ export default function PayPage({
                       {starting ? "Checking…" : "Apply"}
                     </Button>
                   </form>
+                )}
+
+                {error && !showCoupon && (
+                  <div className="animate-rise mt-4 rounded-[var(--radius)] border border-rose-200 bg-rose-50 p-3.5 text-sm font-semibold text-rose-700">
+                    {error}
+                  </div>
                 )}
               </div>
 

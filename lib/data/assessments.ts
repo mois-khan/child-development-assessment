@@ -32,7 +32,12 @@ export async function createAssessment(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    const err = new Error(error.message || "Failed to create assessment");
+    (err as any).code = error.code;
+    (err as any).details = error.details;
+    throw err;
+  }
   
   return {
     id: data.id,
@@ -108,7 +113,12 @@ export async function saveResponse(id: string, itemId: string, value: ResponseVa
       value
     }, { onConflict: "assessment_id, item_id" });
     
-  if (error) throw error;
+  if (error) {
+    const err = new Error(error.message || "Failed to save response");
+    (err as any).code = error.code;
+    (err as any).details = error.details;
+    throw err;
+  }
 }
 
 let detailQueue = Promise.resolve();
@@ -176,7 +186,12 @@ export async function completeAssessment(id: string): Promise<void> {
     })
     .eq("id", id);
 
-  if (error) throw error;
+  if (error) {
+    const err = new Error(error.message || "Failed to complete assessment");
+    (err as any).code = error.code;
+    (err as any).details = error.details;
+    throw err;
+  }
 
   // Best-effort: the report existing is the actual outcome of this
   // function, and a failed or slow notification call must never turn into
@@ -196,7 +211,12 @@ export async function deleteAssessment(id: string): Promise<void> {
     .delete()
     .eq("id", id);
     
-  if (error) throw error;
+  if (error) {
+    const err = new Error(error.message || "Failed to delete assessment");
+    (err as any).code = error.code;
+    (err as any).details = error.details;
+    throw err;
+  }
 }
 
 export async function assessmentsForChild(childId: string): Promise<StoredAssessment[]> {
