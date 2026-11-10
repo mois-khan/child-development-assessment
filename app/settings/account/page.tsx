@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/provider";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { SignOutConfirmDialog } from "@/components/SignOutConfirmDialog";
 import {
   Button,
   Card,
@@ -20,8 +21,10 @@ import {
  * ────────────────────────────────────────────────────────────────────────── */
 
 export default function AccountSettingsPage() {
-  const { user, profile, refreshProfile, updatePassword } = useAuth();
+  const { user, profile, refreshProfile, updatePassword, signOut } = useAuth();
   const isSchool = profile?.accountType === "school";
+  const [signOutOpen, setSignOutOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -383,6 +386,41 @@ export default function AccountSettingsPage() {
           </form>
         )}
       </Card>
+
+      {/* ── Sign out ── */}
+      <Card variant="clay" className="p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-ink">Sign out</h2>
+            <p className="mt-1 text-sm text-ink-3">
+              Signed in as <strong className="text-ink">{user?.email}</strong>
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={() => setSignOutOpen(true)}
+            className="w-full sm:w-auto"
+          >
+            Sign out
+          </Button>
+        </div>
+      </Card>
+
+      <SignOutConfirmDialog
+        isOpen={signOutOpen}
+        busy={signingOut}
+        onClose={() => !signingOut && setSignOutOpen(false)}
+        onConfirm={async () => {
+          setSigningOut(true);
+          try {
+            await signOut();
+            window.location.href = "/";
+          } catch {
+            setSigningOut(false);
+            setSignOutOpen(false);
+          }
+        }}
+      />
     </div>
   );
 }

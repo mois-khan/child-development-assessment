@@ -791,61 +791,49 @@ function SectionIntro({
   onStart: () => void;
 }) {
   return (
-    <div className="animate-rise pt-6 text-center">
+    <div className="animate-rise py-2 sm:py-6 text-center max-w-lg mx-auto flex flex-col items-center">
       <p className="eyebrow justify-center">
         Section {index + 1} of {total} · {stageLabel}
       </p>
 
       {index === 0 && (
-        <div className="mt-4 rounded-2xl border border-line bg-[var(--surface)] p-4 text-left shadow-sm sm:p-5">
+        <div className="mt-3.5 w-full rounded-2xl border border-line bg-[var(--surface)] p-3.5 text-left shadow-sm sm:p-5">
           <div className="flex items-start gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
-              <IconSparkle size={18} />
+            <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent sm:size-9">
+              <IconSparkle size={17} />
             </span>
             <div>
-              <p className="text-sm font-extrabold text-ink">
+              <p className="text-xs sm:text-sm font-extrabold text-ink">
                 Personalized to {childName}&rsquo;s Age ({ageMonths} months)
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-ink-3">
-                Starting with <strong>Phase {stageRoman}</strong> based on {childName}&rsquo;s age bracket. The questions adapt automatically — if they pass everything, the assessment climbs higher; if an area is still developing, it explores foundational milestones to locate their true level.
+              <p className="mt-1 text-[11px] sm:text-xs leading-relaxed text-ink-3">
+                Starting with <strong>Phase {stageRoman}</strong> based on {childName}&rsquo;s age bracket. The questions adapt automatically: if they pass everything, the assessment climbs higher; if an area is still developing, it explores foundational milestones to locate their true level.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="animate-pop mt-7 flex justify-center">
-        <SectionTile code={code} size={104} />
+      <div className="animate-pop mt-4 sm:mt-6 flex justify-center">
+        <SectionTile code={code} size={84} />
       </div>
 
-      <h1 className="mt-6">{name}</h1>
-      <p className="lede mx-auto mt-3 max-w-[40ch]">{blurb}</p>
+      <h1 className="mt-3.5 sm:mt-5 text-2xl sm:text-3xl">{name}</h1>
+      <p className="lede mx-auto mt-2 sm:mt-3 max-w-[40ch] text-sm sm:text-base">{blurb}</p>
 
-      <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-        <span className="chip chip-lg">
-          <IconSparkle size={15} /> {questionCount} to start
+      <div className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center gap-2.5">
+        <span className="chip chip-md sm:chip-lg">
+          <IconSparkle size={14} /> {questionCount} to start
         </span>
-        <span className="chip chip-lg">
-          <IconClock size={15} /> ~
+        <span className="chip chip-md sm:chip-lg">
+          <IconClock size={14} /> ~
           {Math.max(1, Math.round((questionCount * SECONDS_PER_QUESTION) / 60))} min
         </span>
       </div>
 
-      <Button size="lg" className="mt-9" onClick={onStart} iconRight={<IconArrowRight size={18} />}>
+      <Button size="lg" className="mt-5 sm:mt-7 w-full sm:w-auto justify-center" onClick={onStart} iconRight={<IconArrowRight size={18} />}>
         Let&rsquo;s go
       </Button>
-
-      <p className="mt-6 text-sm text-ink-3">
-        Answer for what they do <em>now</em>: &ldquo;no&rdquo; is just as useful an
-        answer, and is how we find their level.
-      </p>
-
-      {index === 0 && (
-        <p className="mt-2 text-sm text-ink-3">
-          The XP counter at the top is just a bit of fun as you go; it doesn&rsquo;t
-          affect the result.
-        </p>
-      )}
     </div>
   );
 }

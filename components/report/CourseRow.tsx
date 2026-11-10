@@ -156,7 +156,7 @@ function FallbackCta({ stageId, childName }: { stageId: string; childName: strin
   const mockCourse = {
     id: "fallback",
     stage_id: stageId,
-    title: `Phase ${STAGE_BY_ID[stageId]?.roman || ''} — KGKP Program`,
+    title: `Phase ${STAGE_BY_ID[stageId]?.roman || ''} - KGKP Program`,
     subtitle: `Structured activities designed for ${childName}'s developmental stage. Accelerates progress across all 6 core competencies.`,
     age_label: "Recommended",
     thumbnail_url: "",
