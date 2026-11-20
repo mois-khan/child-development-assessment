@@ -8,6 +8,7 @@ import { STATUSES } from "@/lib/scoring";
 import type { AssessmentResult, BrainStage, Child, DomainCode, DomainScore } from "@/lib/types";
 import { MilestoneVideoRow } from "@/components/report/MilestoneVideoRow";
 import { CourseRow } from "@/components/report/CourseRow";
+import { formatExactAge } from "@/lib/age";
 
 const STAGE_COLORS: Record<string, string> = {
   s1: "#EF4444",
@@ -25,7 +26,7 @@ export function ReportCardViewer({
   child,
   result,
   startStage,
-  ageMonths,
+  ageExactMonths,
   onShare,
   onDownload,
   copied = false,
@@ -33,7 +34,7 @@ export function ReportCardViewer({
   child: Child;
   result: AssessmentResult;
   startStage: BrainStage;
-  ageMonths: number;
+  ageExactMonths: number;
   onShare: () => void;
   onDownload: () => void;
   copied?: boolean;
@@ -232,7 +233,7 @@ export function ReportCardViewer({
                 <div className="text-right">
                   <span className="text-xs font-bold text-gray-500 block">Age</span>
                   <span className="text-sm font-extrabold text-gray-800">
-                    {ageMonths} Months
+                    {formatExactAge(ageExactMonths)}
                   </span>
                 </div>
               </div>
@@ -273,7 +274,7 @@ export function ReportCardViewer({
                       </svg>
                     </span>
                     <span>
-                      <strong>Age &amp; Level:</strong> {ageMonths} months old, matched to Phase {startStage.roman} ({startStage.name}).
+                      <strong>Age &amp; Level:</strong> {formatExactAge(ageExactMonths).toLowerCase()} old, matched to Phase {startStage.roman} ({startStage.name}).
                     </span>
                   </li>
                   <li className="flex items-start gap-2.5">
@@ -480,13 +481,15 @@ export function ReportCardViewer({
                 </div>
 
                 {/* Milestone Video Recommendation Row */}
-                <div className="mt-3">
-                  <MilestoneVideoRow
-                    stageId={score.achievedStage}
-                    domain={score.domain}
-                    domainName={domain.name}
-                  />
-                </div>
+                {score.percent < 1 && (
+                  <div className="mt-3">
+                    <MilestoneVideoRow
+                      stageId={score.achievedStage}
+                      domain={score.domain}
+                      domainName={domain.name}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="text-center pt-1">

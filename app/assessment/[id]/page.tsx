@@ -1332,7 +1332,7 @@ function LoadFailed({ onRetry }: { onRetry: () => void }) {
 
 function monthsFor(record: StoredAssessment): number {
   return summariseAge(record.child.dob, record.assessedOn, record.child.gestationalWeeks)
-    .assessedMonths;
+    .assessedExact;
 }
 
 /** Scored questions still without an answer, across every stage asked. */

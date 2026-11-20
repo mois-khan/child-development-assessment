@@ -3,13 +3,13 @@
 import { Fragment, use, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE, INPUT_DOMAINS, OUTPUT_DOMAINS } from "@/content/domains";
-import { formatAge, summariseAge } from "@/lib/age";
+import { formatAge, formatExactAge, summariseAge } from "@/lib/age";
 import { PLATFORM_NAME, PLATFORM_SHORT, phaseLabel, reportName } from "@/lib/naming";
 import { DISCLAIMER, getDisclaimer, domainNote, headline, nextSteps, summary, overallSummary } from "@/lib/narrative";
 import { STATUS_SEVERITY, STATUSES, scoreAssessment } from "@/lib/scoring";
 import { itemBankReady, primeItemBank } from "@/lib/item-bank";
 import { primeCmsBank, cmsReady } from "@/lib/cms";
-import { stageForAge } from "@/lib/stage";
+import { stageForAge, stageProgressForAge } from "@/lib/stage";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
 import type {
   AssessmentResult,
@@ -19,7 +19,7 @@ import type {
   DomainScore,
   StatusCode,
 } from "@/lib/types";
-import { BRAIN_STAGES, STAGE_BY_ID, stageAbove, cellFor } from "@/content/stages";
+import { BRAIN_STAGES, cellFor } from "@/content/stages";
 import { MilestoneVideoRow } from "@/components/report/MilestoneVideoRow";
 import { CourseRow } from "@/components/report/CourseRow";
 import { ReportCardViewer } from "@/components/report/ReportCardViewer";
@@ -141,7 +141,7 @@ export function ReportDocument({
     const previous = document.title;
     const stage = stageForAge(
       summariseAge(record.child.dob, record.assessedOn, record.child.gestationalWeeks)
-        .assessedMonths,
+        .assessedExact,
     );
     document.title = reportName(record.child.name, stage);
     return () => {
@@ -162,7 +162,7 @@ export function ReportDocument({
 
   const child = record.child;
   const age = summariseAge(child.dob, record.assessedOn, child.gestationalWeeks);
-  const startStage = stageForAge(age.assessedMonths);
+  const startStage = stageForAge(age.assessedExact);
   
   const formatDate = (d: string) => {
     if (!d) return "-";
@@ -174,20 +174,14 @@ export function ReportDocument({
   const outputDomainCodes = OUTPUT_DOMAINS;
   
   const getAgeTopPercent = (months: number) => {
-    const stage = stageForAge(months);
-    // reversedStages has Phase VII-B (order=9) at top (0%) and Phase I (order=1) at bottom
-    // The top of the child's phase row = (9 - stage.order) / 9 * 100
-    return ((9 - stage.order) / 9) * 100;
+    const { stage, progress } = stageProgressForAge(months);
+    // The chart runs from VII-B at the top to I at the bottom. Move upward
+    // within the child's exact-age row instead of snapping to its top border.
+    return ((BRAIN_STAGES.length - stage.order) + (1 - progress)) / BRAIN_STAGES.length * 100;
   };
 
   const getFillHeight = (stage: BrainStage, score: DomainScore) => {
-    const achievedOrder = STAGE_BY_ID[score.achievedStage]?.order || 0;
-    if (stage.order <= achievedOrder) return 100;
-    if (stage.order === achievedOrder + 1) {
-      if (score.percent === 1) return 100;
-      return Math.max(0, Math.min(99, Math.round(score.percent * 100)));
-    }
-    return 0;
+    return Math.round(Math.max(0, Math.min(1, score.stageProgress[stage.id] ?? 0)) * 100);
   };
 
   const renderCellFill = (stage: BrainStage, score: DomainScore) => {
@@ -215,10 +209,6 @@ export function ReportDocument({
       </>
     );
   };
-
-  const overallScoreValue = result.overallDq !== null ? Math.round(result.overallDq) : Math.round(
-    result.domainScores.reduce((acc, d) => acc + (d.percent * 100), 0) / 6
-  );
 
   return (
     <>
@@ -257,13 +247,13 @@ export function ReportDocument({
             max-width: 210mm !important;
             height: auto !important;
             min-height: 0 !important;
-            max-height: 285mm !important;
+            max-height: none !important;
             box-sizing: border-box !important;
             page-break-after: always !important;
             break-after: page !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             margin: 0 !important;
             border: none !important;
           }
@@ -277,7 +267,7 @@ export function ReportDocument({
             break-after: avoid !important;
             height: auto !important;
             min-height: auto !important;
-            max-height: 285mm !important;
+            max-height: none !important;
           }
         }
       `}} />
@@ -345,7 +335,7 @@ export function ReportDocument({
             child={child}
             result={result}
             startStage={startStage}
-            ageMonths={age.assessedMonths}
+            ageExactMonths={age.assessedExact}
             onShare={handleShare}
             onDownload={() => window.print()}
             copied={copied}
@@ -436,10 +426,10 @@ export function ReportDocument({
                 {/* Red dotted line for age */}
               <div 
                 className="absolute left-0 w-full border-t-2 border-red-500 border-dashed z-10 flex items-center"
-                style={{ top: `${getAgeTopPercent(age.assessedMonths)}%` }}
+                style={{ top: `${getAgeTopPercent(age.assessedExact)}%` }}
               >
                 <span className="absolute left-0 -translate-y-full text-red-600 font-bold flex-wrap sm:flex-nowrap text-[10px] bg-white px-1 leading-none">
-                  {age.assessedMonths} MONTHS
+                  {formatExactAge(age.assessedExact)}
                 </span>
               </div>
                 {reversedStages.map((stage, idx) => {
@@ -527,10 +517,10 @@ export function ReportDocument({
                                 {/* Age Line */}
                                 <div 
                                   className="absolute left-0 w-full border-t border-red-500 border-dashed z-10 flex items-center"
-                                  style={{ top: `${getAgeTopPercent(age.assessedMonths)}%` }}
+                                  style={{ top: `${getAgeTopPercent(age.assessedExact)}%` }}
                                 >
                                   <span className="absolute left-0 -translate-y-full text-red-600 font-bold flex-wrap sm:flex-nowrap text-[8px] bg-white px-1 leading-none">
-                                    {age.assessedMonths} MONTHS
+                                    {formatExactAge(age.assessedExact)}
                                   </span>
                                 </div>
                                 {reversedStages.map((stage, sIdx) => {
@@ -564,11 +554,13 @@ export function ReportDocument({
                                 </div>
                               </div>
                               {/* Milestone QR video card */}
-                              <MilestoneVideoRow
-                                  stageId={score.achievedStage}
-                                  domain={score.domain}
-                                  domainName={domain.name}
-                              />
+                              {score.percent < 1 && (
+                                <MilestoneVideoRow
+                                    stageId={score.achievedStage}
+                                    domain={score.domain}
+                                    domainName={domain.name}
+                                />
+                              )}
                            </div>
                         </div>
                      </div>

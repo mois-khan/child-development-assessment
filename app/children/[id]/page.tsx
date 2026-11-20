@@ -128,7 +128,7 @@ export default function ChildProfilePage({
   }
 
   const age = summariseAge(child.dob, todayISO(), child.gestationalWeeks);
-  const stage = stageForAge(age.assessedMonths);
+  const stage = stageForAge(age.assessedExact);
   const completed = assessments.filter((a) => a.completedAt).length;
 
   return (

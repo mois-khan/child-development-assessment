@@ -113,7 +113,7 @@ export default function SchoolDashboardPage() {
         return {
           child,
           ageMonths: age.chronologicalMonths,
-          phase: stageForAge(age.assessedMonths),
+          phase: stageForAge(age.assessedExact),
           completedCount: completed.length,
           inProgress: mine.find((a) => !a.completedAt) ?? null,
           latest,
