@@ -1,5 +1,8 @@
 const MS_PER_DAY = 86_400_000;
-const DAYS_PER_MONTH = 30.4375;
+// The clinical chart divides its Phase I box into 30 days, Phase II into 45
+// days, and so on. Keep date calculations on that same visible scale so a
+// seven-day-old sits exactly 7/30 of the way through Phase I.
+const DAYS_PER_MONTH = 30;
 
 function parse(iso: string): Date {
   return new Date(`${iso}T00:00:00`);
@@ -77,6 +80,22 @@ export function formatAge(months: number): string {
   if (y === 0) return `${m} month${m === 1 ? "" : "s"}`;
   if (m === 0) return `${y} year${y === 1 ? "" : "s"}`;
   return `${y} year${y === 1 ? "" : "s"}, ${m} month${m === 1 ? "" : "s"}`;
+}
+
+/** Exact age label for chart markers, preserving days for infants. */
+export function formatExactAge(months: number): string {
+  if (months < 1) {
+    const days = Math.max(0, Math.round(months * DAYS_PER_MONTH));
+    return `${days} DAY${days === 1 ? "" : "S"}`;
+  }
+  const rounded = Math.round(months * 10) / 10;
+  return `${rounded} MONTH${rounded === 1 ? "" : "S"}`;
+}
+
+/** Fractional age for parent-facing UI where months are the chosen unit. */
+export function formatExactMonths(months: number): string {
+  const rounded = Math.round(Math.max(0, months) * 10) / 10;
+  return `${rounded.toFixed(1)} month${rounded === 1 ? "" : "s"}`;
 }
 
 export function todayISO(): string {

@@ -83,7 +83,7 @@ export function EditChildDialog({
   const tooOld = age !== null && age.chronologicalMonths > 72;
   const dobChanged = dob !== child.dob;
   const canSave = name.trim().length > 0 && dob !== "" && age !== null && !tooOld && !saving;
-  const phase = age && !tooOld ? stageForAge(age.assessedMonths) : null;
+  const phase = age && !tooOld ? stageForAge(age.assessedExact) : null;
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();

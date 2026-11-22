@@ -158,7 +158,14 @@ export default function AdminChildrenPage() {
 
       {error && (
         <Card className="!p-4 border-[var(--st-consult)]">
-          <p className="text-sm text-[var(--st-consult-ink)]">⚠ {error}</p>
+          <p className="text-sm text-[var(--st-consult-ink)] flex items-center gap-1.5">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+              <line x1="12" y1="9" x2="12"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>{error}</span>
+          </p>
         </Card>
       )}
 

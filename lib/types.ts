@@ -222,12 +222,14 @@ export interface DomainScore {
   raw: number;
   max: number;
   percent: number;
+  /** Completion of each chart box, from 0 to 1, used by the spectrum. */
+  stageProgress: Record<string, number>;
   /**
    * Neurological age in months: the achieved stage's average month, plus
    * partial credit into the stage above.
    */
   neurologicalMonths: number;
-  /** neurologicalMonths / assessed age * 100. Null when too young to be stable. */
+  /** Age-relative performance score: 100 means exact age expectation. */
   dq: number | null;
   status: StatusCode;
   /** Items answered yes at the achieved stage and below. */
@@ -241,6 +243,8 @@ export interface DomainScore {
 export interface AssessmentResult {
   /** Age used for scoring — corrected age when the child was born preterm. */
   assessedMonths: number;
+  /** Corrected fractional age used for age-relative scoring and chart lines. */
+  assessedExactMonths: number;
   chronologicalMonths: number;
   corrected: boolean;
   /** The stage the assessment started at, from the child's age alone. */
@@ -250,12 +254,7 @@ export interface AssessmentResult {
   domainScores: DomainScore[];
   overallDq: number | null;
   overallStatus: StatusCode;
-  /**
-   * Set when the overall status is worse than the average alone would give,
-   * because a single competence needs attention. Without this the report can
-   * show a healthy-looking average beside a cautious status and read as a
-   * contradiction.
-   */
+  /** Reserved for legacy reports; the overall grade is now the direct average. */
   overallRaisedBy: DomainCode | null;
   strengths: DomainCode[];
   focusAreas: DomainCode[];

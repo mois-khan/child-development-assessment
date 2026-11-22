@@ -5,7 +5,13 @@ import { DOMAINS } from "@/content/domains";
 import { BRAIN_STAGES, STAGE_CELLS, cellFor } from "@/content/stages";
 import { ITEMS, itemsFor, scoredItemsFor } from "@/content/items";
 import { completedMonths, correctionMonths, summariseAge } from "@/lib/age";
-import { STAGE_BOUNDARIES, classifyAgainstStage, stageForAge, stageStartMonths } from "@/lib/stage";
+import {
+  STAGE_BOUNDARIES,
+  classifyAgainstStage,
+  stageForAge,
+  stageProgressForAge,
+  stageStartMonths,
+} from "@/lib/stage";
 import { __setItemBankForTests } from "@/lib/item-bank";
 import {
   MIN_AGE_FOR_DQ,
@@ -151,6 +157,16 @@ describe("picking the starting stage", () => {
     assert.ok(age.corrected);
     assert.equal(startStageFor(age.chronologicalMonths).roman, "IV");
     assert.equal(startStageFor(age.assessedMonths).roman, "III");
+  });
+
+  test("keeps an infant's exact position within the Phase I box", () => {
+    const atSevenDays = stageProgressForAge(7 / 30);
+    assert.equal(atSevenDays.stage.id, "s1");
+    assert.equal(atSevenDays.progress, 7 / 30);
+
+    const phaseTwo = stageProgressForAge(1.5);
+    assert.equal(phaseTwo.stage.id, "s2");
+    assert.equal(phaseTwo.progress, 1 / 3);
   });
 });
 
@@ -318,65 +334,75 @@ describe("neurological age", () => {
 });
 
 describe("what the chart says about the result", () => {
-  test("a child on the average line scores a quotient of 100", () => {
-    const child = childAged(10);
+  test("a seven-day-old gains proportional credit for fully completed boxes ahead of age", () => {
+    const child: Child = { name: "Seven days", dob: "2026-08-25", gender: "other" };
     const result = scoreAssessment({
       child,
       assessedOn: ON,
-      responses: fill({ s4: 1 }, 10),
-      stagesByDomain: everyDomain(["s4"]),
-    });
-    assert.equal(result.overallStatus, "A");
-    for (const d of result.domainScores) {
-      assert.equal(d.achievedStage, "s4");
-      assert.equal(d.percent, 1);
-      assert.equal(d.status, "A");
-    }
-  });
-
-  test("a child a stage ahead of their age is on track, with the quotient showing how far", () => {
-    // 10 months old (starts at stage IV), passes stage IV and stage V (average 18 months).
-    const child = childAged(10);
-    const result = scoreAssessment({
-      child,
-      assessedOn: ON,
-      responses: fill({ s4: 1, s5: 1 }, 10),
-      stagesByDomain: everyDomain(["s4", "s5"]),
+      responses: fill({ s1: 1, s2: 1 }, 7 / 30),
+      stagesByDomain: everyDomain(["s1", "s2"]),
     });
     for (const d of result.domainScores) {
-      assert.equal(d.achievedStage, "s5");
-      assert.ok(d.percent > 1);
-      assert.ok(["A+", "A++"].includes(d.status));
-    }
-    assert.ok(["A+", "A++"].includes(result.overallStatus));
-  });
-
-  test("a child at twice the chart's pace is superior", () => {
-    // 8 months old (starts at stage IV), reaches stage VIA
-    const child = childAged(8);
-    const result = scoreAssessment({
-      child,
-      assessedOn: ON,
-      responses: fill({ s4: 1, s5: 1, s6a: 1 }, 8),
-      stagesByDomain: everyDomain(["s4", "s5", "s6a"]),
-    });
-    for (const d of result.domainScores) {
+      // 100 + (23/30 of Phase I × 20) + (one full Phase II × 20) = 135.
+      assert.equal(d.percent, 1.35);
       assert.equal(d.status, "A++");
     }
+    assert.equal(result.overallDq, 135);
     assert.equal(result.overallStatus, "A++");
   });
 
-  test("a child at half their expected stage is slow", () => {
-    const child = childAged(24);
+  test("awards a partial higher box proportionally instead of a flat bonus", () => {
+    const child: Child = { name: "Seven days", dob: "2026-08-25", gender: "other" };
+    const responses = fill({ s1: 1 }, 7 / 30);
+    const phaseTwoVision = scoredItemsFor("s2", "vision", 7 / 30);
+    responses[phaseTwoVision[0].id] = 1;
+    responses[phaseTwoVision[1].id] = 0;
+    responses[phaseTwoVision[2].id] = 0;
     const result = scoreAssessment({
       child,
       assessedOn: ON,
-      responses: fill({ s4: 1, s5: 0 }, 24),
-      stagesByDomain: everyDomain(["s4", "s5"]),
+      responses,
+      stagesByDomain: { ...everyDomain(["s1"]), vision: ["s1", "s2"] },
+    });
+    const vision = result.domainScores.find((d) => d.domain === "vision")!;
+    // The last 23/30 of Phase I plus one third of Phase II are both worth
+    // their proportional share of a 20-point box.
+    assert.equal(vision.percent, 1.22);
+    assert.equal(vision.stageProgress.s1, 1);
+    assert.equal(vision.stageProgress.s2, 1 / 3);
+  });
+
+  test("uses the direct average for the overall grade without a worst-domain demotion", () => {
+    const child: Child = { name: "Seven days", dob: "2026-08-25", gender: "other" };
+    const responses = fill({ s1: 1, s2: 1 }, 7 / 30);
+    for (const item of scoredItemsFor("s1", "auditory", 7 / 30)) {
+      responses[item.id] = 0;
+    }
+    const result = scoreAssessment({
+      child,
+      assessedOn: ON,
+      responses,
+      stagesByDomain: everyDomain(["s1", "s2"]),
+    });
+    const average = Math.round(
+      result.domainScores.reduce((sum, score) => sum + score.percent * 100, 0) / DOMAINS.length,
+    );
+    assert.equal(result.overallDq, average);
+    assert.equal(result.overallStatus, "A++");
+    assert.equal(result.overallRaisedBy, null);
+  });
+
+  test("does not paint the starting box as passed when every answer in it is no", () => {
+    const child: Child = { name: "Seven days", dob: "2026-08-25", gender: "other" };
+    const result = scoreAssessment({
+      child,
+      assessedOn: ON,
+      responses: fill({ s1: 0 }, 7 / 30),
+      stagesByDomain: everyDomain(["s1"]),
     });
     for (const d of result.domainScores) {
-      assert.equal(d.status, "A--"); // 50 <= 50
-      
+      assert.equal(d.stageProgress.s1, 0);
+      assert.equal(d.status, "A");
     }
   });
 });
@@ -395,7 +421,7 @@ describe("the overall verdict", () => {
     assert.equal(vision.cell.number, 19);
   });
 
-  test("one struggling competence is not averaged away", () => {
+  test("a struggling competence remains a focus area", () => {
     const child = childAged(10);
     // Five competences on the average line (s4: 1), one two stages below it (s2: 1, s3: 0, s4: 0).
     const responses = {
@@ -426,12 +452,11 @@ describe("the overall verdict", () => {
       ["A-", "A--"].includes(language.status),
       `language came out ${language.status}`,
     );
-    assert.notEqual(result.overallStatus, "A");
-    assert.equal(result.overallRaisedBy, "language");
+    assert.equal(result.overallRaisedBy, null);
     assert.ok(result.focusAreas.includes("language"));
   });
 
-  test("no quotient is reported for a newborn", () => {
+  test("reports an exact-age score for a newborn", () => {
     const child = childAged(0);
     const result = scoreAssessment({
       child,
@@ -440,8 +465,8 @@ describe("the overall verdict", () => {
       stagesByDomain: everyDomain(["s1"]),
     });
     assert.ok(result.suppressDq === false);
-    assert.equal(result.overallDq, null);
-    assert.ok(result.assessedMonths < MIN_AGE_FOR_DQ);
+    assert.equal(result.overallDq, 120);
+    assert.equal(MIN_AGE_FOR_DQ, 0);
   });
 
   test("records the starting stage the age picked", () => {

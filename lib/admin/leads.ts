@@ -71,7 +71,7 @@ function toLeadChild(child: any): LeadChild {
     name: child.name,
     dob: child.dob,
     ageLabel: formatAge(age.chronologicalMonths),
-    stageLabel: phaseLabel(stageForAge(age.assessedMonths)),
+    stageLabel: phaseLabel(stageForAge(age.assessedExact)),
     assessments: (child.assessments || []).map((a: any) => ({
       id: a.id,
       assessedOn: a.assessed_on,

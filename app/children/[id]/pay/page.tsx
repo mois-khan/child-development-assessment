@@ -142,7 +142,7 @@ export default function PayPage({
     () => (child && child !== "error" ? summariseAge(child.dob, today, child.gestationalWeeks) : null),
     [child, today],
   );
-  const startStage = age ? stageForAge(age.assessedMonths) : null;
+  const startStage = age ? stageForAge(age.assessedExact) : null;
 
   /* The assessment adapts as it goes, so the real length is not knowable up
      front — a child who passes everything climbs, one who does not descends.
@@ -154,7 +154,7 @@ export default function PayPage({
     return DOMAINS.map((d) => ({
       code: d.code,
       name: d.name,
-      count: liveScoredItemsFor(startStage.id, d.code, age.assessedMonths).length,
+      count: liveScoredItemsFor(startStage.id, d.code, age.assessedExact).length,
     }));
   }, [startStage, age, bankReady]);
   const questionCount = perSection.reduce((n, s) => n + s.count, 0);

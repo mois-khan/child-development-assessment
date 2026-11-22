@@ -3,13 +3,13 @@
 import { Fragment, use, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE, INPUT_DOMAINS, OUTPUT_DOMAINS } from "@/content/domains";
-import { formatAge, summariseAge } from "@/lib/age";
+import { formatAge, formatExactAge, summariseAge } from "@/lib/age";
 import { PLATFORM_NAME, PLATFORM_SHORT, phaseLabel, reportName } from "@/lib/naming";
 import { DISCLAIMER, getDisclaimer, domainNote, headline, nextSteps, summary, overallSummary } from "@/lib/narrative";
 import { STATUS_SEVERITY, STATUSES, scoreAssessment } from "@/lib/scoring";
 import { itemBankReady, primeItemBank } from "@/lib/item-bank";
 import { primeCmsBank, cmsReady } from "@/lib/cms";
-import { stageForAge } from "@/lib/stage";
+import { stageForAge, stageProgressForAge } from "@/lib/stage";
 import { getAssessment, type StoredAssessment } from "@/lib/store";
 import type {
   AssessmentResult,
@@ -19,9 +19,11 @@ import type {
   DomainScore,
   StatusCode,
 } from "@/lib/types";
-import { BRAIN_STAGES, STAGE_BY_ID, stageAbove, cellFor } from "@/content/stages";
+import { BRAIN_STAGES, cellFor } from "@/content/stages";
 import { MilestoneVideoRow } from "@/components/report/MilestoneVideoRow";
 import { CourseRow } from "@/components/report/CourseRow";
+import { ReportCardViewer } from "@/components/report/ReportCardViewer";
+import { safeShare } from "@/lib/utils/share";
 import { Avatar, LoadError, TopBar, Wordmark, Button } from "@/components/ui";
 
 const STAGE_COLORS: Record<string, string> = {
@@ -70,16 +72,22 @@ export function ReportDocument({
   const [bankReady, setBankReady] = useState(itemBankReady());
   const [cmsLoaded, setCmsLoaded] = useState(cmsReady());
   const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState<"cards" | "a4">("cards");
 
   const handleShare = () => {
     if (!record) return;
     const shareUrl = record.shareToken
       ? `${window.location.origin}/share/${record.shareToken}`
       : window.location.href;
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2500);
-    });
+    safeShare(
+      shareUrl,
+      `${record.child.name}'s Developmental Assessment Report`,
+      `View the official ECCTRACTION Report for ${record.child.name}`,
+      () => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2500);
+      }
+    );
   };
 
   useEffect(() => {
@@ -133,7 +141,7 @@ export function ReportDocument({
     const previous = document.title;
     const stage = stageForAge(
       summariseAge(record.child.dob, record.assessedOn, record.child.gestationalWeeks)
-        .assessedMonths,
+        .assessedExact,
     );
     document.title = reportName(record.child.name, stage);
     return () => {
@@ -148,16 +156,20 @@ export function ReportDocument({
     }
   }, [result, searchParams]);
 
+  useEffect(() => {
+    if (searchParams.get("view") === "a4") setViewMode("a4");
+  }, [searchParams]);
+
   if (loadError) return <div className="p-8 text-red-500">Failed to load report.</div>;
   if (record === undefined || !bankReady || !cmsLoaded) return <div className="p-8 text-gray-500">Loading...</div>;
   if (record === null || result === null) return <div className="p-8 text-gray-500">Report not found.</div>;
 
   const child = record.child;
   const age = summariseAge(child.dob, record.assessedOn, child.gestationalWeeks);
-  const startStage = stageForAge(age.assessedMonths);
+  const startStage = stageForAge(age.assessedExact);
   
   const formatDate = (d: string) => {
-    if (!d) return "—";
+    if (!d) return "-";
     return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   };
 
@@ -166,20 +178,14 @@ export function ReportDocument({
   const outputDomainCodes = OUTPUT_DOMAINS;
   
   const getAgeTopPercent = (months: number) => {
-    const stage = stageForAge(months);
-    // reversedStages has Phase VII-B (order=9) at top (0%) and Phase I (order=1) at bottom
-    // The top of the child's phase row = (9 - stage.order) / 9 * 100
-    return ((9 - stage.order) / 9) * 100;
+    const { stage, progress } = stageProgressForAge(months);
+    // The chart runs from VII-B at the top to I at the bottom. Move upward
+    // within the child's exact-age row instead of snapping to its top border.
+    return ((BRAIN_STAGES.length - stage.order) + (1 - progress)) / BRAIN_STAGES.length * 100;
   };
 
   const getFillHeight = (stage: BrainStage, score: DomainScore) => {
-    const achievedOrder = STAGE_BY_ID[score.achievedStage]?.order || 0;
-    if (stage.order <= achievedOrder) return 100;
-    if (stage.order === achievedOrder + 1) {
-      if (score.percent === 1) return 100;
-      return Math.max(0, Math.min(99, Math.round(score.percent * 100)));
-    }
-    return 0;
+    return Math.round(Math.max(0, Math.min(1, score.stageProgress[stage.id] ?? 0)) * 100);
   };
 
   const renderCellFill = (stage: BrainStage, score: DomainScore) => {
@@ -207,10 +213,6 @@ export function ReportDocument({
       </>
     );
   };
-
-  const overallScoreValue = result.overallDq !== null ? Math.round(result.overallDq) : Math.round(
-    result.domainScores.reduce((acc, d) => acc + (d.percent * 100), 0) / 6
-  );
 
   return (
     <>
@@ -249,13 +251,13 @@ export function ReportDocument({
             max-width: 210mm !important;
             height: auto !important;
             min-height: 0 !important;
-            max-height: 285mm !important;
+            max-height: none !important;
             box-sizing: border-box !important;
             page-break-after: always !important;
             break-after: page !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             margin: 0 !important;
             border: none !important;
           }
@@ -269,12 +271,105 @@ export function ReportDocument({
             break-after: avoid !important;
             height: auto !important;
             min-height: auto !important;
-            max-height: 285mm !important;
+            max-height: none !important;
           }
         }
       `}} />
-      {!isAdmin && <TopBar />}
-      <main className="bg-gray-100 min-h-screen py-8 print:py-0 print:bg-white flex flex-col items-center print:block print:min-h-0">
+      {!isAdmin && (
+        <div className="hidden sm:block no-print">
+          <TopBar />
+        </div>
+      )}
+
+      {/* Minimal mobile header */}
+      <div className="sm:hidden no-print sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-gray-200 px-4 py-2.5 flex items-center justify-between shadow-sm">
+        <a
+          href={`/children/${child.id}`}
+          className="text-xs font-bold text-gray-700 flex items-center gap-1 hover:text-black"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </a>
+        <span className="text-xs font-extrabold text-[#4D1435] truncate max-w-[170px]">
+          {child.name}&rsquo;s Report
+        </span>
+        <button
+          type="button"
+          onClick={handleShare}
+          className="text-xs font-bold text-gray-700 flex items-center gap-1 hover:text-black"
+        >
+          {copied ? "Copied!" : "Share"}
+        </button>
+      </div>
+
+      <main className="bg-gray-100 min-h-screen py-4 sm:py-8 print:py-0 print:bg-white flex flex-col items-center print:block print:min-h-0">
+        {/* Desktop View Mode Switcher */}
+        <div className="no-print hidden sm:flex items-center justify-center mb-6 gap-2">
+          <div className="inline-flex rounded-full bg-gray-200/90 p-1 shadow-inner border border-gray-300">
+            <button
+              type="button"
+              onClick={() => setViewMode("cards")}
+              className={`inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-bold transition-all ${
+                viewMode === "cards"
+                  ? "bg-[#4D1435] text-white shadow-sm"
+                  : "text-gray-700 hover:text-black"
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+              <span>Virtual Summary</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("a4")}
+              className={`inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-bold transition-all ${
+                viewMode === "a4"
+                  ? "bg-[#4D1435] text-white shadow-sm"
+                  : "text-gray-700 hover:text-black"
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>A4 Clinical Sheet</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Virtual Interactive Story Cards (Default on mobile and when viewMode === 'cards') ── */}
+        <div className={`w-full px-3 py-2 ${viewMode === "cards" ? "block no-print" : "hidden no-print"}`}>
+          <ReportCardViewer
+            child={child}
+            result={result}
+            startStage={startStage}
+            ageExactMonths={age.assessedExact}
+            onShare={handleShare}
+            onViewSheet={() => setViewMode("a4")}
+            onDownload={() => {
+              setViewMode("a4");
+              window.setTimeout(() => window.print(), 100);
+            }}
+            copied={copied}
+          />
+        </div>
+
+        {/* ── A4 Clinical Document (for Print and when viewMode === 'a4') ── */}
+        <div className={`w-full ${viewMode === "a4" ? "block" : "hidden sm:block"} print:block`}>
+        {viewMode === "a4" && (
+          <div className="sm:hidden no-print mb-3 flex items-center justify-between gap-2 px-3">
+            <button
+              type="button"
+              onClick={() => setViewMode("cards")}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-700"
+            >
+              Back to summary
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="rounded-lg bg-[#4D1435] px-3 py-2 text-xs font-bold text-white"
+            >
+              Save as PDF
+            </button>
+          </div>
+        )}
 
         {/* Page 1: Cover */}
         <A4Page isFirstPage>
@@ -299,7 +394,7 @@ export function ReportDocument({
                <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Name:</span> <span className="font-medium text-gray-800">{child.name}</span></div>
                <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Date of Birth:</span> <span className="font-medium text-gray-800">{formatDate(child.dob)}</span></div>
                <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Gender:</span> <span className="font-medium capitalize text-gray-800">{child.gender === 'boy' ? 'Male' : child.gender === 'girl' ? 'Female' : child.gender}</span></div>
-               <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">School/Clinic/Parent:</span> <span className="font-medium text-gray-800">{child.parentName || "—"}</span></div>
+               <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">School/Clinic/Parent:</span> <span className="font-medium text-gray-800">{child.parentName || "-"}</span></div>
                <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Assessment Date:</span> <span className="font-medium text-gray-800">{formatDate(record.assessedOn)}</span></div>
                <div className="flex border-b border-gray-300 pb-1.5 print:pb-1.5"><span className="font-bold w-32 sm:w-48 print:w-48 text-[#4D1435] shrink-0">Assessment Tool:</span> <span className="font-medium text-gray-800">KECCTR (Phase {startStage.roman})</span></div>
             </div>
@@ -357,10 +452,10 @@ export function ReportDocument({
                 {/* Red dotted line for age */}
               <div 
                 className="absolute left-0 w-full border-t-2 border-red-500 border-dashed z-10 flex items-center"
-                style={{ top: `${getAgeTopPercent(age.assessedMonths)}%` }}
+                style={{ top: `${getAgeTopPercent(age.assessedExact)}%` }}
               >
                 <span className="absolute left-0 -translate-y-full text-red-600 font-bold flex-wrap sm:flex-nowrap text-[10px] bg-white px-1 leading-none">
-                  {age.assessedMonths} MONTHS
+                  {formatExactAge(age.assessedExact)}
                 </span>
               </div>
                 {reversedStages.map((stage, idx) => {
@@ -426,11 +521,11 @@ export function ReportDocument({
                    return (
                      <div key={score.domain} className="flex flex-col border-b border-gray-200 pb-3 last:border-0 last:pb-0">
                         <div className="flex flex-row justify-between items-center mb-2.5 border-b border-[#4D1435] pb-1.5 gap-2">
-                             <h2 className="text-[12px] sm:text-[14px] font-bold uppercase text-[#4D1435] tracking-tight flex items-center shrink-0">
+                             <h2 className="text-[12px] sm:text-[14px] font-bold uppercase text-[#4D1435] tracking-tight flex items-center min-w-0 flex-1">
                                <span className="mr-2 border-2 border-[#4D1435] rounded-full w-4 h-4 sm:w-5 sm:h-5 inline-flex items-center justify-center text-[8px] sm:text-[9.5px] shrink-0 font-bold">{romanDomain}</span>
-                               <span className="whitespace-nowrap">{domain.name}</span>
+                               <span className="truncate">{domain.name}</span>
                              </h2>
-                              <div className="flex flex-col items-center justify-center min-w-[55px] sm:min-w-[70px] px-2.5 py-1 rounded-lg border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0 ml-auto">
+                              <div className="flex flex-col items-center justify-center min-w-[55px] sm:min-w-[70px] px-2.5 py-1 rounded-lg border-[2px] sm:border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md shrink-0">
                               <span className="text-[15px] sm:text-[18px] font-black tracking-tight leading-none">{STATUSES[score.status].code.replace(/-/g, '\u2212')}</span>
                               <span className="text-[8px] sm:text-[10px] font-bold mt-0.5 opacity-80">{Math.round(score.percent * 100)}%</span>
                             </div>
@@ -448,10 +543,10 @@ export function ReportDocument({
                                 {/* Age Line */}
                                 <div 
                                   className="absolute left-0 w-full border-t border-red-500 border-dashed z-10 flex items-center"
-                                  style={{ top: `${getAgeTopPercent(age.assessedMonths)}%` }}
+                                  style={{ top: `${getAgeTopPercent(age.assessedExact)}%` }}
                                 >
                                   <span className="absolute left-0 -translate-y-full text-red-600 font-bold flex-wrap sm:flex-nowrap text-[8px] bg-white px-1 leading-none">
-                                    {age.assessedMonths} MONTHS
+                                    {formatExactAge(age.assessedExact)}
                                   </span>
                                 </div>
                                 {reversedStages.map((stage, sIdx) => {
@@ -485,11 +580,13 @@ export function ReportDocument({
                                 </div>
                               </div>
                               {/* Milestone QR video card */}
-                              <MilestoneVideoRow
-                                  stageId={score.achievedStage}
-                                  domain={score.domain}
-                                  domainName={domain.name}
-                              />
+                              {score.percent < 1 && (
+                                <MilestoneVideoRow
+                                    stageId={score.achievedStage}
+                                    domain={score.domain}
+                                    domainName={domain.name}
+                                />
+                              )}
                            </div>
                         </div>
                      </div>
@@ -541,33 +638,42 @@ export function ReportDocument({
              </p>
            </div>
         </A4Page>
+        </div>
 
         {/* Floating actions: Share & Download PDF */}
-        <div className="no-print fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 flex items-center gap-2.5 sm:gap-3">
-          <Button
-            variant="secondary"
-            className="shadow-2xl rounded-full px-4 py-3 sm:px-6 sm:py-5 text-xs sm:text-base font-bold flex items-center gap-2 border border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
+        <div className={`no-print fixed bottom-5 right-4 sm:bottom-8 sm:right-8 z-50 flex flex-col items-end gap-2.5 sm:gap-3 pointer-events-none ${viewMode === "a4" ? "" : "hidden"}`}>
+          {/* Share Button: Icon-only on mobile; expands on hover on large screens */}
+          <button
+            type="button"
             onClick={handleShare}
+            aria-label="Share Report"
+            className="pointer-events-auto group flex items-center justify-center rounded-full bg-white text-gray-800 shadow-xl border border-gray-200 transition-all duration-300 hover:shadow-2xl hover:bg-gray-50 h-12 w-12 sm:h-12 sm:w-auto sm:px-4"
           >
             {copied ? (
-              <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Link Copied!
+              <span className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                <span className="hidden sm:inline">Copied!</span>
               </span>
             ) : (
-              <span className="flex items-center gap-1.5">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                Share Report
+              <span className="flex items-center gap-2 text-gray-800 font-bold text-sm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                <span className="hidden sm:group-hover:inline max-w-0 sm:group-hover:max-w-xs transition-all duration-300 overflow-hidden whitespace-nowrap">Share Report</span>
               </span>
             )}
-          </Button>
-          <Button
-            variant="sun"
-            className="shadow-2xl rounded-full px-5 py-3 sm:px-8 sm:py-6 text-sm sm:text-lg font-bold flex items-center gap-2 border-[2px] sm:border-[3px] border-[#4D1435]"
+          </button>
+
+          {/* Download PDF Button: Icon-only on mobile; expands on hover on large screens */}
+          <button
+            type="button"
             onClick={() => window.print()}
+            aria-label="Download PDF"
+            className="pointer-events-auto group flex items-center justify-center rounded-full bg-[#4D1435] text-white shadow-xl transition-all duration-300 hover:bg-[#3a0f28] hover:shadow-2xl h-12 w-12 sm:h-12 sm:w-auto sm:px-4"
           >
-            Download PDF
-          </Button>
+            <span className="flex items-center gap-2 font-bold text-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span className="hidden sm:group-hover:inline max-w-0 sm:group-hover:max-w-xs transition-all duration-300 overflow-hidden whitespace-nowrap">Download PDF</span>
+            </span>
+          </button>
         </div>
 
       </main>

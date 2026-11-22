@@ -1,7 +1,7 @@
 import { DOMAIN_BY_CODE } from "@/content/domains";
 import { STAGE_BY_ID } from "@/content/stages";
 import type { AssessmentResult, Child, DomainScore } from "./types";
-import { formatAge } from "./age";
+import { formatAge, formatExactAge } from "./age";
 import { getCmsText } from "./cms";
 
 export function headline(result: AssessmentResult, child: Child): string {
@@ -21,7 +21,7 @@ export function headline(result: AssessmentResult, child: Child): string {
 
 export function summary(result: AssessmentResult, child: Child): string[] {
   const name = child.name;
-  const age = formatAge(result.assessedMonths);
+  const age = formatExactAge(result.assessedExactMonths);
   const paras: string[] = [];
 
   paras.push(
@@ -182,6 +182,6 @@ export function overallSummary(result: AssessmentResult, child: Child): string {
   return getCmsText("report_overall_summary", defaultText, {
     name: child.name,
     grade: gradeText,
-    age: result.assessedMonths.toString()
+    age: formatExactAge(result.assessedExactMonths)
   });
 }

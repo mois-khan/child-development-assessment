@@ -29,7 +29,7 @@ import type {
   StatusCode,
 } from "./types";
 import { summariseAge } from "./age";
-import { classifyAgainstStage, stageForAge } from "./stage";
+import { stageForAge, stageProgressForAge } from "./stage";
 
 /* ────────────────────────────────────────────────────────────────────────────
  * How this engine works, in one place.
@@ -90,7 +90,11 @@ export const PASS_THRESHOLD = 1;
  * works — stage I begins at birth — so the profile is shown, just without a
  * number attached to it.
  */
-export const MIN_AGE_FOR_DQ = 1;
+/** Kept for compatibility with callers; exact-age scores are now shown from birth. */
+export const MIN_AGE_FOR_DQ = 0;
+
+/** A fully completed chart box beyond the child's exact age adds 20 points. */
+export const POINTS_PER_STAGE = 20;
 
 export const STATUSES: Record<StatusCode, Status> = {
   "A++": {
@@ -128,7 +132,6 @@ export const STATUS_SEVERITY: Record<StatusCode, number> = {
   "A--": 4,
 };
 
-const SEVERITY_STATUS: StatusCode[] = ["A++", "A+", "A", "A-", "A--"];
 
 /**
  * Standard grade status determined by developmental quotient / percentage:
@@ -372,20 +375,18 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
   const { child, assessedOn, responses, stagesByDomain } = input;
   const details = input.details ?? {};
   const age = summariseAge(child.dob, assessedOn, child.gestationalWeeks);
-  const months = age.assessedMonths;
-  const suppressDq = false; // We use percentage now, no need to suppress
+  // The assessment walk uses this same exact corrected age to select the
+  // starting phase. Whole completed months would put a 75-day-old in Phase II
+  // instead of Phase III and makes a seven-day-old indistinguishable from a
+  // newborn on the report.
+  const months = age.assessedExact;
+  const suppressDq = false;
+  const expectedPosition = stageProgressForAge(months);
 
   const domainScores: DomainScore[] = DOMAINS.map((domain) => {
     const stageIds = stagesByDomain[domain.code] ?? [];
     const asked = sortStages(stageIds);
-    const start = startStageFor(months);
-    const startItems = getItems(start.id, domain.code, responses, months).filter(i => i.kind === "yesno");
-    const numBaseItems = startItems.length > 0 ? startItems.length : 1;
-    const baseValuePerYes = 100 / numBaseItems;
-
-    let baseScore = 0;
-    let upBonus = 0;
-    let downPenalty = 0;
+    const start = expectedPosition.stage;
 
     let raw = 0;
     let answered = 0;
@@ -411,36 +412,51 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
         if (asExpected === 1) achieved.push(item);
         else notYet.push(item);
 
-        if (stage.id === start.id) {
-            if (asExpected === 1) {
-                baseScore += baseValuePerYes;
-            }
-        } else if (stage.order > start.order) {
-            if (asExpected === 1) {
-                upBonus += 10;
-            }
-        } else if (stage.order < start.order) {
-            if (asExpected === 0) {
-                const penaltyPerNo = 50 / Math.max(1, items.length);
-                downPenalty += penaltyPerNo;
-            }
-        }
       }
     }
 
-    let finalPercent = baseScore + upBonus - downPenalty;
-    if (finalPercent < 0) finalPercent = 0;
-    finalPercent = Math.round(finalPercent);
+    const settled = achievedStageFor(
+      domain.code,
+      asked.map((stage) => stage.id),
+      responses,
+      months,
+    );
+    const highestPassedStage = settled.stage;
+    const highestPassedOrder = highestPassedStage?.order ?? 0;
+    const firstUnpassedOrder = highestPassedOrder + 1;
+    const askedIds = new Set(asked.map((stage) => stage.id));
 
-    const status: StatusCode = statusFromPercent(finalPercent);
-
-    let highestPassedStage = null;
-    for (const stage of asked) {
-        const cell = readCell(stage.id, domain.code, responses, months);
-        if (cell.answered > 0 && cell.passed) {
-            highestPassedStage = stage;
+    // Keep phase completion separate from the final percentage. Previously
+    // the report painted the next box with the overall score (for example,
+    // 110% became a visually full Phase II box), which made the chart disagree
+    // with the answers.
+    const stageProgress = Object.fromEntries(
+      BRAIN_STAGES.map((stage) => {
+        if (stage.order <= highestPassedOrder) return [stage.id, 1];
+        if (stage.order === firstUnpassedOrder && askedIds.has(stage.id)) {
+          return [stage.id, readCell(stage.id, domain.code, responses, months).value];
         }
+        return [stage.id, 0];
+      }),
+    ) as Record<string, number>;
+
+    // 100 means the child has reached exactly the point their corrected age
+    // occupies on the chart. Each box contributes 20 points above or below
+    // that baseline; partial boxes contribute their answered share. A child
+    // seven days into Phase I who completes it earns (1 - 7/30) × 20 points,
+    // then earns proportional credit for any later box they have started.
+    let finalPercent = 100;
+    for (const stage of BRAIN_STAGES) {
+      const expectedCompletion =
+        stage.order < start.order
+          ? 1
+          : stage.id === start.id
+            ? expectedPosition.progress
+            : 0;
+      finalPercent += (stageProgress[stage.id] - expectedCompletion) * POINTS_PER_STAGE;
     }
+    finalPercent = Math.max(0, Math.round(finalPercent));
+    const status: StatusCode = statusFromPercent(finalPercent);
 
     const nMonths = neurologicalAge(
       domain.code,
@@ -451,12 +467,13 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
 
     return {
       domain: domain.code,
-      achievedStage: highestPassedStage?.id ?? start.id,
-      cell: cellFor(highestPassedStage?.id ?? start.id, domain.code),
+      achievedStage: highestPassedStage?.id ?? asked[0]?.id ?? start.id,
+      cell: cellFor(highestPassedStage?.id ?? asked[0]?.id ?? start.id, domain.code),
       stagesAsked: asked.map((s) => s.id),
       raw,
       max: answered,
       percent: finalPercent / 100,
+      stageProgress,
       neurologicalMonths: nMonths,
       dq: finalPercent,
       status,
@@ -468,51 +485,18 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
 
   const dqs = domainScores.map((d) => d.dq).filter((d): d is number => d !== null);
   const overallDq =
-    months < MIN_AGE_FOR_DQ || dqs.length === 0
-      ? null
-      : Math.round(dqs.reduce((a, b) => a + b, 0) / dqs.length);
-
-  const severities = domainScores.map((d) => STATUS_SEVERITY[d.status]).sort((a, b) => a - b);
-  const median = Math.ceil(
-    (severities[Math.floor((severities.length - 1) / 2)] +
-      severities[Math.ceil((severities.length - 1) / 2)]) /
-      2,
-  );
-  const medianStatus: StatusCode = SEVERITY_STATUS[median] || "A";
-  const worstDomain = worstOf(domainScores.map((d) => d.status));
-
-  // Determine base grade primarily from overall performance quotient (or median if dq is null)
-  let overallStatus: StatusCode = overallDq !== null ? statusFromPercent(overallDq) : medianStatus;
-  const statusBeforeGuardrail = overallStatus;
-
-  // Guardrail: if one domain is severely lagging (A--), overall status is softened by at most
-  // one tier, and never drops below 'A' if overall performance is above average (> 100%).
-  if (worstDomain === "A--") {
-    if (overallStatus === "A++") {
-      overallStatus = "A+";
-    } else if (overallStatus === "A+") {
-      overallStatus = "A";
-    } else if (overallStatus === "A") {
-      overallStatus = "A-";
-    }
-  } else if (worstDomain === "A-") {
-    if (overallStatus === "A++") {
-      overallStatus = "A+";
-    }
-  }
-
-  const overallRaisedBy =
-    STATUS_SEVERITY[overallStatus] > STATUS_SEVERITY[statusBeforeGuardrail]
-      ? ([...domainScores].sort(
-          (a, b) => STATUS_SEVERITY[b.status] - STATUS_SEVERITY[a.status],
-        )[0]?.domain ?? null)
-      : null;
+    dqs.length === 0 ? null : Math.round(dqs.reduce((a, b) => a + b, 0) / dqs.length);
+  // The client-approved overall result is the arithmetic average of the six
+  // competences. Do not demote that grade because one competence is lower.
+  const overallStatus: StatusCode = statusFromPercent(overallDq ?? 0);
+  const overallRaisedBy = null;
 
   const { strengths, focusAreas } = pickHighlights(domainScores);
   const allStages = new Set(Object.values(stagesByDomain).flat());
 
   return {
-    assessedMonths: months,
+    assessedMonths: age.assessedMonths,
+    assessedExactMonths: months,
     chronologicalMonths: age.chronologicalMonths,
     corrected: age.corrected,
     startStage: startStageFor(months).id,
@@ -526,13 +510,6 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
     suppressDq,
     answeredCount: domainScores.reduce((n, d) => n + d.max, 0),
   };
-}
-
-function worstOf(codes: StatusCode[]): StatusCode {
-  return codes.reduce(
-    (worst, c) => (STATUS_SEVERITY[c] > STATUS_SEVERITY[worst] ? c : worst),
-    "A++" as StatusCode,
-  );
 }
 
 /**

@@ -9,7 +9,7 @@
  *       for server-side code that uses both resolveReportView and storeReportSnapshot)
  *   2. storeReportSnapshot() — side-effectful: generate PDF → upload R2 → save URL to DB
  *
- * ⚠️  This module MUST NOT be imported in Client Components — it pulls in
+ * [IMPORTANT] This module MUST NOT be imported in Client Components — it pulls in
  *     Puppeteer (Node.js-only) via dynamic import. Use lib/storage/resolve-report.ts
  *     directly in Client Components.
  *

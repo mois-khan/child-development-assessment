@@ -55,12 +55,12 @@ components/ReportDocument.tsx      → renders the 5-page A4 PDF
 
 ### 2.3 The Scoring Model (DO NOT CHANGE without client approval)
 
-- **Base phase** = determined by `stageForAge(assessedMonths)` — the child's expected phase
-- **Base score** = 0–100% based on YES answers in their expected phase (100/numItems per YES)
-- **Upward bonus** = +10% per YES in each phase ABOVE the expected phase
-- **Downward penalty** = -10% per NO in each phase BELOW the expected phase
+- **Expected position** = determined by `stageForAge(assessedExact)` — the child's exact corrected age picks both the expected phase and their position inside its box.
+- **Age baseline** = 100% means the child has reached milestones exactly up to that point in the current box.
+- **Box credit** = each full box beyond the age point contributes +20%; a partial box contributes its proportion of scored YES answers.
+- **Below-age adjustment** = each missing portion before the age point subtracts its proportional share of 20%.
 - **Grade thresholds**: A++ > 120%, A+ = 101–120%, A = 80–100%, A- = 50–79%, A-- < 50%
-- **Overall grade** = median of 6 domain grades, raised if any domain is A--
+- **Overall grade** = the arithmetic average of the six competence percentages.
 
 ### 2.4 Stage-for-Age Rule (CLIENT-SPECIFIED — DO NOT CHANGE)
 
@@ -78,7 +78,7 @@ Phase VI-B: 27 ≤ age < 36 months   (Start: 27,  averageMonths = 36)
 Phase VII-A:36 ≤ age < 54 months   (Start: 36,  averageMonths = 54)
 Phase VII-B:54 ≤ age ≤ 72 months   (Start: 54,  averageMonths = 72)
 ```
-Implementation: `stageForAge()` in `lib/stage.ts` uses `assessedMonths >= stageStartMonths(stage)`
+Implementation: `stageForAge()` in `lib/stage.ts` uses `assessedExact >= stageStartMonths(stage)`
 iterating from highest to lowest. This correctly returns the highest phase whose starting month
 the child has reached or exceeded (e.g. 3 months -> Phase III; 28 months -> Phase VI-B). **This is correct and should NOT be changed.**
 
@@ -127,12 +127,12 @@ milestone_videos (id, stage_id, domain, title, description, redirect_url, thumbn
 | ID | Bug | File | Fix Status |
 |----|-----|------|------------|
 | B1 | Resume shows on completed assessments (RLS blocks UPDATE) | `supabase/migrations/0023_fix_completion_rls.sql` | ✅ Fixed — policy now allows owner + admin to update without status restriction |
-| B2 | Red age line wrong phase on spectrum chart | `components/ReportDocument.tsx` | ✅ Fixed — uses `stageForAge()` with correct reversed-grid formula |
+| B2 | Red age line snapped to a phase boundary instead of the child's exact age | `components/ReportDocument.tsx`, `lib/stage.ts` | ✅ Fixed — exact corrected age is placed proportionally inside its chart box |
 | B3 | CMS summaries never load in report | `components/ReportDocument.tsx`, `lib/cms.ts` | ✅ Fixed — `primeCmsBank()` now called with `cmsLoaded` state gate |
 | B3b | CMS block IDs in DB were wrong (generic, not domain-specific) | `seed_cms.js`, `supabase/migrations/0024_seed_cms_blocks.sql` | ✅ Fixed — all 31 correct IDs seeded; run migration 0024 or `node seed_cms.js` |
 | B4 | parentName not fetched from DB join | `lib/data/assessments.ts` | ✅ Fixed — all 3 mapping locations updated |
 | B5 | Cell shading hardcoded at 50% instead of proportional | `components/ReportDocument.tsx` | ✅ Fixed — uses `score.percent * 100` clamped to 0-99 |
-| B6 | MilestoneVideoRow never rendered in report | `components/ReportDocument.tsx` | ✅ Fixed — added after Recommendation paragraph per competence |
+| B6 | MilestoneVideoRow never rendered in report | `components/ReportDocument.tsx` | ✅ Fixed — rendered after the domain summary when that competence is below its exact-age expectation |
 | B7 | Duplicate buttons in CourseRow | `components/report/CourseRow.tsx` | ✅ Fixed — removed second button, added null fallback |
 | B8 | Assessments showing A-- (0%) across all domains due to question bank ID mismatch and RLS lock | `lib/item-bank.ts`, `lib/scoring.ts`, `supabase/migrations/0029_fix_item_overrides_read_rls.sql` | ✅ Fixed — RLS unlocked for public select, dual-lookup logic in scoring engine matches both legacy & new bank IDs |
 | B9 | Starting phase mapped to descending phase for all child ages (e.g. 3mo -> Phase II instead of III; 28mo -> Phase VIA instead of VIB) | `lib/stage.ts` | ✅ Fixed — evaluated against `stageStartMonths(stage)` instead of upper `averageMonths` |
@@ -140,6 +140,7 @@ milestone_videos (id, stage_id, domain, title, description, redirect_url, thumbn
 | B11 | Report typo "raise the DQ" instead of "raise the IQ" and squished ECCTRACTION PLAN banner | `components/ReportDocument.tsx`, `public/ECCTR.svg` | ✅ Fixed — corrected wording to "raise the IQ.", SVG viewBox cropped to artwork bounding box with `object-contain` |
 | B12 | Security & UX improvements: /admin/content RBAC gate, school payment exemption, Razorpay load strategy, image downscaling, accessible toggle switches | `middleware.ts`, `supabase/migrations/0030_admin_content_and_schools.sql`, `app/layout.tsx`, `app/children/page.tsx`, `app/admin/(protected)/users/page.tsx` | ✅ Fixed — migration 0030 created, middleware updated, afterInteractive script, canvas compression, aria-labels |
 | B13 | School assessment paywall blocker, JSONB write race conditions, and CMS stale cache | `app/children/[id]/pay/page.tsx`, `lib/data/assessments.ts`, `lib/cms.ts`, `components/ReportDocument.tsx` | ✅ Fixed — school accounts and active credits bypass paywall, async write queues serialize responses, cache invalidation wired |
+| B14 | Age-relative scores and charts disagreed; overall grades could be demoted below their average | `lib/scoring.ts`, `components/ReportDocument.tsx` | ✅ Fixed — proportional 20-point box scoring, truthful cell fills, direct overall average |
 
 ### ⚠️ Action Required After These Fixes
 1. **Apply migration 0023**: `npx supabase db push` — fixes the RLS policy
@@ -176,7 +177,7 @@ milestone_videos (id, stage_id, domain, title, description, redirect_url, thumbn
 - The **red dashed age line** must use `stageForAge(age.assessedMonths)` to find which row to draw on.
 - The **spectrum chart shading** must be proportional to `score.percent` for the partial (current) phase — NOT hardcoded to 50%.
 - The **mini-chart** on pages 3-4 must show Phase, Brain Stage name, and Time Frame columns.
-- `MilestoneVideoRow` must appear in each per-competence section (pages 3-4).
+- `MilestoneVideoRow` appears in a per-competence section only when that competence is below its exact-age expectation.
 - `CourseRow` appears only on page 5 (final recommendation).
 
 ### 5.4 CMS Rules

@@ -5,6 +5,7 @@ import { ReportDocument } from "@/components/ReportDocument";
 import { getAssessment } from "@/lib/store";
 import { resolveReportView } from "@/lib/storage/resolve-report";
 import { TopBar } from "@/components/ui";
+import { safeShare } from "@/lib/utils/share";
 
 /**
  * Report page — serves the immutable frozen PDF snapshot when available,
@@ -54,17 +55,24 @@ export default function ReportPage({
     const url = shareToken
       ? `${window.location.origin}/share/${shareToken}`
       : window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    });
+    safeShare(
+      url,
+      "Developmental Assessment Report",
+      "View the official ECCTRACTION Report",
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
+    );
   };
 
   // ── Frozen: serve the immutable PDF snapshot ───────────────────────────────
   if (view.mode === "frozen") {
     return (
       <>
-        <TopBar />
+        <div className="hidden sm:block">
+          <TopBar />
+        </div>
         <main className="flex flex-col min-h-screen bg-gray-100">
           {/* Actions bar: Share & Download */}
           <div className="no-print flex items-center justify-end gap-3 px-6 py-3 bg-white border-b border-gray-200 shadow-sm">
@@ -89,7 +97,6 @@ export default function ReportPage({
               href={view.url}
               target="_blank"
               rel="noopener noreferrer"
-              download
               className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-[#4D1435] text-white font-bold text-sm shadow hover:bg-[#3a0f28] transition-colors"
             >
               {/* Download icon (inline SVG, no raster) */}
@@ -109,7 +116,7 @@ export default function ReportPage({
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Download PDF
+              Open PDF
             </a>
           </div>
 

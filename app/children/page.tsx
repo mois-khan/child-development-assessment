@@ -228,7 +228,7 @@ function ChildTile({ child, delay }: { child: SavedChild; delay: number }) {
   const router = useRouter();
   const [state, setState] = useState<{ done: number; openId: string | null } | null>(null);
   const age = summariseAge(child.dob, todayISO(), child.gestationalWeeks);
-  const stage = stageForAge(age.assessedMonths);
+  const stage = stageForAge(age.assessedExact);
 
   useEffect(() => {
     let active = true;
@@ -413,7 +413,7 @@ function NewChildForm({
   const dobInvalid = dobTouched && dob !== "" && age === null;
   const nameOk = name.trim().length > 0;
   const canSubmit = nameOk && dob !== "" && gender !== "" && age !== null && !tooOld;
-  const stage = age && !tooOld ? stageForAge(age.assessedMonths) : null;
+  const stage = age && !tooOld ? stageForAge(age.assessedExact) : null;
 
   function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

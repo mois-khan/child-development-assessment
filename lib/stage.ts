@@ -20,6 +20,41 @@ export function stageStartMonths(stage: BrainStage): number {
 }
 
 /**
+ * The age interval represented by one box in the developmental chart.
+ *
+ * A box begins when the preceding average milestone ends and finishes at its
+ * own average milestone. This makes Phase I 0–1 month (30 days) and Phase II
+ * 1–2.5 months (45 days), matching the range parents see in the report.
+ */
+export function stageAgeWindow(stage: BrainStage): {
+  startMonths: number;
+  endMonths: number;
+} {
+  return {
+    startMonths: stageStartMonths(stage),
+    endMonths: stage.averageMonths,
+  };
+}
+
+/**
+ * Exact progress through the chart box that contains an age. The progress is
+ * 0 at the bottom of the box and 1 at its top. A calendar month is treated as
+ * 30 days here because this is the report's displayed clinical scale.
+ */
+export function stageProgressForAge(months: number): {
+  stage: BrainStage;
+  progress: number;
+} {
+  const stage = stageForAge(months);
+  const { startMonths, endMonths } = stageAgeWindow(stage);
+  const span = Math.max(endMonths - startMonths, 1 / 30);
+  return {
+    stage,
+    progress: Math.max(0, Math.min(1, (months - startMonths) / span)),
+  };
+}
+
+/**
  * Which stage of the Developmental Profile a child of a given age starts at.
  *
  * Evaluates against the clinical start month of each phase bracket from
