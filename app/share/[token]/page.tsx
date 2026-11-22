@@ -83,7 +83,6 @@ export default function PublicSharePage({
             href={reportPdfUrl}
             target="_blank"
             rel="noopener noreferrer"
-            download
             className="inline-flex items-center gap-2 rounded-full bg-[#4D1435] px-5 py-2 text-sm font-bold text-white shadow transition-colors hover:bg-[#3a0f28]"
           >
             <svg
@@ -102,7 +101,7 @@ export default function PublicSharePage({
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Download PDF
+            Open PDF
           </a>
         </header>
 

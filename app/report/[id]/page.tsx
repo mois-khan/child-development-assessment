@@ -97,7 +97,6 @@ export default function ReportPage({
               href={view.url}
               target="_blank"
               rel="noopener noreferrer"
-              download
               className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-[#4D1435] text-white font-bold text-sm shadow hover:bg-[#3a0f28] transition-colors"
             >
               {/* Download icon (inline SVG, no raster) */}
@@ -117,7 +116,7 @@ export default function ReportPage({
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Download PDF
+              Open PDF
             </a>
           </div>
 

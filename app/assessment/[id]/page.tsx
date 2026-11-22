@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { DOMAINS, DOMAIN_BY_CODE } from "@/content/domains";
 import { STAGE_BY_ID } from "@/content/stages";
 import { itemBankReady, liveItemsFor, primeItemBank } from "@/lib/item-bank";
-import { summariseAge } from "@/lib/age";
+import { formatExactMonths, summariseAge } from "@/lib/age";
 import { cellComplete, nextStageFor, startStageFor } from "@/lib/scoring";
 import {
   appendStage,
@@ -430,7 +430,7 @@ export default function AssessmentPage({
     try {
       await completeAssessment(id);
       setPhase("celebrating");
-      window.setTimeout(() => router.push(`/report/${id}`), 1900);
+      window.setTimeout(() => router.push(`/report/${id}`), 1000);
     } catch (e) {
       console.error(e);
       setPending(false);
@@ -804,7 +804,7 @@ function SectionIntro({
             </span>
             <div>
               <p className="text-xs sm:text-sm font-extrabold text-ink">
-                Personalized to {childName}&rsquo;s Age ({ageMonths} months)
+                Personalized to {childName}&rsquo;s Age ({formatExactMonths(ageMonths)})
               </p>
               <p className="mt-1 text-[11px] sm:text-xs leading-relaxed text-ink-3">
                 Starting with <strong>Phase {stageRoman}</strong> based on {childName}&rsquo;s age bracket. The questions adapt automatically: if they pass everything, the assessment climbs higher; if an area is still developing, it explores foundational milestones to locate their true level.

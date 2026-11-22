@@ -92,6 +92,12 @@ export function formatExactAge(months: number): string {
   return `${rounded} MONTH${rounded === 1 ? "" : "S"}`;
 }
 
+/** Fractional age for parent-facing UI where months are the chosen unit. */
+export function formatExactMonths(months: number): string {
+  const rounded = Math.round(Math.max(0, months) * 10) / 10;
+  return `${rounded.toFixed(1)} month${rounded === 1 ? "" : "s"}`;
+}
+
 export function todayISO(): string {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
