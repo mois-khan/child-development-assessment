@@ -64,7 +64,7 @@ export function ReportCardViewer({
         <header className="border-b border-slate-100 bg-gradient-to-br from-[#4D1435] to-[#751d50] px-5 py-5 text-white sm:px-8 sm:py-7">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0"><p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-white/70">Development snapshot</p><h1 className="mt-1 truncate text-2xl font-black tracking-tight sm:text-3xl">{child.name}&rsquo;s ECCTRACTION Plan</h1><p className="mt-2 text-sm font-semibold text-white/80">{formatExactAge(ageExactMonths)} · Expected phase {startStage.roman}</p></div>
-            <div className="shrink-0 rounded-2xl bg-white px-3.5 py-2.5 text-center text-[#4D1435] shadow-lg"><p className="text-2xl font-black leading-none">{overallStatus.code.replace(/-/g, "−")}</p><p className="mt-1 text-xs font-extrabold">{overall}%</p></div>
+            <div className="shrink-0 rounded-2xl bg-white px-3.5 py-2.5 text-center text-[#4D1435] shadow-lg"><p className="text-2xl font-black leading-none">{overallStatus.code.replace(/-/g, "−")}</p><p className="mt-1 text-xs font-extrabold">{Math.round(overall)}%</p></div>
           </div>
         </header>
 
