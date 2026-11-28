@@ -211,19 +211,20 @@ const STATUS_TONE: Record<StatusCode, BadgeTone> = {
   "A+": "success",
   "A": "success",
   "A-": "warn",
-  "A--": "danger",
+  very_weak: "warn",
+  extremely_weak: "danger",
+  severely_weak: "danger",
 };
 
-/* The five-step developmental scale — see app/globals.css. One colour per
-   status, in severity order. `delay` and `significant` used to share a single
-   red, which meant the two outcomes that matter most were the two a parent
-   could not tell apart. */
+/* The seven-step developmental scale — see docs/grading/grading_logic.md. */
 const STATUS_VAR: Record<StatusCode, string> = {
-  "A++": "var(--st-on-track)",
-  "A+": "var(--st-on-track)",
-  "A": "var(--st-on-track)",
-  "A-": "var(--st-emerging)",
-  "A--": "var(--st-consult)",
+  "A++": "--st-advanced",
+  "A+": "--st-advanced",
+  "A": "--st-typical",
+  "A-": "--st-mild",
+  very_weak: "--st-needs-focus",
+  extremely_weak: "--st-delay",
+  severely_weak: "--st-significant",
 };
 
 export function statusColor(status: StatusCode): string {

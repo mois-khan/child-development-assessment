@@ -201,10 +201,18 @@ export interface Child {
  * These are not thresholds anyone chose — they are read straight off the
  * TIME FRAME column of whichever stage the child reached.
  */
-export type StatusCode = "A++" | "A+" | "A" | "A-" | "A--";
+export type StatusCode =
+  | "A++"
+  | "A+"
+  | "A"
+  | "A-"
+  | "very_weak"
+  | "extremely_weak"
+  | "severely_weak";
 
 export interface Status {
-  code: StatusCode;
+  /** Parent-facing grade label. Internal status identifiers remain stable. */
+  code: string;
   label: string;
   /** One line explaining what this status means for the parent. */
   meaning: string;

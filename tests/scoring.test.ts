@@ -13,6 +13,7 @@ import {
   stageStartMonths,
 } from "@/lib/stage";
 import { __setItemBankForTests } from "@/lib/item-bank";
+import { domainNote } from "@/lib/narrative";
 import {
   MIN_AGE_FOR_DQ,
   PASS_THRESHOLD,
@@ -22,6 +23,7 @@ import {
   readCell,
   scoreAssessment,
   startStageFor,
+  statusFromPercent,
 } from "@/lib/scoring";
 import type { Child, DomainCode, ResponseValue } from "@/lib/types";
 
@@ -334,6 +336,40 @@ describe("neurological age", () => {
 });
 
 describe("what the chart says about the result", () => {
+  test("classifies the approved 20-point grading boundaries", () => {
+    assert.equal(statusFromPercent(120.01), "A++");
+    assert.equal(statusFromPercent(120), "A+");
+    assert.equal(statusFromPercent(100), "A");
+    assert.equal(statusFromPercent(80), "A-");
+    assert.equal(statusFromPercent(60), "very_weak");
+    assert.equal(statusFromPercent(53.33), "very_weak");
+    assert.equal(statusFromPercent(40), "extremely_weak");
+    assert.equal(statusFromPercent(20), "severely_weak");
+  });
+
+  test("retains a partial-box score for grading and overall averaging", () => {
+    // 990 days before ON: exactly 33 clinical (30-day) months.
+    const child: Child = { name: "Partial", dob: "2023-12-16", gender: "other" };
+    const responses = fill({ s1: 1, s2: 1, s3: 1, s4: 1 }, 33);
+    const partial = scoredItemsFor("s5", "auditory", 33);
+    assert.equal(partial.length, 3);
+    partial.forEach((item, index) => {
+      responses[item.id] = (index === 0 ? 1 : 0) as ResponseValue;
+    });
+
+    const result = scoreAssessment({
+      child,
+      assessedOn: ON,
+      responses,
+      stagesByDomain: { ...everyDomain(["s1", "s2", "s3", "s4"]), auditory: ["s1", "s2", "s3", "s4", "s5"] },
+    });
+    const auditory = result.domainScores.find((score) => score.domain === "auditory")!;
+
+    assert.equal(auditory.percent, 0.5333333333333333);
+    assert.equal(auditory.status, "very_weak");
+    assert.match(domainNote(auditory, child), /significant developmental gap/i);
+  });
+
   test("a seven-day-old gains proportional credit for fully completed boxes ahead of age", () => {
     const child: Child = { name: "Seven days", dob: "2026-08-25", gender: "other" };
     const result = scoreAssessment({
@@ -343,11 +379,11 @@ describe("what the chart says about the result", () => {
       stagesByDomain: everyDomain(["s1", "s2"]),
     });
     for (const d of result.domainScores) {
-      // 100 + (23/30 of Phase I × 20) + (one full Phase II × 20) = 135.
-      assert.equal(d.percent, 1.35);
+      // 100 + (23/30 of Phase I × 20) + (one full Phase II × 20) = 135.33.
+      assert.equal(d.percent, 1.353333333333333);
       assert.equal(d.status, "A++");
     }
-    assert.equal(result.overallDq, 135);
+    assert.equal(result.overallDq, 135.3333333333333);
     assert.equal(result.overallStatus, "A++");
   });
 
@@ -384,9 +420,8 @@ describe("what the chart says about the result", () => {
       responses,
       stagesByDomain: everyDomain(["s1", "s2"]),
     });
-    const average = Math.round(
-      result.domainScores.reduce((sum, score) => sum + score.percent * 100, 0) / DOMAINS.length,
-    );
+    const average =
+      result.domainScores.reduce((sum, score) => sum + score.percent * 100, 0) / DOMAINS.length;
     assert.equal(result.overallDq, average);
     assert.equal(result.overallStatus, "A++");
     assert.equal(result.overallRaisedBy, null);
@@ -449,7 +484,7 @@ describe("the overall verdict", () => {
     const language = result.domainScores.find((d) => d.domain === "language")!;
     assert.equal(language.achievedStage, "s2");
     assert.ok(
-      ["A-", "A--"].includes(language.status),
+      ["A-", "very_weak", "extremely_weak", "severely_weak"].includes(language.status),
       `language came out ${language.status}`,
     );
     assert.equal(result.overallRaisedBy, null);

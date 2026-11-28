@@ -117,10 +117,20 @@ export const STATUSES: Record<StatusCode, Status> = {
     label: "Slightly Below Average",
     meaning: "Missed some expected milestones. Monitor closely.",
   },
-  "A--": {
-    code: "A--",
-    label: "Needs Focus",
-    meaning: "Missing foundational milestones. We recommend targeted practice.",
+  very_weak: {
+    code: "Very weak",
+    label: "Very weak",
+    meaning: "More than one full phase behind the age expectation.",
+  },
+  extremely_weak: {
+    code: "Extremely weak",
+    label: "Extremely weak",
+    meaning: "Several foundational phases are behind the age expectation.",
+  },
+  severely_weak: {
+    code: "Severely weak",
+    label: "Severely weak",
+    meaning: "Substantial foundational support is needed.",
   },
 };
 
@@ -129,24 +139,24 @@ export const STATUS_SEVERITY: Record<StatusCode, number> = {
   "A+": 1,
   "A": 2,
   "A-": 3,
-  "A--": 4,
+  very_weak: 4,
+  extremely_weak: 5,
+  severely_weak: 6,
 };
 
 
 /**
  * Standard grade status determined by developmental quotient / percentage:
- *   A++: > 120%
- *   A+:  101% – 120%
- *   A:   80% – 100%
- *   A-:  50% – 79%
- *   A--: < 50%
+ * Boundaries belong to the weaker tier. See docs/grading/grading_logic.md.
  */
 export function statusFromPercent(percent: number): StatusCode {
   if (percent > 120) return "A++";
   if (percent > 100) return "A+";
-  if (percent >= 80) return "A";
-  if (percent >= 50) return "A-";
-  return "A--";
+  if (percent > 80) return "A";
+  if (percent > 60) return "A-";
+  if (percent > 40) return "very_weak";
+  if (percent > 20) return "extremely_weak";
+  return "severely_weak";
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -455,7 +465,9 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
             : 0;
       finalPercent += (stageProgress[stage.id] - expectedCompletion) * POINTS_PER_STAGE;
     }
-    finalPercent = Math.max(0, Math.round(finalPercent));
+    // Keep partial-box precision for the grade and the six-competence average.
+    // Rendering is responsible for rounding the percentage shown to families.
+    finalPercent = Math.max(0, finalPercent);
     const status: StatusCode = statusFromPercent(finalPercent);
 
     const nMonths = neurologicalAge(
@@ -485,7 +497,7 @@ export function scoreAssessment(input: ScoreInput): AssessmentResult {
 
   const dqs = domainScores.map((d) => d.dq).filter((d): d is number => d !== null);
   const overallDq =
-    dqs.length === 0 ? null : Math.round(dqs.reduce((a, b) => a + b, 0) / dqs.length);
+    dqs.length === 0 ? null : dqs.reduce((a, b) => a + b, 0) / dqs.length;
   // The client-approved overall result is the arithmetic average of the six
   // competences. Do not demote that grade because one competence is lower.
   const overallStatus: StatusCode = statusFromPercent(overallDq ?? 0);

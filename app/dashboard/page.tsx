@@ -7,7 +7,7 @@ import { formatAge, summariseAge, todayISO } from "@/lib/age";
 import { useAuth } from "@/lib/auth/provider";
 import { itemBankReady, primeItemBank } from "@/lib/item-bank";
 import { phaseLabel } from "@/lib/naming";
-import { scoreAssessment } from "@/lib/scoring";
+import { STATUSES, scoreAssessment } from "@/lib/scoring";
 import { stageForAge } from "@/lib/stage";
 import { listAssessments, listChildren, type SavedChild, type StoredAssessment } from "@/lib/store";
 import type { AssessmentResult, DomainCode } from "@/lib/types";
@@ -585,7 +585,7 @@ function ChildDashCard({ summary, delay }: { summary: ChildSummary; delay: numbe
                 } as React.CSSProperties
               }
             >
-              {latest.result.overallStatus}
+              {STATUSES[latest.result.overallStatus].code}
               {" · "}
               {Math.round(latest.result.overallDq ?? 0)}%
             </span>

@@ -14,8 +14,12 @@ export function headline(result: AssessmentResult, child: Child): string {
       return `${name} is developing well across all six areas.`;
     case "A-":
       return `${name} is growing steadily, and some areas would benefit from focused support.`;
-    case "A--":
-      return `${name} requires immediate and intensive support.`;
+    case "very_weak":
+      return `${name} would benefit from focused developmental support.`;
+    case "extremely_weak":
+      return `${name} requires prompt, structured developmental support.`;
+    case "severely_weak":
+      return `${name} requires immediate, intensive developmental support.`;
   }
 }
 
@@ -79,14 +83,26 @@ export function summary(result: AssessmentResult, child: Child): string[] {
       );
       break;
 
-    case "A--":
+    case "very_weak":
       paras.push(
         strong
           ? `${name} is doing well in ${strong}, and that is a genuine strength to build on.`
           : `Every child has strengths to build on, and this report is a starting point rather than a verdict.`,
       );
       paras.push(
-        `Several areas are further behind than the chart's own range allows for. We would suggest arranging an assessment with a developmental paediatrician or a child therapist, who can look at this properly in person. This is a screening result, not a diagnosis, but it is worth acting on rather than waiting.`,
+        `${capitalise(focus)} ${result.focusAreas.length > 1 ? "are" : "is"} more than one full chart box behind the age expectation. We recommend structured practice and a developmental screening discussion with a qualified professional.`,
+      );
+      break;
+
+    case "extremely_weak":
+    case "severely_weak":
+      paras.push(
+        strong
+          ? `${name} is doing well in ${strong}, and that is a genuine strength to build on.`
+          : `Every child has strengths to build on, and this report is a starting point rather than a verdict.`,
+      );
+      paras.push(
+        `Several areas are substantially behind the age expectation. We recommend arranging an assessment with a developmental paediatrician or child therapist, who can review these results properly in person. This is a screening result, not a diagnosis, but it is worth acting on promptly.`,
       );
       paras.push(
         `In the meantime, the activities below are still worth doing, and early support makes a real difference at this age.`,
@@ -113,8 +129,12 @@ export function domainNote(score: DomainScore, child: Child): string {
       return getCmsText(`domain_note_${domainCode}_a`, `${name} demonstrates age appropriate progress in the ${domainName} competence.`, vars);
     case "A-":
       return getCmsText(`domain_note_${domainCode}_a_minus`, `${name} falls under a mild developmental gap category in the ${domainName} competence.`, vars);
-    case "A--":
-      return getCmsText(`domain_note_${domainCode}_a_minus_minus`, `${name} requires immediate and intensive support in ${domainName} competence.`, vars);
+    case "very_weak":
+      return getCmsText(`domain_note_${domainCode}_very_weak`, `${name} shows a significant developmental gap in ${domainName} competence and would benefit from focused support.`, vars);
+    case "extremely_weak":
+      return getCmsText(`domain_note_${domainCode}_extremely_weak`, `${name} shows an extremely significant developmental gap in ${domainName} competence and needs prompt, structured support.`, vars);
+    case "severely_weak":
+      return getCmsText(`domain_note_${domainCode}_severely_weak`, `${name} shows a severe developmental gap in ${domainName} competence and needs immediate, intensive support.`, vars);
   }
   return "";
 }
@@ -138,7 +158,13 @@ export function nextSteps(result: AssessmentResult, child: Child): string[] {
     );
   }
 
-  if (result.overallStatus === "A--") {
+  if (result.overallStatus === "very_weak") {
+    steps.push(
+      `Discuss this report with your doctor or a child development professional so you can agree on the most useful next support.`,
+    );
+  }
+
+  if (result.overallStatus === "extremely_weak" || result.overallStatus === "severely_weak") {
     steps.push(
       `Ask your doctor to refer you to a developmental paediatrician, or contact a child development centre directly. You do not need to wait for a referral to ask.`,
     );
@@ -171,17 +197,21 @@ function months(n: number): string {
 }
 
 export function overallSummary(result: AssessmentResult, child: Child): string {
-  const gradeText = result.overallStatus === "A++" || result.overallStatus === "A+" 
-    ? "beyond expectation" 
-    : result.overallStatus === "A" 
-      ? "as expected" 
-      : "below expectation";
+  const gradeText: Record<AssessmentResult["overallStatus"], string> = {
+    "A++": "well beyond expectation",
+    "A+": "beyond expectation",
+    "A": "as expected",
+    "A-": "with a mild developmental gap",
+    very_weak: "with a significant developmental gap",
+    extremely_weak: "with an extremely significant developmental gap",
+    severely_weak: "with a severe developmental gap",
+  };
 
   const defaultText = "The KECCTRA report indicates that {name} is developing {grade} for his/her age.";
   
   return getCmsText("report_overall_summary", defaultText, {
     name: child.name,
-    grade: gradeText,
+    grade: gradeText[result.overallStatus],
     age: formatExactAge(result.assessedExactMonths)
   });
 }

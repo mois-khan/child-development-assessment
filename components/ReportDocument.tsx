@@ -415,7 +415,7 @@ export function ReportDocument({
                </div>
                <div className="flex-shrink-0">
                 <div className="flex flex-col items-center justify-center min-w-[80px] sm:min-w-[100px] px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl border-[3px] border-[#4D1435] bg-[#4D1435] text-white shadow-md">
-                  <span className="text-xl sm:text-2xl font-black tracking-tight leading-none">{result.overallStatus.replace(/-/g, '\u2212')}</span>
+                  <span className="text-xl sm:text-2xl font-black tracking-tight leading-none">{STATUSES[result.overallStatus].code}</span>
                   <span className="text-xs sm:text-xs font-bold mt-0.5 opacity-80">{Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1) * 100)}%</span>
                 </div>
              </div>
@@ -602,7 +602,7 @@ export function ReportDocument({
            <div className="border-b-[3px] border-[#4D1435] pb-4 mb-10 flex flex-row justify-between items-center gap-4 mt-4">
              <h2 className="text-[1.15rem] sm:text-2xl font-extrabold uppercase text-[#4D1435] tracking-wide">OVERALL RESULT:</h2>
                <div className="flex flex-col items-center justify-center min-w-[80px] sm:min-w-[140px] px-4 sm:px-8 py-2 sm:py-4 rounded-xl sm:rounded-2xl border-[3px] sm:border-[5px] border-[#4D1435] bg-[#4D1435] text-white shadow-xl shrink-0">
-               <span className="text-3xl sm:text-5xl font-black tracking-tight leading-none">{result.overallStatus.replace(/-/g, '\u2212')}</span>
+               <span className="text-3xl sm:text-5xl font-black tracking-tight leading-none">{STATUSES[result.overallStatus].code}</span>
                <span className="text-xs sm:text-lg font-bold mt-1 sm:mt-1.5 opacity-80">{Math.round(result.domainScores.reduce((acc, curr) => acc + (curr.percent || 0), 0) / (result.domainScores.length || 1) * 100)}%</span>
              </div>
            </div>

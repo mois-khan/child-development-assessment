@@ -78,8 +78,10 @@ export default function CmsContentPage() {
   function getGradeHeading(id: string) {
     if (id.endsWith("_a_plus_plus")) return "Grade A++ (Beyond Expectation)";
     if (id.endsWith("_a_plus")) return "Grade A+ (Exceeding)";
-    if (id.endsWith("_a_minus_minus")) return "Grade A-- (Needs Immediate Support)";
-    if (id.endsWith("_a_minus")) return "Grade A- (Needs Focus)";
+    if (id.endsWith("_severely_weak")) return "Severely weak (Immediate Support)";
+    if (id.endsWith("_extremely_weak")) return "Extremely weak (Prompt Support)";
+    if (id.endsWith("_very_weak")) return "Very weak (Focused Support)";
+    if (id.endsWith("_a_minus")) return "Grade A- (Mild Developmental Gap)";
     if (id.endsWith("_a")) return "Grade A (On Track)";
     if (id === "report_disclaimer") return "Report Disclaimer";
     return id;

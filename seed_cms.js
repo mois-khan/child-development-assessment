@@ -4,7 +4,7 @@
  * Run: SUPABASE_SERVICE_ROLE_KEY=<key> node seed_cms.js
  *
  * Each domain (vision, auditory, tactile, mobility, language, hand) needs
- * 5 grade-specific blocks. Keys must match exactly what lib/narrative.ts
+ * 7 grade-specific blocks. Keys must match exactly what lib/narrative.ts
  * passes to getCmsText(): domain_note_{domain}_{grade}
  *
  * The placeholder {name} is replaced with the child's name.
@@ -45,16 +45,24 @@ const GRADE_TEMPLATES = {
   a_minus: (domainName) =>
     `{name} falls under a mild developmental gap category in the ${domainName} competence. This indicates that there is a need for ongoing support to help {name} thrive in the ${domainName} competence. Our activities library has the appropriate video to guide you to conduct the necessary simple activities with the child right at home. Please scan the QR code here to access the FREE video.`,
 
-  a_minus_minus: (domainName) =>
-    `{name} requires immediate and intensive support in ${domainName} competence. This child will benefit from structured pathology intervention to build ${domainName} competence. With targeted support and consistent practice, meaningful progress is achievable. Please follow the recommendations given in the 'overall result' section of this report.`,
+  very_weak: (domainName) =>
+    `{name} shows a significant developmental gap in the ${domainName} competence and would benefit from focused support and consistent practice. Please follow the recommendations given in the overall result section of this report.`,
+
+  extremely_weak: (domainName) =>
+    `{name} shows an extremely significant developmental gap in the ${domainName} competence and needs prompt, structured support. Please discuss the next steps with a qualified child-development professional.`,
+
+  severely_weak: (domainName) =>
+    `{name} shows a severe developmental gap in the ${domainName} competence and needs immediate, intensive support. Please arrange a prompt discussion with a qualified child-development professional.`,
 };
 
 const GRADE_DESCRIPTIONS = {
   a_plus_plus: 'Grade: A++ (Highly Advanced) — shown when score > 120%',
   a_plus:      'Grade: A+ (Advanced) — shown when score 101–120%',
-  a:           'Grade: A (On Track) — shown when score 80–100%',
-  a_minus:     'Grade: A- (Mild Gap) — shown when score 50–79%',
-  a_minus_minus:'Grade: A-- (Needs Focus) — shown when score < 50%',
+  a:           'Grade: A (On Track) — shown when score >80–100%',
+  a_minus:     'Grade: A- (Mild Gap) — shown when score >60–80%',
+  very_weak:   'Very weak — shown when score >40–60%',
+  extremely_weak: 'Extremely weak — shown when score >20–40%',
+  severely_weak: 'Severely weak — shown when score 0–20%',
 };
 
 async function run() {
@@ -93,7 +101,7 @@ async function run() {
   }
 
   console.log('\nDone! Total blocks:', blocks.length);
-  console.log('Expected: 30 domain blocks + 1 disclaimer = 31 blocks');
+  console.log('Expected: 42 domain blocks + 1 disclaimer = 43 blocks');
 }
 
 run().catch(console.error);
